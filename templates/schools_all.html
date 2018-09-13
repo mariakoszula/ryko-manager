@@ -19,16 +19,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for school in Schools %}
                                     <tr class="odd gradeX">
-                                        <td>Trident</td>
-                                        <td>Internet Explorer 4.0</td>
-                                        <td>Win 95+</td>
-                                        <td>Win 95+</td>
-                                        <td>Win 95+</td>
-                                        <td class="center">4</td>
-                                        <td class="center">X</td>
-                                        <td class="center">X</td>
+                                        <td>{{ school.nick }}</td>
+                                        <td>{{ school.name }}</td>
+                                        <td>{{ school.regon }}</td>
+                                        <td>{{ school.email }}</td>
+                                        <td>{{ school.phone }}</td>
+                                        <td class="center"></td>
+                                        <td class="center"></td>
+                                        <td class="center">
+                                            <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=school.id ) }}';" class="btn btn-default">Edytuj</button>
+                                        </td>
                                     </tr>
+                                    {% endfor %}
                             </table>
                             <!-- /.table-responsive -->
                         <!-- /.panel-body -->

@@ -1,23 +1,21 @@
-from flask import Flask, render_template
-from database import db_session
+from flask import render_template, request
+from setup import app, db
+from models import School
 
-app = Flask(__name__)
-
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     db_session.remove()
 
 @app.route('/')
 def index():
     return render_template("index.html")
 
+
 @app.route('/schools_all')
 def schools_all():
-    return render_template("schools_all.html")
+    return render_template("schools_all.html", Schools=School.query.all())
 
-# @app.route('/sign')
-# def sign():
-#     return render_template("sign.html")
+
+@app.route('/school_form/<int:school_id>')
+def school_form(school_id=None):
+    return render_template("school_form.html", School=School.query.filter_by(id=school_id).first_or_404())
 
 
 if __name__ == "__main__":
