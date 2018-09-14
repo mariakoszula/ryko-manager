@@ -57,7 +57,7 @@ class Contract(db.Model):
     validity_date = db.Column(db.DateTime, nullable=False)
     fruitVeg_products = db.Column(db.Integer, nullable=False)
     dairy_products = db.Column(db.Integer, nullable=False)
-    is_annex = db.Column(db.Boolean, nullable=False, default=False)
+    is_annex = db.Column(db.Boolean, nullable=False, default=0)
 
     school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
     school = db.relationship('School', backref=db.backref('contracts', lazy=True))

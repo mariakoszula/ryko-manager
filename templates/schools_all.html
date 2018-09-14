@@ -8,6 +8,7 @@
                             <table width="100%" class="table table-striped table-bordered table-hover" id="divided-table-with-search">
                                 <thead>
                                     <tr>
+                                        <th>Lp</th>
                                         <th>Skrót</th>
                                         <th>Nazwa</th>
                                         <th>Regon</th>
@@ -21,13 +22,14 @@
                                 <tbody>
                                     {% for school in Schools %}
                                     <tr class="odd gradeX">
+                                        <td>{{ school.id }}</td>
                                         <td>{{ school.nick }}</td>
                                         <td>{{ school.name }}</td>
                                         <td>{{ school.regon }}</td>
                                         <td>{{ school.email }}</td>
                                         <td>{{ school.phone }}</td>
-                                        <td class="center"></td>
-                                        <td class="center"></td>
+                                        <td class="center">{{ school.contracts[0].fruitVeg_products }}</td>
+                                        <td class="center">{{ school.contracts[0].dairy_products }}</td>
                                         <td class="center">
                                             <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=school.id ) }}';" class="btn btn-default">Edytuj</button>
                                         </td>

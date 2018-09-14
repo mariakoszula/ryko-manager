@@ -1,6 +1,6 @@
 from flask import render_template, request
 from setup import app, db
-from models import School
+from models import School, Contract
 
 
 @app.route('/')
@@ -10,7 +10,9 @@ def index():
 
 @app.route('/schools_all')
 def schools_all():
-    return render_template("schools_all.html", Schools=School.query.all())
+    AllSchools = db.session.query(School).join(School.contracts).filter(Contract.program_id == 1).all() ## filtering by contract not working?!
+
+    return render_template("schools_all.html", Schools=AllSchools)
 
 
 @app.route('/school_form/<int:school_id>')
