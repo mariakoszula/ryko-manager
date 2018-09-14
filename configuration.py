@@ -1,2 +1,2 @@
 
-database_location = 'sqlite:///C:\\Users\\mery\\rykomanager.db'
+database_location = 'sqlite:///C:\\ryko-manager\\kowr_doc\\rykomanager.db'
