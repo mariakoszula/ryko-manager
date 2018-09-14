@@ -17,7 +17,8 @@ def schools_all():
 
 @app.route('/school_form/<int:school_id>')
 def school_form(school_id=None):
-    return render_template("school_form.html", School=School.query.filter_by(id=school_id).first_or_404())
+    return render_template("school_form.html",  School=School.query.filter_by(id=school_id).first_or_404(),
+                                                Contracts=Contract.query.filter(Contract.school_id==school_id).all())
 
 
 if __name__ == "__main__":

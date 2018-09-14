@@ -9,26 +9,51 @@
                             Edytuj dane szkoły
                         </div>
                         <div class="panel-body">
-
-                        <div class="panel-body">
                             <div class="col-lg-6">
                                 <form role="form">
                                             <div class="form-group">
-                                                <label>Nick</label><input class="form-control">
-                                                <label>Nazwa</label><input class="form-control">
-                                                <p class="help-block">Dodaj aneks jeśli chcesz zmienić ilość dzieci.</p>
+                                                <label>Nick</label><input class="form-control" {% if  School.nick  %}value="{{ School.nick }}"{% endif %}>
+                                                <label>Nazwa</label><input class="form-control" {% if  School.name  %}value="{{ School.name }}"{% endif %}>
+                                                <label>Adres</label><input class="form-control" {% if  School.address  %}value="{{ School.address }}"{% endif %}>
+                                                <label>REGON</label><input class="form-control" {% if  School.regon  %}value="{{ School.regon }}"{% endif %}>
+                                                <label>NIP*</label><input class="form-control" {% if  School.nip  %}value="{{ School.nip }}"{% endif %}>
+                                                <label>Email</label><input class="form-control" {% if  School.email  %}value="{{ School.email }}"{% endif %}>
+                                                <label>Telefon</label><input class="form-control" {% if  School.phone  %}value="{{ School.phone }}"{% endif %}>
+                                                <label>Miasto</label><input class="form-control" {% if  School.city  %}value="{{ School.city }}"{% endif %}>
+                                                <label>Osoba reprezentująca</label><input class="form-control" {% if  School.responsible_person  %}value="{{ School.responsible_person }}"{% endif %}>
+                                                <label>Nazwa organu prowadzącego*</label><input class="form-control" {% if  School.representative  %}value="{{ School.representative }}"{% endif %}>
+                                                <label>NIP organu prowadzącego*</label><input class="form-control" {% if  School.representative_nip  %}value="{{ School.representative_nip }}"{% endif %}>
+                                                <label>REGON organu prowadzącego*</label><input class="form-control" {% if  School.representative_regon  %}value="{{ School.representative_regon }}"{% endif %}>
+                                                <p class="help-block">*pola nieobowiązkowe</p>
                                             </div>
 
-                                    <button type="submit" class="btn btn-default">Zapisz</button>
+                                    <button type="submit"  class="btn btn-primary btn-lg btn-block">Zapisz</button>
                                 </form>
                             </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label>Liczba dzieci Owoce</label><p class="form-control-static">xxxx</p>
-                                <label>Liczba dzieci Mleko</label><p class="form-control-static">xxxx</p>
-                                <p class="help-block">Dodaj aneks jeśli chcesz zmienić ilość dzieci.</p>
+                            <div class="col-lg-6">
+                           <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Data zawarcia</th>
+                                            <th>Data obowiązywania</th>
+                                            <th>Produkt owocowy</th>
+                                            <th>Produkt melczny</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                     {% for contract in Contracts %}
+                                        <tr {% if contract.is_anex %} class="warning" {% endif %} {% if not contract.is_anex %} class="info" {% endif %}>
+                                            <td>{{ contract.contract_no}}/{{contract.contract_year }}</td>
+                                            <td>{{ contract.contract_date.date() }}</td>
+                                            <td>{{ contract.validity_date.date() }}</td>
+                                            <td>{{ contract.fruitVeg_products }}</td>
+                                            <td>{{ contract.dairy_products }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
 
                              <div class="panel panel-yellow">
@@ -51,7 +76,6 @@
                         </a>
                     </div>
                         </div>
-
                         </div>
                     </div>
       </div>
