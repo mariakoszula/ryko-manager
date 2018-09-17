@@ -64,7 +64,6 @@ class Contract(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
-    db.UniqueConstraint('contract_no', 'contract_year')
     __table_args__ = {'extend_existing': True}
 
     def __init__(self):
