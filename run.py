@@ -1,6 +1,7 @@
 from flask import render_template, request, flash, redirect, url_for
 from setup import app, db
 from models import School, Contract
+from documentManager.AnnexCreator import AnnexCreator
 
 
 @app.route('/')
@@ -21,7 +22,7 @@ def school_form(school_id=None):
                                                 Contracts=Contract.query.filter(Contract.school_id==school_id).all())
 
 
-@app.route('/school_form/<int:school_id>/add_annex/', methods = ['GET', 'POST'])
+@app.route('/school_form/<int:school_id>/add_annex/', methods=['GET', 'POST'])
 def school_form_add_annex(school_id=None):
     if request.method == 'POST':
         if not request.form['contract_date'] or not request.form['validity_date']:
@@ -29,9 +30,11 @@ def school_form_add_annex(school_id=None):
         elif not request.form['fruitVeg_products'] and not request.form['dairy_products']:
             flash('Uzupełnij wartość produktu, którego liczba zmieniła się', 'error')
         else:
-            # print(request.form['contract_date'], request.form['validity_date'], request.form['fruitVeg_products'],
-            #      request.form['dairy_products'])
-            return redirect(url_for('school_form', school_id = school_id))
+            ac = AnnexCreator(school_id)
+            ac.create(request.form['contract_date'], request.form['validity_date'],
+                       request.form['fruitVeg_products'], request.form['dairy_products'])
+
+            return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=None)
 
 

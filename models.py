@@ -18,9 +18,6 @@ class School(db.Model):
     representative_regon = db.Column(db.String(80))
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, name):
-        self.name = name
-
     def __repr__(self):
         return '<School: %r>' % self.name
 
@@ -45,9 +42,6 @@ class Program(db.Model):
     db.UniqueConstraint('school_year', 'semester_no')
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self):
-        pass
-
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,9 +59,6 @@ class Contract(db.Model):
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
     __table_args__ = {'extend_existing': True}
-
-    def __init__(self):
-        pass
 
 
 db.create_all()
