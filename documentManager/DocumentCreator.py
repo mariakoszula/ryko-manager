@@ -2,6 +2,8 @@ from mailmerge import MailMerge
 from abc import ABC, abstractmethod
 from os import path, makedirs
 import setup
+import configuration as cfg
+import subprocess
 
 
 class DocumentCreator(ABC):
@@ -22,7 +24,7 @@ class DocumentCreator(ABC):
     def generate(self, new_doc_name):
         generated_file = path.join(self.output_directory, new_doc_name)
         self.document.write(generated_file)
-        DocumentCreator.generate_pdf(generated_file)
+        # DocumentCreator.generate_pdf(generated_file, self.output_directory)
 
     def generate_many(self):
         pass
@@ -31,8 +33,13 @@ class DocumentCreator(ABC):
         pass
 
     @staticmethod
-    def generate_pdf(docx_to_convert):
-        pass
+    def generate_pdf(docx_to_convert, output_dir):
+        #! TODO CHECK!!!
+        try:
+            args = [cfg.libreoffice_coneverter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
+            subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3000)
+        except Exception as e:
+            print(e)
 
     @staticmethod
     def create_directory(output_directory):

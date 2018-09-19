@@ -45,7 +45,7 @@ class Program(db.Model):
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    contract_no = db.Column(db.Integer, nullable=False)
+    contract_no = db.Column(db.String(80), nullable=False)
     contract_year = db.Column(db.Integer, nullable=False)
     contract_date = db.Column(db.DateTime, nullable=False)
     validity_date = db.Column(db.DateTime, nullable=False)
