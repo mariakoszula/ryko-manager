@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from models import School, Contract
+from models import School, Contract, Program
 from setup import db, app
-
+import datetime
 
 class DatabaseManager(ABC):
 
@@ -26,11 +26,37 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_current_sem():
-        return "I"
+        return "I" #@TODO fill with sql query
 
     @staticmethod
     def get_school_year():
-        return "2018/2019"
+        return "2018/2019"  #@TODO fill with sql query
+
+    @staticmethod
+    def get_next_annex_no(school_id):
+        return 1
+
+    @staticmethod
+    def get_all_schools_with_contract(program_id):
+        return db.session.query(School).join(School.contracts).filter(
+            Program.id.like(program_id)).all()
+
+    @staticmethod
+    def get_all_schools():
+        return School.query.all()
+
+    @staticmethod
+    def get_all_contracts(school_id, program_id):
+        return Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
+
+    @staticmethod
+    def get_current_contract(school_id, program_id):
+        now = datetime.datetime.now()
+        res = School.query.filter(School.id.like(school_id)).first()
+        for contract in res.contracts:
+            if contract.program_id == program_id and contract.validity_date.date() <= now.date():
+                return contract
+        return None
 
     @staticmethod
     def add_row(models=None):

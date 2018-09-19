@@ -24,7 +24,7 @@ class DocumentCreator(ABC):
     def generate(self, new_doc_name):
         generated_file = path.join(self.output_directory, new_doc_name)
         self.document.write(generated_file)
-        # DocumentCreator.generate_pdf(generated_file, self.output_directory)
+        DocumentCreator.generate_pdf(generated_file, self.output_directory)
 
     def generate_many(self):
         pass
@@ -34,12 +34,12 @@ class DocumentCreator(ABC):
 
     @staticmethod
     def generate_pdf(docx_to_convert, output_dir):
-        #! TODO CHECK!!!
         try:
-            args = [cfg.libreoffice_coneverter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
+            args = [cfg.libreoffice_converter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
             subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3000)
         except Exception as e:
-            print(e)
+            setup.app.logger.error("[%s] Serious error when generating pdf from docx %s out_dir %s: err_msg: %s",
+                                   __class__.__name__, output_dir, docx_to_convert, e)
 
     @staticmethod
     def create_directory(output_directory):

@@ -13,7 +13,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
     def __init__(self, school_id):
         self.school = DatabaseManager.get_school(school_id)
         self.contract = DatabaseManager.get_contract(school_id)
-        self.contract_no = self.contract.contract_no
+        self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id))
         self.contract_year = self.contract.contract_year
         self.contract_date = None
         self.validity_date = None

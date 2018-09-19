@@ -54,7 +54,7 @@ class Contract(db.Model):
     is_annex = db.Column(db.Boolean, nullable=False, default=0)
 
     school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
-    school = db.relationship('School', backref=db.backref('contracts', lazy=True))
+    school = db.relationship('School', backref=db.backref('contracts', lazy=True, order_by='Contract.validity_date.desc()'))
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
