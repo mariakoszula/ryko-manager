@@ -22,14 +22,9 @@ class School(db.Model):
         return '<School: %r>' % self.name
 
 
-class Semester(enum.Enum):
-    one = 1
-    two = 2
-
-
 class Program(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    semester_no = db.Column(db.Enum(Semester), nullable=False)
+    semester_no = db.Column(db.Integer, nullable=False)
     school_year = db.Column(db.String(20), nullable=False)
     fruitVeg_price = db.Column(db.Float)
     dairy_price = db.Column(db.Float)
@@ -119,7 +114,7 @@ class RecordState(enum.Enum):
 class Record(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
-    state = db.Column(db.Enum(RecordState), nullable=False)
+    state = db.Column(db.Enum(RecordState), nullable=False, default=RecordState.NOT_DELIVERED)
 
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     product = db.relationship('Product',

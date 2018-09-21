@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from models import School, Contract, Program
 from setup import db, app
 import datetime
-from sqlalchemy import desc
 
 class DatabaseManager(ABC):
 
