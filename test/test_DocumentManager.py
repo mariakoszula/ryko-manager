@@ -30,3 +30,7 @@ def test_get_all_school_withContract_is25():
 
 def test_get_all_schools_is26():
     assert(len(DatabaseManager.get_all_schools()) == 26)
+
+def test_properlly_obtained_next_annex_id():
+    assert(DatabaseManager.get_next_annex_no(1, 1) == 1)
+    assert(DatabaseManager.get_next_annex_no(2, 1) == 2)

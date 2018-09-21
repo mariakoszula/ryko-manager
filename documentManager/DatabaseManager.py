@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from models import School, Contract, Program
 from setup import db, app
 import datetime
+from sqlalchemy import desc
 
 class DatabaseManager(ABC):
 
@@ -33,8 +34,13 @@ class DatabaseManager(ABC):
         return "2018/2019"  #@TODO fill with sql query
 
     @staticmethod
-    def get_next_annex_no(school_id):
-        return 1
+    def get_next_annex_no(school_id, program_id):
+        contracts = Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
+        annex_no_list = [int(contract.contract_no[2:]) for contract in contracts if "_" in str(contract.contract_no)]
+        if not annex_no_list:
+            return 1
+        else:
+            return min(annex_no_list) + 1
 
     @staticmethod
     def get_all_schools_with_contract(program_id):

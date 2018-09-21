@@ -33,7 +33,7 @@ def school_form_add_annex(school_id=None):
             if request.form['is_contract']: # @TODO add properly action when checkbox is checked
                 app.logger.warn("Var is_annex is not set: Creating contract is not yet implemented")
             else:
-                ac = AnnexCreator(school_id)
+                ac = AnnexCreator(school_id, cfg.current_program_id)
                 ac.create(request.form['contract_date'], request.form['validity_date'],
                            request.form['fruitVeg_products'], request.form['dairy_products'])
 

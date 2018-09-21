@@ -10,10 +10,11 @@ from setup import app
 class AnnexCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.annex_docx
 
-    def __init__(self, school_id):
+    def __init__(self, school_id, program_id):
+        self.program_id = program_id
         self.school = DatabaseManager.get_school(school_id)
         self.contract = DatabaseManager.get_contract(school_id)
-        self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id))
+        self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id, self.program_id ))
         self.contract_year = self.contract.contract_year
         self.contract_date = None
         self.validity_date = None
@@ -58,7 +59,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
     def update_row(self):
         annex = Contract(contract_no=self.contract_no, contract_year=self.contract_year, contract_date=self.contract_date,
                          validity_date=self.validity_date, fruitVeg_products=self.fruitVeg_products, dairy_products=self.dairy_products, is_annex=True,
-                         school_id=self.school.id, program_id=cfg.current_program_id)
+                         school_id=self.school.id, program_id=self.program_id)
         DatabaseManager.add_row(annex)
 
     def modify_row(self):

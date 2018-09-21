@@ -61,4 +61,8 @@ class Contract(db.Model):
     __table_args__ = {'extend_existing': True}
 
 
+class Week(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {'extend_existing': True}
+
 db.create_all()
