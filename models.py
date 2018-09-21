@@ -63,6 +63,72 @@ class Contract(db.Model):
 
 class Week(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    week_no = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+
+    program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
+    program = db.relationship('Program', backref=db.backref('weeks', lazy=True))
+
+    __table_args__ = {'extend_existing': True}
+
+
+class ProductType(enum.Enum):
+    FRUIT_VEG = 1
+    DAIRY = 2
+
+
+class ProductName(enum.Enum):
+    APPLE = 1
+    PEAR = 2
+    STRAWBERRY = 3
+    PLUM = 4
+    END_FRUITS = 10
+
+    CARROT = 11
+    RADISH = 12
+    PEPPER = 13
+    TOMATO = 14
+    KOHLRABI = 15
+    END_VEG = 20
+
+    MILK = 21
+    YOGHURT = 22
+    KEFIR = 23
+    CHEESE = 24
+    END_DIARY = 25
+
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Enum(ProductName), nullable=False)
+    type = db.Column(db.Enum(ProductType), nullable=False)
+    min_amount = db.Column(db.Integer, nullable=False)
+
+    program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
+    program = db.relationship('Program', backref=db.backref('week', lazy=True))
+
+    __table_args__ = {'extend_existing': True}
+
+
+class RecordState(enum.Enum):
+    NOT_DELIVERED = 1
+    DELIVERED = 2
+
+
+class Record(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False)
+    state = db.Column(db.Enum(RecordState), nullable=False)
+
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    product = db.relationship('Product',
+                             backref=db.backref('records', lazy=True))
+
+    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'), nullable=False)
+    contract = db.relationship('Contract',
+                             backref=db.backref('records', lazy=True, order_by='Contract.validity_date.desc()'))
+
     __table_args__ = {'extend_existing': True}
 
 db.create_all()
