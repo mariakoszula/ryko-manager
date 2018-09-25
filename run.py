@@ -1,10 +1,11 @@
 from flask import render_template, request, flash, redirect, url_for
 from setup import app, db
 from documentManager.AnnexCreator import AnnexCreator
+from documentManager.RecordCreator import RecordCreator
 import configuration as cfg
 from documentManager.DatabaseManager import DatabaseManager
 import datetime
-
+from werkzeug.datastructures import ImmutableMultiDict
 
 @app.route('/')
 def index():
@@ -78,9 +79,15 @@ def create_records_per_week(week_id):
 
             return render_template("create_records.html", **record_context)
         if request.form['record_selector']:
-            current_date = request.form['record_selector']
-            print(request.form)
-            #@TODO move this strftime to DateConverter function
+            record_data = request.form.to_dict(flat=False)
+            current_date = record_data.pop('record_selector')
+
+            for school_key, product_list in record_data.items():
+                school_id = RecordCreator.extract_school_id(school_key)
+                rc = RecordCreator(cfg.current_program_id, current_date, school_id)
+                for product_id in product_list:
+                    rc.create(product_id)
+
             return redirect(url_for('record_created', current_date=current_date))
 
     return render_template("create_records.html", **record_context)

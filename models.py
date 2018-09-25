@@ -96,6 +96,8 @@ class ProductName(enum.Enum):
 
 
 class Product(db.Model):
+    __table_args__ = {'extend_existing': True}
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Enum(ProductName), nullable=False)
     type = db.Column(db.Enum(ProductType), nullable=False)
@@ -103,8 +105,6 @@ class Product(db.Model):
 
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('week', lazy=True))
-
-    __table_args__ = {'extend_existing': True}
 
     #@TODO remove language dependency
     def get_name_mapping(self):
@@ -135,12 +135,21 @@ class Product(db.Model):
         if self.name == ProductName.CHEESE:
             return "ser twarogowy"
 
+    def get_record_title_mapping(self):
+        if self.type == ProductType.DAIRY:
+            return "Mleko i przetwory mleczne"
+        if self.type == ProductType.FRUIT_VEG:
+            return "Warzywa i owoce "
+
+
 class RecordState(enum.Enum):
     NOT_DELIVERED = 1
     DELIVERED = 2
 
 
 class Record(db.Model):
+    __table_args__ = {'extend_existing': True}
+
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
     state = db.Column(db.Enum(RecordState), nullable=False, default=RecordState.NOT_DELIVERED)
@@ -153,6 +162,7 @@ class Record(db.Model):
     contract = db.relationship('Contract',
                              backref=db.backref('records', lazy=True, order_by='Contract.validity_date.desc()'))
 
-    __table_args__ = {'extend_existing': True}
+    db.UniqueConstraint('date', 'Product.type', 'Contract.program_id', 'Contract.school_id')
+
 
 db.create_all()

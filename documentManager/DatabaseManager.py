@@ -88,6 +88,10 @@ class DatabaseManager(ABC):
         pass
 
     @staticmethod
+    def get_product(program_id, product_id):
+        return Product.query.filter(Program.id.like(program_id)).filter(Product.id.like(product_id)).first()
+
+    @staticmethod
     def add_row(models=None):
         if not isinstance(models, list):
             model = models

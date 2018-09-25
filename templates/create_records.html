@@ -56,7 +56,7 @@
                                                         <label>{{ school.nick }}</label>
                                                         <select name="records_schoolId_{{ school.id }}" class="form-control">
                                                             {% for fruitVeg in products_veg %}
-                                                            <option name="records_schoolId_{{ school.id }})" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
+                                                            <option name="records_schoolId_{{ school.id }}" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
                                                             {% endfor %}
                                                         </select>
                                                         <select name="records_schoolId_{{ school.id }}" class="form-control">
