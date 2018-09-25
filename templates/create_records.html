@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Przygotuj WZ{% endblock %}
+
+{% block content %}
+      <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            {% if not current_week %}
+                            <label>Wybierz tydzień:</label>
+                                 {% for week in Weeks %}
+                                    <a href = "{{ url_for( 'create_records_per_week', week_id=week.id) }}">
+                                        <option>Tydzień {{ week.week_no }}</option></a>
+                                {% endfor %}
+                            {% else %}
+                            <label>Tydzień: {{ current_week.week_no }}</label>
+                            {% endif %}
+                        </div>
+                        <div class="panel-body">
+                                <div class="row">
+                                        {% if current_week %}
+
+                                            {% set start_date = current_week.start_date.date() %}
+                                            {% for i in range(0, 5) %}
+                                            <div class="col-lg-2">
+                                               <div class="panel panel-info">
+                                                    <div class="panel-heading">
+                                                        {% set current_date = start_date + datetime.timedelta(days=loop.index-1) %}
+                                                        Dzień {{ current_date }}
+                                                    </div>
+                                                       {% if current_date.strftime('%Y-%m-%d') in selected_schools_product_view.keys()%}
+                                                       {% set product_view = True %}
+                                                       {% endif %}
+
+                                                      {% if not product_view %}
+                                                       <form role="form" action="" method="post">
+                                                       <input type="hidden" name="school_selector" value="{{ current_date }}"/>
+                                                           <div class="form-group">
+                                                                <div class="panel-body">
+                                                                    <select name="schools_{{ current_date }}" multiple class="form-control" size="25">
+                                                                        {% for school in schools_with_contracts %}
+                                                                        <option name="schools_{{ current_date }}" value="{{school.id}}">{{ school.nick }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                               <div class="panel-footer">
+                                                                <button type="submit" class="btn btn-default">Wybierz</button>
+                                                                <button type="reset" class="btn btn-default">Wyczyść</button>
+                                                                </div>
+                                                            </div>
+                                                       </form>
+                                                   {% else %}
+                                                   <form role="form" action="" method="post">
+                                                       <input type="hidden" name="record_selector" value="{{ current_date }}"/>
+                                                        {% for school in selected_schools_product_view[current_date.strftime('%Y-%m-%d')] %}
+                                                        <label>{{ school.nick }}</label>
+                                                        <select name="records_schoolId_{{ school.id }}" class="form-control">
+                                                            {% for fruitVeg in products_veg %}
+                                                            <option name="records_schoolId_{{ school.id }})" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <select name="records_schoolId_{{ school.id }}" class="form-control">
+                                                            {% for dairy in products_dairy %}
+                                                            <option name="records_schoolId_{{ school.id }}" value="{{ dairy.id }}">{{ dairy.get_name_mapping() }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        {% endfor %}
+                                                        <div class="panel-footer">
+                                                            <button type="submit" class="btn btn-default">Generuj</button>
+                                                        </div>
+                                                   </form>
+                                                   {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                </div>
+                        </div>
+                    </div>
+      </div>
+{% endblock %}

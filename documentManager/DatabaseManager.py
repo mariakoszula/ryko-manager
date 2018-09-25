@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from models import School, Contract, Program
+from models import School, Contract, Program, Week, Product, ProductType
 from setup import db, app
 import datetime
 
@@ -47,6 +47,10 @@ class DatabaseManager(ABC):
             Program.id.like(program_id)).all()
 
     @staticmethod
+    def get_school(school_id):
+        return db.session.query(School).filter(School.id.like(school_id)).first()
+
+    @staticmethod
     def get_all_schools():
         return School.query.all()
 
@@ -62,6 +66,26 @@ class DatabaseManager(ABC):
             if contract.program_id == program_id and contract.validity_date.date() <= now.date():
                 return contract
         return None
+
+    @staticmethod
+    def get_weeks(program_id):
+        return Week.query.filter(Program.id == program_id).all()
+
+    @staticmethod
+    def get_week(week_id, program_id):
+        return Week.query.filter(Program.id == program_id).filter(Week.id == week_id).first()
+
+    @staticmethod
+    def get_fruitVeg_products(program_id):
+        return Product.query.filter(Program.id.like(program_id)).filter(Product.type.like(ProductType.FRUIT_VEG)).all()
+
+    @staticmethod
+    def get_dairy_products(program_id):
+        return Product.query.filter(Program.id.like(program_id)).filter(Product.type.like(ProductType.DAIRY)).all()
+
+    @staticmethod
+    def get_daily_records(program_id, date):
+        pass
 
     @staticmethod
     def add_row(models=None):

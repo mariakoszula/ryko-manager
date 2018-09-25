@@ -65,6 +65,7 @@ class Week(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('weeks', lazy=True))
 
+    db.UniqueConstraint('week_no', 'program_id')
     __table_args__ = {'extend_existing': True}
 
 
@@ -105,6 +106,34 @@ class Product(db.Model):
 
     __table_args__ = {'extend_existing': True}
 
+    #@TODO remove language dependency
+    def get_name_mapping(self):
+        if self.name == ProductName.APPLE:
+            return "jabłko"
+        if self.name == ProductName.PEAR:
+            return "gruszka"
+        if self.name == ProductName.PLUM:
+            return "śliwka"
+        if self.name == ProductName.STRAWBERRY:
+            return "truskawka"
+        if self.name == ProductName.CARROT:
+            return "marchew"
+        if self.name == ProductName.RADISH:
+            return "rzodkiewka"
+        if self.name == ProductName.PEPPER:
+            return "papryka"
+        if self.name == ProductName.TOMATO:
+            return "pomidor"
+        if self.name == ProductName.KOHLRABI:
+            return "kalarepa"
+        if self.name == ProductName.MILK:
+            return "mleko"
+        if self.name == ProductName.YOGHURT:
+            return "jogurt"
+        if self.name == ProductName.KEFIR:
+            return "kefir"
+        if self.name == ProductName.CHEESE:
+            return "ser twarogowy"
 
 class RecordState(enum.Enum):
     NOT_DELIVERED = 1

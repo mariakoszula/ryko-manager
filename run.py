@@ -3,6 +3,8 @@ from setup import app, db
 from documentManager.AnnexCreator import AnnexCreator
 import configuration as cfg
 from documentManager.DatabaseManager import DatabaseManager
+import datetime
+
 
 @app.route('/')
 def index():
@@ -39,6 +41,55 @@ def school_form_add_annex(school_id=None):
 
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=None)
+
+
+@app.route('/create_records')
+def create_records():
+    weeks = DatabaseManager.get_weeks(cfg.current_program_id)
+    return render_template("create_records.html", Weeks=weeks, week=None, Schools=None)
+
+
+selected_schools_product_view = dict()
+
+
+@app.route('/create_records/<int:week_id>', methods=['GET', 'POST'])
+def create_records_per_week(week_id):
+    record_context = {
+        'schools_with_contracts': DatabaseManager.get_all_schools_with_contract(cfg.current_program_id),
+        'products_dairy': DatabaseManager.get_dairy_products(cfg.current_program_id),
+        'products_veg': DatabaseManager.get_fruitVeg_products(cfg.current_program_id),
+        'current_week': DatabaseManager.get_week(week_id, cfg.current_program_id),
+        'datetime': datetime,
+        'weeks': DatabaseManager.get_weeks(cfg.current_program_id),
+        'selected_schools_product_view': selected_schools_product_view
+    }
+    if request.method == 'POST':
+        #@TODO clean code: this is showing the school slector
+        current_date = request.form.get('school_selector', None)
+        if current_date and current_date not in record_context['selected_schools_product_view'].keys():
+            record_context['selected_schools_product_view'][current_date] = list()
+            school_list_req = request.form.getlist('schools_'+current_date)
+            if school_list_req:
+                for school_id in school_list_req:
+                    school = DatabaseManager.get_school(school_id)
+                    record_context['selected_schools_product_view'][current_date].append(school)
+
+            selected_schools_product_view.update(record_context['selected_schools_product_view'])
+
+            return render_template("create_records.html", **record_context)
+        if request.form['record_selector']:
+            current_date = request.form['record_selector']
+            print(request.form)
+            #@TODO move this strftime to DateConverter function
+            return redirect(url_for('record_created', current_date=current_date))
+
+    return render_template("create_records.html", **record_context)
+
+
+@app.route('/create_records/<string:current_date>')
+def record_created(current_date):
+    daily_records = DatabaseManager.get_daily_records(cfg.current_program_id, current_date)
+    return render_template("generated_record.html", daily_records=daily_records, current_date=current_date)
 
 
 if __name__ == "__main__":
