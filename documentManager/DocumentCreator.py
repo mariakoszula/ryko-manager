@@ -11,10 +11,9 @@ class DocumentCreator(ABC):
     def __init__(self, template_document, output_directory):
         if not path.exists(template_document):
             setup.app.logger.error("[%s] template document: %s does not exists", __class__.__name__, template_document)
-        self.document = MailMerge(template_document)
+        self.document = DocumentCreator.start_doc_gen(template_document, output_directory)
         self.fields_to_merge = self.document.get_merge_fields()
         setup.app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
-        DocumentCreator.create_directory(output_directory)
 
         self.template_document = template_document
         self.output_directory = output_directory
@@ -23,8 +22,7 @@ class DocumentCreator(ABC):
     @abstractmethod
     def generate(self, new_doc_name):
         generated_file = path.join(self.output_directory, new_doc_name)
-        self.document.write(generated_file)
-        DocumentCreator.generate_pdf(generated_file, self.output_directory)
+        DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory)
 
     def generate_many(self):
         pass
@@ -46,6 +44,16 @@ class DocumentCreator(ABC):
         if not path.exists(output_directory):
             makedirs(output_directory)
             setup.app.logger.info("[%s] Created new output directory: %s", __class__.__name__, output_directory)
+
+    @staticmethod
+    def start_doc_gen(doc_template, output_dir):
+        DocumentCreator.create_directory(output_dir)
+        return MailMerge(doc_template)
+
+    @staticmethod
+    def end_doc_gen(document, generated_file, output_dir):
+        document.write(generated_file)
+        DocumentCreator.generate_pdf(generated_file, output_dir)
 
     @abstractmethod
     def create(self):

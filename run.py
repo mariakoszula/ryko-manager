@@ -82,12 +82,14 @@ def create_records_per_week(week_id):
             record_data = request.form.to_dict(flat=False)
             current_date = record_data.pop('record_selector')
 
+            record_list = list()
             for school_key, product_list in record_data.items():
                 school_id = RecordCreator.extract_school_id(school_key)
-                rc = RecordCreator(cfg.current_program_id, current_date, school_id)
                 for product_id in product_list:
-                    rc.create(product_id)
-
+                    rc = RecordCreator(cfg.current_program_id, current_date, school_id, product_id)
+                    rc.create()
+                    record_list.append(rc)
+            RecordCreator.generate_many(current_date, record_list)
             return redirect(url_for('record_created', current_date=current_date))
 
     return render_template("create_records.html", **record_context)

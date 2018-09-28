@@ -20,7 +20,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.validity_date = None
         self.fruitVeg_products = None
         self.dairy_products = None
-        output_directory = path.join(cfg.output_dir_main, self.school.nick, cfg.annex_folder_name)
+        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.annex_folder_name)
         DocumentCreator.__init__(self, AnnexCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 

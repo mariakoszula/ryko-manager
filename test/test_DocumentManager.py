@@ -4,6 +4,7 @@ from documentManager.RecordCreator import RecordCreator
 from os import path
 from documentManager.DatabaseManager import DatabaseManager
 from models import Contract, ProductName
+import configuration as cfg
 
 class DB(object):
     pass
@@ -44,13 +45,32 @@ def test_extract_school_id():
     assert(RecordCreator.extract_school_id("records_schoolId_234") == 234)
 
 
-def test_record_creator():
-    rc = RecordCreator(1, '2018-09-17', 1)
-    rc.create(1)
-    assert(rc._get_kids_no() == 400)
-    rc.create(10)
-    assert(rc._get_kids_no() == 422)
+# def test_record_creator():
+#     rc = RecordCreator(1, '2018-09-17', 1)
+#     rc.create(1)
+#     assert(rc._get_kids_no() == 400)
+#     rc.create(10)
+#     assert(rc._get_kids_no() == 422)
+#     rc.generate()
+#     assert(path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\szkoly\\SP 17\\WZ\\WZ_2018-09-17_gruszka.docx"))
+#     assert (path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\szkoly\\SP 22\\WZ\\WZ_2018-09-17_jabłko.docx"))
+#
+#     rc.update_row()
 
 
 def test_get_product():
     assert(DatabaseManager.get_product(1, 1).name == ProductName.APPLE)
+
+
+def test_generate_many_record():
+    rc = RecordCreator(1, '2018-09-17', 1, 1)
+    rc2 = RecordCreator(1, '2018-09-17', 1, 10)
+    rc3 = RecordCreator(1, '2018-09-17', 2, 2)
+    rc4 = RecordCreator(1, '2018-09-17', 2, 11)
+    rc.create()
+    rc2.create()
+    rc3.create()
+    rc4.create()
+    RecordCreator.generate_many('2018-09-17', [rc, rc2, rc3, rc4])
+    assert (path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\WZ\\2018-09-17.docx"))
+
