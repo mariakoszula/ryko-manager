@@ -45,17 +45,14 @@ def test_extract_school_id():
     assert(RecordCreator.extract_school_id("records_schoolId_234") == 234)
 
 
-# def test_record_creator():
-#     rc = RecordCreator(1, '2018-09-17', 1)
-#     rc.create(1)
-#     assert(rc._get_kids_no() == 400)
-#     rc.create(10)
-#     assert(rc._get_kids_no() == 422)
-#     rc.generate()
-#     assert(path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\szkoly\\SP 17\\WZ\\WZ_2018-09-17_gruszka.docx"))
-#     assert (path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\szkoly\\SP 22\\WZ\\WZ_2018-09-17_jabłko.docx"))
-#
-#     rc.update_row()
+def test_record_creator():
+    rc = RecordCreator(1, '2018-09-17', 1, 1)
+    rc.create()
+    assert(rc._get_kids_no() == 400)
+    rc_m = RecordCreator(1, '2018-09-17', 1, 10)
+    rc_m.create()
+    assert(rc_m._get_kids_no() == 422)
+    assert (path.exists("C:\\ryko-manager\\kowr_doc\\program_2018_2019_sem1\\szkoly\\SP 22\\WZ\\WZ_2018-09-17_jabłko.docx"))
 
 
 def test_get_product():

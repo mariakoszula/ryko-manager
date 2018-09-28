@@ -27,8 +27,8 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
                         __class__.__name__, self.date, self.contract.school.nick, self.product.name)
         self._prepare_data_for_doc()
-        # self.generate()
-        # self.update_row()
+        self.generate()
+        self.update_row()
 
     def generate(self):
         self.document.merge(
@@ -50,11 +50,12 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def generate_many(date, records_to_merge):
         out_dir = path.join(cfg.output_dir_main, cfg.record_folder_name)
         doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
-        out_doc = path.join(out_dir, "{}.docx".format(RecordCreator.str_from_date(date)))
         if not isinstance(date, datetime.datetime):
             date = RecordCreator.date_from_str(date)
+        out_doc = path.join(out_dir, "{}.docx".format(RecordCreator.str_from_date(date)))
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
+
         doc.merge_pages(records_to_merge_list)
 
         app.logger.info("[%s] Created merge docx of records in dir: [%s]", RecordCreator.__qualname__, out_doc)
