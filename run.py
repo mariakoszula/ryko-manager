@@ -50,13 +50,15 @@ def create_records():
     return render_template("create_records.html", Weeks=weeks, week=None, Schools=None)
 
 
-selected_schools_product_view = dict()
-
-
 @app.route('/create_records/<int:week_id>', methods=['GET', 'POST'])
 def create_records_per_week(week_id):
+    selected_schools_product_view = dict()
+    schools = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id) # schools which don't have record for this day
+    weekly_product = list()
+    for school in schools:
+        weekly_product.append(DatabaseManager.get_product_no(school.contracts[0].id, week_no=1))
     record_context = {
-        'schools_with_contracts': DatabaseManager.get_all_schools_with_contract(cfg.current_program_id),
+        'schools_with_contracts': schools,
         'products_dairy': DatabaseManager.get_dairy_products(cfg.current_program_id),
         'products_veg': DatabaseManager.get_fruitVeg_products(cfg.current_program_id),
         'current_week': DatabaseManager.get_week(week_id, cfg.current_program_id),
@@ -76,29 +78,44 @@ def create_records_per_week(week_id):
                     record_context['selected_schools_product_view'][current_date].append(school)
 
             selected_schools_product_view.update(record_context['selected_schools_product_view'])
-
             return render_template("create_records.html", **record_context)
+
         if request.form['record_selector']:
             record_data = request.form.to_dict(flat=False)
-            current_date = record_data.pop('record_selector')
-
+            current_date = record_data.pop('record_selector')[0]
             record_list = list()
             for school_key, product_list in record_data.items():
                 school_id = RecordCreator.extract_school_id(school_key)
                 for product_id in product_list:
-                    rc = RecordCreator(cfg.current_program_id, current_date, school_id, product_id)
-                    rc.create()
-                    record_list.append(rc)
+                    if product_id != "":
+                        rc = RecordCreator(cfg.current_program_id, current_date, school_id, product_id)
+                        rc.create()
+                        record_list.append(rc)
+                    else:
+                        #@TODO warning msg display pop up
+                        app.logger.warn("[$s] Product_id was not set for school_id: %s", "create_records_per_week", school_id)
             RecordCreator.generate_many(current_date, record_list)
-            return redirect(url_for('record_created', current_date=current_date))
+            return redirect(url_for('record_created', current_date=current_date, week_id=week_id))
 
     return render_template("create_records.html", **record_context)
 
 
-@app.route('/create_records/<string:current_date>')
-def record_created(current_date):
-    daily_records = DatabaseManager.get_daily_records(cfg.current_program_id, current_date)
-    return render_template("generated_record.html", daily_records=daily_records, current_date=current_date)
+@app.route('/create_records/<int:week_id>/<string:current_date>', methods=['GET', 'POST'])
+def record_created(current_date, week_id):
+    daily_records = DatabaseManager.get_daily_records(current_date)
+    if request.method == 'POST':
+        if request.form['update']:
+            DatabaseManager.get_record(request.form['update']).set_to_delivered()
+    return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)
+
+
+@app.context_processor
+def my_utility_processor():
+
+    def update_record_state(record=None):
+        if record:
+            print(record.id)
+    return dict(update_state=update_record_state)
 
 
 if __name__ == "__main__":

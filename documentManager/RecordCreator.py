@@ -13,7 +13,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
     def __init__(self, program_id, date, school_id, product_id):
         self.program_id = program_id
-        self.date = RecordCreator.date_from_str(date)
+        self.date = DatabaseManager.date_from_str(date)
         self.state = RecordState.NOT_DELIVERED
         self.contract = DatabaseManager.get_current_contract(school_id, self.program_id)
         self.product = DatabaseManager.get_product(self.program_id, product_id)
@@ -43,7 +43,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
             product_name=self.doc_data['product_name'],
             record_title=self.doc_data['record_title']
         )
-        DocumentCreator.generate(self, "WZ_{0}_{1}.docx".format(RecordCreator.str_from_date(self.date),
+        DocumentCreator.generate(self, "WZ_{0}_{1}.docx".format(DatabaseManager.str_from_date(self.date),
                                                                 self.product.get_name_mapping()))
 
     @staticmethod
@@ -51,8 +51,8 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         out_dir = path.join(cfg.output_dir_main, cfg.record_folder_name)
         doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
         if not isinstance(date, datetime.datetime):
-            date = RecordCreator.date_from_str(date)
-        out_doc = path.join(out_dir, "{}.docx".format(RecordCreator.str_from_date(date)))
+            date = DatabaseManager.date_from_str(date)
+        out_doc = path.join(out_dir, "{}.docx".format(DatabaseManager.str_from_date(date)))
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
 
@@ -63,7 +63,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
     def _prepare_data_for_doc(self):
         self.doc_data['city'] = self.contract.school.city
-        self.doc_data['current_date'] = self.date.strftime("%d.%m.%Y")
+        self.doc_data['current_date'] = DatabaseManager.str_from_date(self.date)
         self.doc_data['name'] = self.contract.school.name
         self.doc_data['address'] = self.contract.school.address
         self.doc_data['nip'] = self.contract.school.nip
@@ -85,20 +85,9 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
         return kids_no if kids_no else 0
 
-    @staticmethod
-    def date_from_str(date, pattern=None):
-        pattern_used = '%Y-%m-%d' if not pattern else pattern
-        return datetime.datetime.strptime(date, pattern_used)
-
-    @staticmethod
-    def str_from_date(date, pattern=None):
-        #@TODO check if given strig has this pattern
-        pattern_used = '%Y-%m-%d' if not pattern else pattern
-        return datetime.datetime.strftime(date, pattern_used)
-
     def update_row(self):
         record = Record(date=self.date, state=RecordState.NOT_DELIVERED, product_id=self.product.id,
-                        contract_id=self.contract.id)
+                        contract_id=self.contract.id, week_id=DatabaseManager.get_week_by_date(self.date).id)
         DatabaseManager.add_row(record)
 
     def modify_row(self):

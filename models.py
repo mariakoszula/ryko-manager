@@ -35,7 +35,7 @@ class Program(db.Model):
     dairy_amount = db.Column(db.Integer)
     fruitVeg_amount = db.Column(db.Integer)
     db.UniqueConstraint('school_year', 'semester_no')
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {'extend_existing': True, }
 
 
 class Contract(db.Model):
@@ -141,6 +141,12 @@ class Product(db.Model):
         if self.type == ProductType.FRUIT_VEG:
             return "Warzywa i owoce "
 
+    def get_type_mapping(self):
+        if self.type == ProductType.DAIRY:
+            return "nb"
+        if self.type == ProductType.FRUIT_VEG:
+            return "wo"
+
 
 class RecordState(enum.Enum):
     NOT_DELIVERED = 1
@@ -162,7 +168,16 @@ class Record(db.Model):
     contract = db.relationship('Contract',
                              backref=db.backref('records', lazy=True, order_by='Contract.validity_date.desc()'))
 
-    db.UniqueConstraint('date', 'Product.type', 'Contract.program_id', 'Contract.school_id')
+    week_id = db.Column(db.Integer, db.ForeignKey('week.id'), nullable=False)
+    week = db.relationship('Week',
+                             backref=db.backref('records', lazy=True))
 
+    __table_args__ = (
+        db.UniqueConstraint('date', 'product_id', 'contract_id'),
+        )
+
+    def set_to_delivered(self):
+        self.state = RecordState.DELIVERED
+        db.session.commit()
 
 db.create_all()

@@ -44,8 +44,9 @@
                                                                     </select>
                                                                 </div>
                                                                <div class="panel-footer">
-                                                                <button type="submit" class="btn btn-default">Wybierz</button>
-                                                                <button type="reset" class="btn btn-default">Wyczyść</button>
+                                                                <button type="submit" class="btn btn-outline btn-primary btn-block">Wybierz</button>
+                                                                <button type="reset" class="btn btn-outline btn-warning btn-block">Wyczyść</button>
+                                                                <a href="{{ url_for( 'record_created', current_date=current_date, week_id=current_week.id) }}" class="btn  btn-outline btn-success btn-block">Pokaż WZ</a>
                                                                 </div>
                                                             </div>
                                                        </form>
@@ -55,18 +56,22 @@
                                                         {% for school in selected_schools_product_view[current_date.strftime('%Y-%m-%d')] %}
                                                         <label>{{ school.nick }}</label>
                                                         <select name="records_schoolId_{{ school.id }}" class="form-control">
+                                                            <option name="records_schoolId_{{ school.id }}" value=""></option>
                                                             {% for fruitVeg in products_veg %}
                                                             <option name="records_schoolId_{{ school.id }}" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
                                                             {% endfor %}
                                                         </select>
                                                         <select name="records_schoolId_{{ school.id }}" class="form-control">
+                                                            <option name="records_schoolId_{{ school.id }}" value=""></option>
                                                             {% for dairy in products_dairy %}
                                                             <option name="records_schoolId_{{ school.id }}" value="{{ dairy.id }}">{{ dairy.get_name_mapping() }}</option>
                                                             {% endfor %}
                                                         </select>
                                                         {% endfor %}
                                                         <div class="panel-footer">
-                                                            <button type="submit" class="btn btn-default">Generuj</button>
+                                                            <button type="submit" class="btn btn-outline btn-primary btn-block">Generuj</button>
+                                                           <a href="{{ url_for( 'record_created', current_date=current_date, week_id=current_week.id) }}" class="btn  btn-outline btn-success btn-block">Pokaż WZ</a>
+                                                            <a href="{{ url_for( 'create_records_per_week', week_id=current_week.id) }}" class="btn btn-outline btn-default btn-block">Powrót</a>
                                                         </div>
                                                    </form>
                                                    {% endif %}
@@ -74,7 +79,37 @@
                                             </div>
                                             {% endfor %}
                                         {% endif %}
+
                                 </div>
+                            {% if current_week %}
+                                     <div class="col-lg-3">
+                                         <div class="panel panel-info">
+                                                    <div class="panel-heading">Podsumowanie</div>
+                                                    <div class="panel-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>SP</th>
+                                                                        <th>WO</th>
+                                                                        <th>NB</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                {% for school in schools_with_contracts %}
+                                                                    <tr class="danger">
+                                                                        <td>{{ school.nick }}</td>
+                                                                        <td>school.veg_fruit_per_week</td>
+                                                                        <td>school.diary_per_week</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                         </div>
+                                     </div>
+                                    {% endif %}
                         </div>
                     </div>
       </div>

@@ -41,7 +41,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.document.merge(
             city=self.school.city,
             current_date=self.contract_date.strftime("%d.%m.%Y"),
-            contract_no=str(self.contract_no),
+            contract_no=str(self.contract_no.split("_")[0]),
             contract_year=str(self.contract_year),
             semester_no=DatabaseManager.get_current_sem(),
             school_year=DatabaseManager.get_school_year(),
