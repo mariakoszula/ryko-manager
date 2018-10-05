@@ -104,8 +104,21 @@ def create_records_per_week(week_id):
 def record_created(current_date, week_id):
     daily_records = DatabaseManager.get_daily_records(current_date)
     if request.method == 'POST':
-        if request.form['update']:
-            DatabaseManager.get_record(request.form['update']).set_to_delivered()
+        if request.form['action']:
+            action_record_list = request.form['action'].split("_")
+            action = action_record_list[0]
+            record_id = action_record_list[1]
+            if action == "update":
+                DatabaseManager.get_record(record_id).set_to_delivered()
+                app.logger.info("Update state to Delivered Record.id %s", record_id)
+            if action == "modify":
+                pass
+            if action == "update_product":
+                pass
+            if action == "delete":
+                DatabaseManager.remove_record(record_id)
+                app.logger.info("Remove: Record.id %s", record_id)
+        return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
     return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)
 
 

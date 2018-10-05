@@ -6,7 +6,7 @@
                         <div class="panel-body">
                             <table width="100%" class="table table-bordered table-hover" id="divided-table-with-search">
                                 <thead>
-                                    <tr>
+                                <tr>
                                         <th>Szkoła</th>
                                         <th>Product</th>
                                         <th>Typ</th>
@@ -17,27 +17,31 @@
                                 <tbody>
                                 {% if daily_records %}
                                     {% for record in daily_records %}
-                                        <tr>
+                                        {% if record.state|string() == 'RecordState.DELIVERED' %}
+                                            <tr class="success">
+                                        {% else %}
+                                            <tr class="warning">
+                                        {% endif %}
                                             <td>{{ record.contract.school.nick }}</td>
                                             <td>{{ record.product.get_name_mapping() }}</td>
                                             <td>{{ record.product.get_type_mapping() }}</td>
                                             {% if record.product.get_type_mapping() == "wo" %}
-                                            <td>{{ record.contract.dairy_products }}</td>
+                                                <td>{{ record.contract.fruitVeg_products }}</td>
                                             {% endif %}
                                             {% if record.product.get_type_mapping() == "nb" %}
-                                            <td>{{ record.contract.fruitVeg_products }}</td>
+                                                <td>{{ record.contract.dairy_products }}</td>
                                             {% endif %}
                                             <td>
-                                                {%if record.state|string() == 'RecordState.NOT_DELIVERED' %}
+                                                {% if record.state|string() == 'RecordState.NOT_DELIVERED' %}
                                                 <form role="form" action="" method="post">
-                                                    <button type="submit" name="update" value="{{ record.id }}" class="btn btn-info btn-circle"><i class="fa fa-check"></i>                   </button>
-                                                    <button type="submit" name="modify" value="{{ record.id }}" class="btn btn-primary btn-circle"><i class="fa fa-list"></i></button>
-                                                    <button type="submit" name="delete" value="{{ record.id }}" class="btn btn-warning btn-circle"><i class="fa fa-times"></i></button>
+                                                    <button type="submit" name="action" value="update_{{ record.id }}" class="btn btn-info btn-circle"><i class="fa fa-check"></i></button>
+                                                    <button type="submit" name="action" value="modify_{{ record.id }}" class="btn btn-primary btn-circle"><i class="fa fa-list"></i></button>
+                                                    <button type="submit" name="action" value="delete_{{ record.id }}" class="btn btn-warning btn-circle"><i class="fa fa-times"></i></button>
                                                 </form>
                                                 {% endif %}
                                             </td>
                                         </tr>
-                                        {% endfor %}
+                                    {% endfor %}
                                 {% endif %}
                             </table>
                             <!-- /.table-responsive -->

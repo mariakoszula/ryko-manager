@@ -124,6 +124,11 @@ class DatabaseManager(ABC):
         return Record.query.filter(Record.id.like(id)).one()
 
     @staticmethod
+    def remove_record(id):
+        Record.query.filter(Record.id == id).delete()
+        db.session.commit()
+
+    @staticmethod
     def add_row(models=None):
         if not isinstance(models, list):
             model = models

@@ -180,4 +180,15 @@ class Record(db.Model):
         self.state = RecordState.DELIVERED
         db.session.commit()
 
+    def update_product(self, product_id):
+        self.product_id = product_id
+        db.session.commit()
+
+    def is_dairy(self):
+        return self.product.type == ProductType.DAIRY
+
+    def is_fruitVeg(self):
+        return self.product.type == ProductType.FRUIT_VEG
+
+
 db.create_all()
