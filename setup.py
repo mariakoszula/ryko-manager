@@ -1,16 +1,14 @@
-from flask import Flask
-import logging
-import logging.handlers
-from flask_sqlalchemy import SQLAlchemy
-import configuration as cfg
+from setuptools import setup, find_packages
 
-app = Flask(__name__)
-app.secret_key = 'vDMWkzeO1d'
-handler = logging.handlers.RotatingFileHandler('ryko-manager.log', maxBytes=10*1024*1024, backupCount=1)
-handler.setLevel(logging.INFO)
+setup(
+    name='rykomanager',
+    version='1.2',
+    packages=find_packages(),
+    include_package_data=True,
+    install_requires=[
+        'flask',
+        'flask_sqlalchemy',
+        'docx-mailmerge',
 
-app.logger.addHandler(handler)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = cfg.database_location
-db = SQLAlchemy(app)
-
+    ],
+)
