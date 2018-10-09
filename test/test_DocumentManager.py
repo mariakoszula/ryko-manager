@@ -6,12 +6,15 @@ from documentManager.DatabaseManager import DatabaseManager
 from models import Contract, ProductName
 import configuration as cfg
 
+
 class DB(object):
     pass
+
 
 @pytest.fixture(scope="session")
 def db():
     assert 0, db
+
 
 def test_pdf_is_properly_created():
     DocumentCreator.generate_pdf('C:\\ryko-manager\\test\\helper_files\\aneks_test.docx', 'C:\\ryko-manager\\test\\helper_files')
