@@ -77,11 +77,11 @@ class DatabaseManager(ABC):
         return Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
 
     @staticmethod
-    def get_current_contract(school_id, program_id):
-        now = datetime.datetime.now()
+    def get_current_contract(school_id, program_id, date=None):
+        date_to_compare = DatabaseManager.date_from_str(date) if date else datetime.datetime.now()
         res = School.query.filter(School.id.like(school_id)).first()
         for contract in res.contracts:
-            if contract.program_id == program_id and contract.validity_date.date() <= now.date():
+            if contract.program_id == program_id and contract.validity_date.date() <= date_to_compare.date():
                 return contract
         return None
 

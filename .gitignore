@@ -9,3 +9,6 @@ managerVenv/
 dist/
 build/
 *.egg-info/
+
+ryko-manager.log
+program_2018_2019_sem1/
