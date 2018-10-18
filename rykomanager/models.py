@@ -39,6 +39,7 @@ class Program(db.Model):
 
 
 class Contract(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     contract_no = db.Column(db.String(80), nullable=False)
     contract_year = db.Column(db.Integer, nullable=False)
@@ -53,7 +54,10 @@ class Contract(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
-    __table_args__ = {'extend_existing': True}
+
+    __table_args__ = (
+        db.UniqueConstraint('validity_date', 'school_id'),
+        )
 
 
 class Week(db.Model):

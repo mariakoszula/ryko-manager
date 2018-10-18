@@ -16,7 +16,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         self.program_id = program_id
         self.date = DatabaseManager.date_from_str(date)
         self.state = RecordState.NOT_DELIVERED
-        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id)
+        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, date)
         self.product = DatabaseManager.get_product(self.program_id, product_id)
         self.doc_data = dict()
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school,

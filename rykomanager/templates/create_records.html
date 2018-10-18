@@ -17,7 +17,7 @@
                             {% endif %}
                         </div>
                         <div class="panel-body">
-                                <div class="row">
+                            <div class="row">
                                         {% if current_week %}
 
                                             {% set start_date = current_week.start_date.date() %}
@@ -82,6 +82,7 @@
 
                                 </div>
                             {% if current_week %}
+                                <div class="row">
                                      <div class="col-lg-3">
                                          <div class="panel panel-info">
                                                     <div class="panel-heading">Podsumowanie</div>
@@ -96,11 +97,19 @@
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                {% for school in schools_with_contracts %}
-                                                                    <tr class="danger">
-                                                                        <td>{{ school.nick }}</td>
-                                                                        <td>school.veg_fruit_per_week</td>
-                                                                        <td>school.diary_per_week</td>
+                                                                {% for school_in_week in weekly_product %}
+                                                                    <tr>
+                                                                        <td>{{ school_in_week[0].nick }}</td>
+                                                                                {% if school_in_week[1].get_type_mapping() == "wo" %}
+                                                                                    <td>{{ school_in_week[2] }}</td>
+                                                                                {% else %}
+                                                                                    <td>0</td>
+                                                                                {% endif %}
+                                                                                {% if school_in_week[1].get_type_mapping() == "nb" %}
+                                                                                     <td>{{ school_in_week[2] }}</td>
+                                                                                {% else %}
+                                                                                     <td>0</td>
+                                                                                {% endif %}
                                                                     </tr>
                                                                 {% endfor %}
                                                                 </tbody>
@@ -111,6 +120,7 @@
                                      </div>
                                     {% endif %}
                         </div>
+                                </div>
                     </div>
       </div>
 {% endblock %}

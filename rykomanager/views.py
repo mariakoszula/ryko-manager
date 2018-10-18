@@ -54,11 +54,11 @@ def create_records():
 def create_records_per_week(week_id):
     selected_schools_product_view = dict()
     schools = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id) # schools which don't have record for this day
-    weekly_product = list()
-    for school in schools:
-        weekly_product.append(DatabaseManager.get_product_no(school.contracts[0].id, week_no=1))
+    weeks = DatabaseManager.get_product_no(week_no=1)
+    print(weeks)
     record_context = {
         'schools_with_contracts': schools,
+        'weekly_product': DatabaseManager.get_product_no(week_no=1),
         'products_dairy': DatabaseManager.get_dairy_products(cfg.current_program_id),
         'products_veg': DatabaseManager.get_fruitVeg_products(cfg.current_program_id),
         'current_week': DatabaseManager.get_week(week_id, cfg.current_program_id),

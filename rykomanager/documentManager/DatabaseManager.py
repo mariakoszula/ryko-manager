@@ -3,6 +3,7 @@ from rykomanager import db, app
 from abc import ABC, abstractmethod
 import datetime
 import re
+from sqlalchemy import func, and_
 
 
 class DatabaseManager(ABC):
@@ -51,13 +52,20 @@ class DatabaseManager(ABC):
         return "2018/2019"  #@TODO fill with sql query
 
     @staticmethod
+    def is_annex(validity_date, school_id):
+        rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DatabaseManager.date_from_str(validity_date)
+        print(validity_date)
+        print()
+        return Contract.query.join(Contract.school).filter(School.id==school_id).filter(Contract.validity_date==rdate).all()
+
+    @staticmethod
     def get_next_annex_no(school_id, program_id):
         contracts = Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
         annex_no_list = [int(re.findall(r"\d+_(\d+)", contract.contract_no)[0]) for contract in contracts if "_" in str(contract.contract_no)]
         if not annex_no_list:
             return 1
         else:
-            return min(annex_no_list) + 1
+            return max(annex_no_list) + 1
 
     @staticmethod
     def get_all_schools_with_contract(program_id):
@@ -116,14 +124,11 @@ class DatabaseManager(ABC):
         return Product.query.filter(Program.id.like(program_id)).filter(Product.id.like(product_id)).first()
 
     @staticmethod
-    def get_product_no(contract_id, week_no=None):
+    def get_product_no(week_no=None):
         if not week_no:
             pass
-        return 0
-
-    @staticmethod
-    def get_record(id):
-        return Record.query.filter(Record.id.like(id)).one()
+        return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
+            .with_entities(School, Product, func.count(Product.type)).group_by(School.nick, Product.type).all()
 
     @staticmethod
     def remove_record(id):
