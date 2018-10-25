@@ -170,7 +170,8 @@ class Record(db.Model):
 
     contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'), nullable=False)
     contract = db.relationship('Contract',
-                             backref=db.backref('records', lazy=True, order_by='Contract.validity_date.desc()'))
+                             backref=db.backref('records', lazy=True, order_by='Contract.validity_date.desc()',
+                             cascade="all, delete-orphan"))
 
     week_id = db.Column(db.Integer, db.ForeignKey('week.id'), nullable=False)
     week = db.relationship('Week',

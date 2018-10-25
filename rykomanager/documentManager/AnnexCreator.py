@@ -30,9 +30,10 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.validity_date = datetime.strptime(validity_date, "%d.%m.%Y")
         self.fruitVeg_products = fruitVeg_products # @TODO if None get_the_latest_value
         self.dairy_products = dairy_products
-        print(DatabaseManager.is_annex(self.validity_date, self.school.id))
+
         if DatabaseManager.is_annex(self.validity_date, self.school.id):
-            app.logger.error("[%s] Annex already exists. Only modifying is possible", __class__.__name__)
+            app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
+                             self.nick, self.validity_date)
             return
 
         app.logger.info("[%s] Adding new annex: school_nick %s: city %s | current_date %s, | contract_no %s"

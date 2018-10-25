@@ -3,7 +3,7 @@ from rykomanager import db, app
 from abc import ABC, abstractmethod
 import datetime
 import re
-from sqlalchemy import func, and_
+from sqlalchemy import func, exc
 
 
 class DatabaseManager(ABC):
@@ -54,9 +54,8 @@ class DatabaseManager(ABC):
     @staticmethod
     def is_annex(validity_date, school_id):
         rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DatabaseManager.date_from_str(validity_date)
-        print(validity_date)
-        print()
-        return Contract.query.join(Contract.school).filter(School.id==school_id).filter(Contract.validity_date==rdate).all()
+        return Contract.query.join(Contract.school).filter(School.id==school_id)\
+            .filter(Contract.validity_date==DatabaseManager.str_from_date(rdate)).all()
 
     @staticmethod
     def get_next_annex_no(school_id, program_id):
@@ -136,16 +135,17 @@ class DatabaseManager(ABC):
         db.session.commit()
 
     @staticmethod
-    def add_row(models=None):
-        if not isinstance(models, list):
-            model = models
-            models = list()
-            models.append(model)
-        for model in models:
-            if isinstance(model, db.Model):
+    def add_row(model=None):
+        if isinstance(model, db.Model):
+            #@TODO fix to handle incerting unique values
+            try:
                 db.session.add(model)
-            else:
-                app.logger.warn("[%s] %s is not an instance of db.Model", __class__.__name__, model)
-            app.logger.info("[%s] Update database %s", __class__.__name__, model)
-        db.session.commit()
+                db.session.commit()
+            except exc.IntegrityError as e:
+                app.logger.error("Exception occured when adding row: ", e)
+                return False
+        else:
+            app.logger.warn("[%s] %s is not an instance of db.Model", __class__.__name__, model)
+        app.logger.info("[%s] Update database %s", __class__.__name__, model)
+        return True
 

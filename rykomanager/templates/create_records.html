@@ -81,44 +81,44 @@
                                         {% endif %}
 
                                 </div>
-                            {% if current_week %}
-                                <div class="row">
-                                     <div class="col-lg-3">
-                                         <div class="panel panel-info">
-                                                    <div class="panel-heading">Podsumowanie</div>
-                                                    <div class="panel-body">
-                                                        <div class="table-responsive">
-                                                            <table class="table">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>SP</th>
-                                                                        <th>WO</th>
-                                                                        <th>NB</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                {% for school_in_week in weekly_product %}
-                                                                    <tr>
-                                                                        <td>{{ school_in_week[0].nick }}</td>
-                                                                                {% if school_in_week[1].get_type_mapping() == "wo" %}
-                                                                                    <td>{{ school_in_week[2] }}</td>
-                                                                                {% else %}
-                                                                                    <td>0</td>
-                                                                                {% endif %}
-                                                                                {% if school_in_week[1].get_type_mapping() == "nb" %}
-                                                                                     <td>{{ school_in_week[2] }}</td>
-                                                                                {% else %}
-                                                                                     <td>0</td>
-                                                                                {% endif %}
-                                                                    </tr>
-                                                                {% endfor %}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                         </div>
-                                     </div>
-                                    {% endif %}
+                            <!--{% if current_week %}-->
+                                <!--<div class="row">-->
+                                     <!--<div class="col-lg-3">-->
+                                         <!--<div class="panel panel-info">-->
+                                                    <!--<div class="panel-heading">Podsumowanie</div>-->
+                                                    <!--<div class="panel-body">-->
+                                                        <!--<div class="table-responsive">-->
+                                                            <!--<table class="table">-->
+                                                                <!--<thead>-->
+                                                                    <!--<tr>-->
+                                                                        <!--<th>SP</th>-->
+                                                                        <!--<th>WO</th>-->
+                                                                        <!--<th>NB</th>-->
+                                                                    <!--</tr>-->
+                                                                <!--</thead>-->
+                                                                <!--<tbody>-->
+                                                                <!--{% for school_in_week in weekly_product %}-->
+                                                                    <!--<tr>-->
+                                                                        <!--<td>{{ school_in_week[0].nick }}</td>-->
+                                                                                <!--{% if school_in_week[1].get_type_mapping() == "wo" %}-->
+                                                                                    <!--<td>{{ school_in_week[2] }}</td>-->
+                                                                                <!--{% else %}-->
+                                                                                    <!--<td>0</td>-->
+                                                                                <!--{% endif %}-->
+                                                                                <!--{% if school_in_week[1].get_type_mapping() == "nb" %}-->
+                                                                                     <!--<td>{{ school_in_week[2] }}</td>-->
+                                                                                <!--{% else %}-->
+                                                                                     <!--<td>0</td>-->
+                                                                                <!--{% endif %}-->
+                                                                    <!--</tr>-->
+                                                                <!--{% endfor %}-->
+                                                                <!--</tbody>-->
+                                                            <!--</table>-->
+                                                        <!--</div>-->
+                                                    <!--</div>-->
+                                         <!--</div>-->
+                                     <!--</div>-->
+                                    <!--{% endif %}-->
                         </div>
                                 </div>
                     </div>

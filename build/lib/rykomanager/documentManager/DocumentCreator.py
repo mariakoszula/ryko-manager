@@ -37,8 +37,8 @@ class DocumentCreator(ABC):
             args = [cfg.libreoffice_converter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
             subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3000)
         except Exception as e:
-            app.logger.error("[%s] Serious error when generating pdf from docx %s out_dir %s: err_msg: %s",
-                                   __class__.__name__, output_dir, docx_to_convert, e)
+            app.logger.error("[%s] Serious error when generating pdf from docx %s out_dir %s: err_msg: %s. Check libreoffice converter path: %s",
+                                   __class__.__name__, docx_to_convert, output_dir , e, cfg.libreoffice_converter)
 
     @staticmethod
     def create_directory(output_directory):
@@ -54,6 +54,7 @@ class DocumentCreator(ABC):
     @staticmethod
     def end_doc_gen(document, generated_file, output_dir):
         document.write(generated_file)
+        app.logger.info("[%s] Created new output directory: %s", __class__.__name__, generated_file, )
         DocumentCreator.generate_pdf(generated_file, output_dir)
 
     @abstractmethod

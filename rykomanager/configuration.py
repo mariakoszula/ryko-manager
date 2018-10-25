@@ -7,5 +7,5 @@ output_dir_school = 'szkoly'
 annex_folder_name = 'AneksyIumowy'
 record_folder_name = 'WZ'
 libreoffice_converter = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe'
-# libreoffice_converter = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
+#libreoffice_converter = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe'
 current_program_id = 1

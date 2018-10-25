@@ -28,8 +28,8 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
                         __class__.__name__, self.date, self.contract.school.nick, self.product.name)
         self._prepare_data_for_doc()
-        self.generate()
-        self.update_row()
+        if self.update_row():
+            self.generate()
 
     def generate(self):
         self.document.merge(
@@ -89,7 +89,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def update_row(self):
         record = Record(date=self.date, state=RecordState.NOT_DELIVERED, product_id=self.product.id,
                         contract_id=self.contract.id, week_id=DatabaseManager.get_week_by_date(self.date).id)
-        DatabaseManager.add_row(record)
+        return DatabaseManager.add_row(record)
 
     def modify_row(self):
         pass
