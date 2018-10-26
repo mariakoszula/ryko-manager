@@ -196,4 +196,75 @@ class Record(db.Model):
         return self.product.type == ProductType.FRUIT_VEG
 
 
+class Summary(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    no = db.Column(db.Integer, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    kids_no = db.Column(db.Integer, default=0)
+    school_no = db.Column(db.Integer, default=0)
+    apple = db.Column(db.Integer, default=0)
+    pear = db.Column(db.Integer, default=0)
+    plum = db.Column(db.Integer, default=0)
+    strawberry = db.Column(db.Integer, default=0)
+    carrot = db.Column(db.Integer, default=0)
+    radish = db.Column(db.Integer, default=0)
+    pepper = db.Column(db.Integer, default=0)
+    tomato = db.Column(db.Integer, default=0)
+    kohlrabi = db.Column(db.Integer, default=0)
+    school_no_milk = db.Column(db.Integer, default=0)
+    kids_no_milk = db.Column(db.Integer, default=0)
+    milk = db.Column(db.Integer, default=0)
+    yoghurt = db.Column(db.Integer, default=0)
+    kefir = db.Column(db.Integer, default=0)
+    cheese = db.Column(db.Integer, default=0)
+    fruitVeg_income = db.Column(db.Float, default=0)
+    milk_income = db.Column(db.Float, default=0)
+    is_first = db.Column(db.Boolean, nullable=False)
+
+    program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
+    program = db.relationship('Program',
+                             backref=db.backref('program', lazy=True))
+
+    def get_application_no(self):
+        return "{0}/{1}".format(self.no, self.year)
+
+    __table_args__ = (
+                        db.UniqueConstraint('no', 'year'),)
+
+
+class Application(db.Model):
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    apple = db.Column(db.Integer, default=0)
+    pear = db.Column(db.Integer, default=0)
+    plum = db.Column(db.Integer, default=0)
+    strawberry = db.Column(db.Integer, default=0)
+    carrot = db.Column(db.Integer, default=0)
+    radish = db.Column(db.Integer, default=0)
+    pepper = db.Column(db.Integer, default=0)
+    tomato = db.Column(db.Integer, default=0)
+    kohlrabi = db.Column(db.Integer, default=0)
+    milk = db.Column(db.Integer, default=0)
+    yoghurt = db.Column(db.Integer, default=0)
+    kefir = db.Column(db.Integer, default=0)
+    cheese = db.Column(db.Integer, default=0)
+    fruit_all = db.Column(db.Integer, default=0)
+    veg_all = db.Column(db.Integer, default=0)
+    dairy_all = db.Column(db.Integer, default=0)
+    max_kids_perWeeks_fruitVeg = db.Column(db.Integer, default=0)
+    max_kids_perWeeks_milk = db.Column(db.Integer, default=0)
+
+    summary_id = db.Column(db.Integer,  db.ForeignKey('summary.id'), nullable=False)
+    summary = db.relationship('Summary', backref=db.backref('summary', lazy=True, order_by='Contract.validity_date.desc()'))
+
+    school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
+    school = db.relationship('School', backref=db.backref('school', lazy=True, order_by='Contract.validity_date.desc()'))
+
+    __table_args__ = (
+                        db.UniqueConstraint('summary_id', 'school_id'),)
+
+
 db.create_all()

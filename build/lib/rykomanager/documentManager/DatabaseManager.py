@@ -1,4 +1,4 @@
-from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record
+from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application
 from rykomanager import db, app
 from abc import ABC, abstractmethod
 import datetime
@@ -15,10 +15,6 @@ class DatabaseManager(ABC):
     def update_row(self):
         pass
 
-    @abstractmethod
-    def modify_row(self):
-        pass
-
     @staticmethod
     def date_from_str(date, pattern=None):
         if isinstance(date, str):
@@ -28,6 +24,10 @@ class DatabaseManager(ABC):
             return date
         else:
             print("LOG ERROR")
+
+    @staticmethod
+    def modify_row():
+        db.session.commit()
 
     @staticmethod
     def str_from_date(date, pattern=None):
@@ -56,6 +56,10 @@ class DatabaseManager(ABC):
         rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DatabaseManager.date_from_str(validity_date)
         return Contract.query.join(Contract.school).filter(School.id==school_id)\
             .filter(Contract.validity_date==DatabaseManager.str_from_date(rdate)).all()
+
+    @staticmethod
+    def is_summary(no, year):
+        return Summary.query.filter_by(no=no).filter_by(year=year).all()
 
     @staticmethod
     def get_next_annex_no(school_id, program_id):
@@ -144,8 +148,58 @@ class DatabaseManager(ABC):
             except exc.IntegrityError as e:
                 app.logger.error("Exception occured when adding row: ", e)
                 return False
+            except exc.InvalidRequestError as e:
+                app.logger.error("Exception occured when adding row: ", e)
+                return False
         else:
             app.logger.warn("[%s] %s is not an instance of db.Model", __class__.__name__, model)
         app.logger.info("[%s] Update database %s", __class__.__name__, model)
         return True
 
+    @staticmethod
+    def get_next_summary_no(year):
+        return 4
+
+    @staticmethod
+    def get_product_amount(school_id, product_name, weeks=list()):
+        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()
+        item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
+        data = Record.query.join(Contract).join(Product).filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
+                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id).with_entities(func.sum(item_to_sum).label('product_amount')).one()
+        return data.product_amount if data.product_amount else 0
+
+    @staticmethod
+    def get_fruit_price():
+        return 0.75
+
+    @staticmethod
+    def get_milk_price():
+        return 0.75
+
+
+    @staticmethod
+    def get_maxKids_perWeek(school_id, product_type, weeks=list()):
+        item_to_sum = DatabaseManager.get_contract_products(product_type)
+        data =  Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
+                Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
+                func.max(item_to_sum).label('max_amount')).one()
+        return data.max_amount if data.max_amount else 0
+
+    @staticmethod
+    def get_contract_products(product_type):
+        return Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
+
+    @staticmethod
+    def get_summary(summary_id=None, program_id=None):
+        if summary_id:
+            return Summary.query.filter_by(id=summary_id).first()
+        if program_id:
+            return Summary.query.filter(Summary.program_id==program_id).all()
+
+    @staticmethod
+    def get_school_with_summary(summary_id):
+        return Application.query.filter(Application.summary_id==summary_id).all()
+
+    @staticmethod
+    def get_application(school_id, summary_id):
+        return Application.query.filter(Application.school_id==school_id).filter(Application.summary_id==summary_id).all()

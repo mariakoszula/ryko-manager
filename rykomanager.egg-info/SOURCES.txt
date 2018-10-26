@@ -10,9 +10,11 @@ rykomanager.egg-info/dependency_links.txt
 rykomanager.egg-info/requires.txt
 rykomanager.egg-info/top_level.txt
 rykomanager/documentManager/AnnexCreator.py
+rykomanager/documentManager/ApplicationCreator.py
 rykomanager/documentManager/DatabaseManager.py
 rykomanager/documentManager/DocumentCreator.py
 rykomanager/documentManager/RecordCreator.py
+rykomanager/documentManager/SummaryCreator.py
 rykomanager/documentManager/__init__.py
 rykomanager/static/sign.css
 rykomanager/static/data/flot-data.js

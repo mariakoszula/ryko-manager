@@ -21,9 +21,10 @@ class DocumentCreator(ABC):
         super(DocumentCreator, self).__init__()
 
     @abstractmethod
-    def generate(self, new_doc_name):
+    def generate(self, new_doc_name, gen_pdf=True):
         generated_file = path.join(self.output_directory, new_doc_name)
-        DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory)
+        if gen_pdf:
+            DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
 
     def generate_many(self):
         pass

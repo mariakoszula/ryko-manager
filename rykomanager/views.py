@@ -3,6 +3,8 @@ import datetime
 from rykomanager import app
 from rykomanager.documentManager.AnnexCreator import AnnexCreator
 from rykomanager.documentManager.RecordCreator import RecordCreator
+from rykomanager.documentManager.SummaryCreator import SummaryCreator
+from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
 import rykomanager.configuration as cfg
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 
@@ -120,7 +122,6 @@ def record_created(current_date, week_id):
         return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
     return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)
 
-
 @app.context_processor
 def my_utility_processor():
 
@@ -128,6 +129,25 @@ def my_utility_processor():
         if record:
             print(record.id)
     return dict(update_state=update_record_state)
+
+
+@app.route('/create_summary/<int:week_id>')
+def create_summary(week_id, week_no=6):
+    summary_first = SummaryCreator(week_id, week_no, True)
+    summary_first.create()
+    appCreators = list()
+
+    for school in DatabaseManager.get_all_schools_with_contract(cfg.current_program_id):
+        app = ApplicationCreator(school.id, 1) # TODO get proper summary_id form ids
+        if app.create():
+            appCreators.append(app)
+        break
+
+    for appCreator in appCreators:
+        appCreator.generate()
+
+
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
