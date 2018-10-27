@@ -158,11 +158,11 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_next_summary_no(year):
-        return 4
+        return 1
 
     @staticmethod
     def get_product_amount(school_id, product_name, weeks=list()):
-        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()
+        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()[0]
         item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
         data = Record.query.join(Contract).join(Product).filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
                                                                  Week.week_no<=weeks[1]).filter(Contract.school_id==school_id).with_entities(func.sum(item_to_sum).label('product_amount')).one()
@@ -182,6 +182,16 @@ class DatabaseManager(ABC):
         return "{0}-{1}\n{2}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
                                 DatabaseManager.str_from_date(week.end_date, "%d.%m"),
                                 DatabaseManager.str_from_date(week.end_date, "%Y"))
+
+    @staticmethod
+    def str_from_weeks(weeks, week_range=(1,12)):
+        weeks_list=list()
+        for week in weeks:
+            if week.week_no in list(range(week_range[0], week_range[1]+1)):
+                weeks_list.append("{0}-{1}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
+                                  DatabaseManager.str_from_date(week.end_date, "%d.%m.%Y")))
+        return ','.join(weeks_list)
+
 
     @staticmethod
     def get_maxKids_perWeek(school_id, product_type, weeks=(1,12)):
@@ -209,3 +219,15 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_application(school_id, summary_id):
         return Application.query.filter(Application.school_id==school_id).filter(Application.summary_id==summary_id).all()
+
+    @staticmethod
+    def get_records(school_id, product_type, weeks=(1, 12)):
+        item_to_sum = DatabaseManager.get_contract_products(product_type)
+        data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
+            Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
+            Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
+        return data
+
+    @staticmethod
+    def get_record(id):
+        return Record.query.filter(Record.id.like(id)).one()

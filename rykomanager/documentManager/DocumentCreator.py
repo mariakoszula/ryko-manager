@@ -23,8 +23,10 @@ class DocumentCreator(ABC):
     @abstractmethod
     def generate(self, new_doc_name, gen_pdf=True):
         generated_file = path.join(self.output_directory, new_doc_name)
-        if gen_pdf:
-            DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
+
+        res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
+        if gen_pdf and res:
+            DocumentCreator.generate_pdf(generated_file, self.output_directory)
 
     def generate_many(self):
         pass
@@ -56,7 +58,7 @@ class DocumentCreator(ABC):
     def end_doc_gen(document, generated_file, output_dir):
         document.write(generated_file)
         app.logger.info("[%s] Created new output directory: %s", __class__.__name__, generated_file, )
-        DocumentCreator.generate_pdf(generated_file, output_dir)
+        return True
 
     @abstractmethod
     def create(self):

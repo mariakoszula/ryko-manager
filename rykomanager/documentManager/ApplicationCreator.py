@@ -1,7 +1,7 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 import rykomanager.configuration as cfg
-from rykomanager.models import Summary, ProductName, ProductType, Application
+from rykomanager.models import Summary, ProductName, ProductType, Application, Product
 from rykomanager import app
 
 from os import path
@@ -36,14 +36,19 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.dairy_all = self.milk + self.yoghurt + self.kefir + self.cheese
         self.max_kids_perWeeks_fruitVeg = DatabaseManager.get_maxKids_perWeek(school_id, ProductType.FRUIT_VEG, weeks)
         self.max_kids_perWeeks_milk = DatabaseManager.get_maxKids_perWeek(school_id, ProductType.DAIRY, weeks)
-
+        self.records_to_merge_vegFruit = []
+        self.records_to_merge_milk = []
+        self.sum_product_vegFruit = 0
+        self.sum_product_milk = 0
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick,
                                      cfg.annex_folder_name)
         self.output_directory = output_directory
         DatabaseManager.__init__(self)
 
     def generate(self):
-        self._generate_5()
+        if self.__prepare_data():
+            self._generate_5()
+            self._generate_5a()
 
     def _generate_5(self):
         DocumentCreator.__init__(self, ApplicationCreator.template_document_v, self.output_directory)
@@ -113,8 +118,58 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
 
     def _generate_5a(self):
         DocumentCreator.__init__(self, ApplicationCreator.template_document_va, self.output_directory)
-        self.document_craetor['generate_5a'].generate(self, "Ewidencja_5a_" + self.contract_date.strftime(
-            "%d_%m_%Y") + ".docx")
+
+        self.document.merge_rows('date_vegFruit', self.records_to_merge_vegFruit)
+        self.document.merge_rows('date_milk', self.records_to_merge_milk)
+        self.document.merge(
+            school_name=self.school.name,
+            school_nip=self.school.nip,
+            school_regon=self.school.regon,
+            school_address=self.school.address,
+            city=self.school.city,
+            weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(1), (1, 6)),
+            sum_vegFruit=str(self.sum_product_vegFruit),
+            sum_kids_vegFruit=str(self.sum_product_vegFruit),
+            sum_milk=str(self.sum_product_milk),
+            sum_kids_milk=str(self.sum_product_milk)
+        )
+        DocumentCreator.generate(self, "Ewidencja_VA_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year), False)
+
+    def __prepare_data(self):
+        for record in DatabaseManager.get_records(self.school_id, ProductType.FRUIT_VEG, (1, 6)):
+            record_dict = dict()
+            record_dict['date_vegFruit'] = DatabaseManager.str_from_date(record.date, "%d.%m.%Y")
+            record_dict['kids_vegFruit'] = str(record.product_no)
+            record_dict['vegFruit'] = Product.get_name_map(record.product)
+            self.records_to_merge_vegFruit.append(record_dict)
+
+        for record in DatabaseManager.get_records(self.school_id, ProductType.DAIRY, (1, 6)):
+            record_dict = dict()
+            record_dict['date_milk'] = DatabaseManager.str_from_date(record.date, "%d.%m.%Y")
+            record_dict['kids_milk'] = str(record.product_no)
+            record_dict['milk'] = Product.get_name_map(record.product)
+            self.records_to_merge_milk.append(record_dict)
+
+        self.sum_product_vegFruit = self.__sum_product(self.records_to_merge_vegFruit, 'kids_vegFruit')
+        self.sum_product_milk = self.__sum_product(self.records_to_merge_milk, 'kids_milk')
+
+        if self.sum_product_vegFruit != (self.fruit_all + self.veg_all):
+            app.logger.error("Vale of fruitVeg product from 5 and 5A does not match! School: {0} 5: {1} "
+                             " 5A: {2} -- ABORT generating".format(self.school.nick, self.fruit_all + self.veg_all, self.sum_product_vegFruit))
+            return False
+        if self.sum_product_milk != self.dairy_all:
+            app.logger.error("Vale of dairy product from 5 and 5A does not match! School: {0} 5: {1} "
+                             " 5A: {2} -- ABORT generating".format(self.school.nick, self.dairy_all, self.sum_product_milk))
+            return False
+        return True
+
+    def __sum_product(self, records, type):
+        sum = 0
+        for recrod in records:
+            for (key, value) in recrod.items():
+                if key == type:
+                    sum += int(value)
+        return sum
 
     def create(self):
         if not DatabaseManager.get_application(self.school_id, self.summary_id) and self.update_row():
@@ -137,7 +192,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             if self.max_kids_perWeeks_milk != 0:
                 self.summary.school_no_milk = self.summary.school_no_milk + 1
             self.summary.fruitVeg_income = (self.summary.apple + self.summary.pear + self.summary.plum + self.summary.strawberry
-                                            + self.summary.carrot + self.summary.tomato + self.radish + self.kohlrabi) * DatabaseManager.get_fruit_price()
+                                            + self.summary.carrot + self.summary.tomato + self.summary.radish + self.summary.kohlrabi) * DatabaseManager.get_fruit_price()
             self.summary.milk_income = (self.summary.milk + self.summary.yoghurt + self.summary.kefir + self.summary.cheese) * DatabaseManager.get_milk_price()
             DatabaseManager.modify_row()
             return True

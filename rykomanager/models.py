@@ -110,34 +110,38 @@ class Product(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('week', lazy=True))
 
+    @staticmethod
+    def get_name_map(name):
+        if name == ProductName.APPLE:
+            return "jabłko"
+        if name == ProductName.PEAR:
+            return "gruszka"
+        if name == ProductName.PLUM:
+            return "śliwka"
+        if name == ProductName.STRAWBERRY:
+            return "truskawka"
+        if name == ProductName.CARROT:
+            return "marchew"
+        if name == ProductName.RADISH:
+            return "rzodkiewka"
+        if name == ProductName.PEPPER:
+            return "papryka"
+        if name == ProductName.TOMATO:
+            return "pomidor"
+        if name == ProductName.KOHLRABI:
+            return "kalarepa"
+        if name == ProductName.MILK:
+            return "mleko"
+        if name == ProductName.YOGHURT:
+            return "jogurt"
+        if name == ProductName.KEFIR:
+            return "kefir"
+        if name == ProductName.CHEESE:
+            return "ser twarogowy"
+
     #@TODO remove language dependency
     def get_name_mapping(self):
-        if self.name == ProductName.APPLE:
-            return "jabłko"
-        if self.name == ProductName.PEAR:
-            return "gruszka"
-        if self.name == ProductName.PLUM:
-            return "śliwka"
-        if self.name == ProductName.STRAWBERRY:
-            return "truskawka"
-        if self.name == ProductName.CARROT:
-            return "marchew"
-        if self.name == ProductName.RADISH:
-            return "rzodkiewka"
-        if self.name == ProductName.PEPPER:
-            return "papryka"
-        if self.name == ProductName.TOMATO:
-            return "pomidor"
-        if self.name == ProductName.KOHLRABI:
-            return "kalarepa"
-        if self.name == ProductName.MILK:
-            return "mleko"
-        if self.name == ProductName.YOGHURT:
-            return "jogurt"
-        if self.name == ProductName.KEFIR:
-            return "kefir"
-        if self.name == ProductName.CHEESE:
-            return "ser twarogowy"
+        return Product.get_name_map(self.name)
 
     def get_record_title_mapping(self):
         if self.type == ProductType.DAIRY:

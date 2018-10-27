@@ -141,12 +141,11 @@ def create_summary(week_id, week_no=6):
         app = ApplicationCreator(school.id, 1) # TODO get proper summary_id form ids
         if app.create():
             appCreators.append(app)
-        break
 
     for appCreator in appCreators:
         appCreator.generate()
 
-
+    summary_first.generate()
     return render_template("index.html")
 
 
