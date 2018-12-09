@@ -3,25 +3,142 @@
 {% block title %}Panel Główny{% endblock %}
 
 {% block content %}
-      <div class="col-lg-3 col-md-6">
-                    <div class="panel panel-green">
-                        <div class="panel-heading">
-                            <div class="row">
-                                <div class="col-xs-3">
-                                    <i class="fa fa-tasks fa-5x"></i>
-                                </div>
-                                <div class="col-xs-9 text-right">
-                                    <div class="huge">Wniosek</div>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="{{ url_for( 'create_summary', week_id=1) }}">
-                            <div class="panel-footer">
-                                <span class="pull-left">Wygeneruj</span>
-                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                <div class="clearfix"></div>
-                            </div>
-                        </a>
+<div class="row">
+    <div class="row">
+    <div class="col-lg-6">
+        <div class="panel panel-green">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <i class="fa fa-tasks fa-5x"></i>
+                    </div>
+                    <div class="col-xs-9 text-right">
+                        <div class="huge">Wniosek</div>
                     </div>
                 </div>
-{% endblock %}
+            </div>
+            <a href="{{ url_for( 'create_summary', week_id=7) }}">
+                <div class="panel-footer">
+                    <span class="pull-left">Wygeneruj</span>
+                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                    <div class="clearfix"></div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    </div>
+    <div class="row">
+ <div class="col-lg-6">
+    <div class="panel panel-default">
+    <div class="panel-heading">ZOSTAŁO DO PODANIA</div>
+    <!-- /.panel-heading -->
+    <div class="panel-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ilość</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for product, amount in product_remaining.items() %}
+                <tr><td>{{ product }}</td><td>{{ amount }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>Szkoła</th>
+                    <th>Product</th>
+                    <th>Podania</th>
+                    <th>Ilość</th>
+                </tr>
+                </thead>
+                <tbody>
+                 {% for school, items in school_data.items() %}
+                    <tr><td rowspan="{{ items|length + 1 }}">{{ school }}</td>
+                    {% for item in items %}
+                    {% if item[2] == 0 %}
+                        <tr class="success">
+                    {% elif item[2] == -1 %}
+                        <tr class="warning">
+                     {% else %}
+                        <tr class="danger">
+                     {% endif %}
+                     <td>{{ item[0] }}</td><td>{{ item[2] }}</td><td>{{ item[3] }}</td></tr>
+                    {% endfor %}
+                    </tr>
+                  {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+ </div>
+
+<div class="col-lg-6">
+<div class="panel panel-default">
+<div class="panel-heading">PODSUMOWANIE - NABIAŁ {{ weeks[0] }}- {{ weeks[1] }} tyg.</div>
+<!-- /.panel-heading -->
+<div class="panel-body">
+<form role="form" method="post"  action="{{ request.path }}">
+<div class="form-group">
+    <label>Wybierz tygodnie</label>
+    <input class="form-control" name="weeks_form" value="{{ weeks[0] }}-{{ weeks[1]}}">
+    <p class="help-block">wprowadź zakres tygodni np. 1-6, 1-9, 6-12 itp.</p>
+      <button type="submit" class="btn btn-primary btn-sm btn-block">Odśwież</button>
+</div>
+</form>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Ilość</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td>Mleko</td><td>{{ dairy_summary['milk_all'] }}</td></tr>
+            <tr><td>Kefir</td><td>{{ dairy_summary['kefir_all'] }}</td></tr>
+            <tr><td>Ser twarogowy</td><td>{{ dairy_summary['cheese_all'] }}</td></tr>
+            <tr><td>Jogurt</td><td>{{ dairy_summary['yoghurt_all'] }}</td></tr>
+            </tbody>
+        </table>
+        <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>Szkoła</th>
+                <th>Mleko</th>
+                <th>Kefir</th>
+                <th>Ser twarogowy</th>
+                <th>Jogurt</th>
+            </tr>
+            </thead>
+            <tbody>
+             {% for school, dairy in dairy_summary.items() %}
+                {% if "all" not in school %}
+                    <tr>
+                        <td>{{ school }}</td>
+                        <td>{{ dairy['milk'] }}</td>
+                        <td>{{ dairy['kefir'] }}</td>
+                        <td>{{ dairy['cheese'] }}</td>
+                        <td>{{ dairy['yoghurt'] }}</td>
+                    </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+ </div>
+    {% endblock %}

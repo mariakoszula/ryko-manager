@@ -41,8 +41,10 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
                         __class__.__name__, self.school.nick, self.school.city, self.contract_date, self.contract_no,
                         self.contract_year, self.validity_date, self.fruitVeg_products, self.dairy_products)
 
-        self.generate()
-        self.update_row()
+        if self.update_row():
+            self.generate()
+        else:
+            app.logger.error("[%s]  Something went wrong when creating annex", __class__.__name__)
 
     def generate(self):
         self.document.merge(
@@ -67,7 +69,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         annex = Contract(contract_no=self.contract_no, contract_year=self.contract_year, contract_date=self.contract_date,
                          validity_date=self.validity_date, fruitVeg_products=self.fruitVeg_products, dairy_products=self.dairy_products, is_annex=True,
                          school_id=self.school.id, program_id=self.program_id)
-        DatabaseManager.add_row(annex)
+        return DatabaseManager.add_row(annex)
 
     def modify_row(self):
         # for feature case after modification of Annex is ready from view

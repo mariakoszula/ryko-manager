@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Wygenerowane WZ na {{ current_date }}{% endblock %}
+{% block title %}
+    {% if current_date %}
+        Wygenerowane WZ na {{ current_date }}
+    {% endif %}
+{% endblock %}
 
 {% block content %}
                         <div class="panel-body">
-                            <table width="100%" class="table table-bordered table-hover" id="divided-table-with-search">
+                            <table width="100%" class="table table-bordered table-hover" id="wz-table">
                                 <thead>
                                 <tr>
                                         <th>Szkoła</th>

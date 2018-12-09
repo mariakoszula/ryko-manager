@@ -21,6 +21,8 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.fruit_all = 0
         self.veg_all = 0
         self.dairy_all = 0
+        self.summary = DatabaseManager.is_summary(self.no, self.year)[0] if DatabaseManager.is_summary(self.no,
+                                                                                                       self.year) else None
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 
@@ -33,8 +35,9 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         calculated_dairy_price = self.dairy_all * DatabaseManager.get_milk_price()
 
         if not calculated_fruitVeg_price == self.summary.fruitVeg_income:
-            app.logger.error("Summary ABORT: the price for fruitVeg does not match calculated_fruitVeg_price: {} expected: {} fruitVeg: {}".format(
-                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), (self.fruit_all + self.veg_all)))
+            app.logger.error("Summary ABORT: the price for fruitVeg does not match calculated_fruitVeg_price: {} expected: {} fruitVeg amoung: {}"
+                             " income: {} ".format(
+                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), (self.fruit_all + self.veg_all), self.summary.fruitVeg_income))
             return False
 
         if not calculated_dairy_price == self.summary.milk_income:
@@ -49,7 +52,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             return
 
         self.fruit_all = sum([self.summary.apple, self.summary.pear, self.summary.plum, self.summary.strawberry])
-        self.veg_all = sum([self.summary.carrot, self.summary.tomato, self.summary.radish, self.summary.kohlrabi])
+        self.veg_all = sum([self.summary.carrot, self.summary.tomato, self.summary.radish, self.summary.kohlrabi, self.summary.pepper])
         self.dairy_all = self.summary.milk + self.summary.yoghurt + self.summary.kefir + self.summary.cheese
 
         if not self.__base_check():
@@ -90,15 +93,40 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         DocumentCreator.generate(self, "Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year), False)
 
     def create(self):
-        self.summary = DatabaseManager.is_summary(self.no, self.year)[0] if DatabaseManager.is_summary(self.no, self.year) else None
         if not self.summary:
             self.update_row()
+        else:
+            self.clear()
 
     def update_row(self):
-        summary = Summary(no=self.no, year=self.year, is_first=True, program_id=cfg.current_program_id)
+        summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=cfg.current_program_id)
         if DatabaseManager.add_row(summary):
             self.summary = DatabaseManager.is_summary(self.no, self.year)[0]
 
+    def get_id(self):
+        return self.summary.id
 
     def modify_row(self):
         pass
+
+    def clear(self):
+        self.summary.apple = 0
+        self.summary.pear = 0
+        self.summary.plum = 0
+        self.summary.strawberry = 0
+        self.summary.carrot = 0
+        self.summary.radish = 0
+        self.summary.pepper = 0
+        self.summary.tomato = 0
+        self.summary.kohlrabi = 0
+        self.summary.milk = 0
+        self.summary.yoghurt = 0
+        self.summary.kefir = 0
+        self.summary.cheese = 0
+        self.summary.kids_no = 0
+        self.summary.kids_no_milk = 0
+        self.summary.school_no = 0
+        self.summary.school_no_milk = 0
+        self.summary.fruitVeg_income = 0
+        self.summary.milk_income = 0
+        DatabaseManager.modify_row()

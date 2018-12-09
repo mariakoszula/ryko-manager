@@ -1,4 +1,4 @@
-from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application
+from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application, RecordState
 from rykomanager import db, app
 from abc import ABC, abstractmethod
 import datetime
@@ -42,6 +42,10 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_contract(school_id):
         return Contract.query.filter(Contract.school_id==school_id).filter(Contract.is_annex==False).one()
+
+    @staticmethod
+    def get_contracts(program_id):
+        return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.school_id).order_by(Contract.contract_no).all()
 
     @staticmethod
     def get_current_sem():
@@ -123,13 +127,18 @@ class DatabaseManager(ABC):
         return Record.query.filter(Record.date.like(g_date)).all()
 
     @staticmethod
+    def get_school_records(school_id):
+        return Record.query.join(Record.contract).join(Contract.school).filter(School.id.like(school_id)).all()
+
+    @staticmethod
     def get_product(program_id, product_id):
         return Product.query.filter(Program.id.like(program_id)).filter(Product.id.like(product_id)).first()
 
     @staticmethod
     def get_product_no(week_no=None):
         if not week_no:
-            pass
+            return Record.query.join(Record.contract).join(Record.product).join(Contract.school)\
+                .with_entities(School, Product, func.count(Product.name)).group_by(School.nick, Product.name).all()
         return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
             .with_entities(School, Product, func.count(Product.type)).group_by(School.nick, Product.type).all()
 
@@ -137,6 +146,13 @@ class DatabaseManager(ABC):
     def remove_record(id):
         Record.query.filter(Record.id == id).delete()
         db.session.commit()
+
+    @staticmethod
+    def remove_application(id):
+        #@TODO acutally check if deleted
+        Application.query.filter(Application.id == id).delete()
+        db.session.commit()
+        return True
 
     @staticmethod
     def add_row(model=None):
@@ -158,14 +174,15 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_next_summary_no(year):
-        return 4
+        return 2
 
     @staticmethod
     def get_product_amount(school_id, product_name, weeks=list()):
-        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()
+        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()[0]
         item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
         data = Record.query.join(Contract).join(Product).filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
-                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id).with_entities(func.sum(item_to_sum).label('product_amount')).one()
+                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id)\
+            .filter(Record.state == RecordState.DELIVERED).with_entities(func.sum(item_to_sum).label('product_amount')).one()
         return data.product_amount if data.product_amount else 0
 
     @staticmethod
@@ -176,9 +193,25 @@ class DatabaseManager(ABC):
     def get_milk_price():
         return 0.75
 
+    @staticmethod
+    def get_dates(week_no):
+        week = Week.query.filter(Week.program_id==1).filter(Week.week_no==week_no).one()
+        return "{0}-{1}\n{2}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
+                                DatabaseManager.str_from_date(week.end_date, "%d.%m"),
+                                DatabaseManager.str_from_date(week.end_date, "%Y"))
 
     @staticmethod
-    def get_maxKids_perWeek(school_id, product_type, weeks=list()):
+    def str_from_weeks(weeks, week_range=(1,12)):
+        weeks_list=list()
+        for week in weeks:
+            if week.week_no in list(range(week_range[0], week_range[1]+1)):
+                weeks_list.append("{0}-{1}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
+                                  DatabaseManager.str_from_date(week.end_date, "%d.%m.%Y")))
+        return ','.join(weeks_list)
+
+
+    @staticmethod
+    def get_maxKids_perWeek(school_id, product_type, weeks=(1,12)):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
         data =  Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
                 Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
@@ -203,3 +236,19 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_application(school_id, summary_id):
         return Application.query.filter(Application.school_id==school_id).filter(Application.summary_id==summary_id).all()
+
+    @staticmethod
+    def get_records(school_id, product_type, weeks=(1, 12)):
+        item_to_sum = DatabaseManager.get_contract_products(product_type)
+        data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
+            Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
+            order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
+        return data
+
+    @staticmethod
+    def get_record(id):
+        return Record.query.filter(Record.id.like(id)).one()
+
+    @staticmethod
+    def get_remaining_product():
+        return DatabaseManager.get_product_no()

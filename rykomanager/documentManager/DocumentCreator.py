@@ -14,7 +14,8 @@ class DocumentCreator(ABC):
             app.logger.error("[%s] template document: %s does not exists", __class__.__name__, template_document)
         self.document = DocumentCreator.start_doc_gen(template_document, output_directory)
         self.fields_to_merge = self.document.get_merge_fields()
-        app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
+        if cfg.devDebug:
+            app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
 
         self.template_document = template_document
         self.output_directory = output_directory

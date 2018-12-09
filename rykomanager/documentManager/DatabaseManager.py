@@ -1,4 +1,4 @@
-from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application
+from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application, RecordState
 from rykomanager import db, app
 from abc import ABC, abstractmethod
 import datetime
@@ -42,6 +42,10 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_contract(school_id):
         return Contract.query.filter(Contract.school_id==school_id).filter(Contract.is_annex==False).one()
+
+    @staticmethod
+    def get_contracts(program_id):
+        return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.school_id).order_by(Contract.contract_no).all()
 
     @staticmethod
     def get_current_sem():
@@ -123,13 +127,18 @@ class DatabaseManager(ABC):
         return Record.query.filter(Record.date.like(g_date)).all()
 
     @staticmethod
+    def get_school_records(school_id):
+        return Record.query.join(Record.contract).join(Contract.school).filter(School.id.like(school_id)).all()
+
+    @staticmethod
     def get_product(program_id, product_id):
         return Product.query.filter(Program.id.like(program_id)).filter(Product.id.like(product_id)).first()
 
     @staticmethod
     def get_product_no(week_no=None):
         if not week_no:
-            pass
+            return Record.query.join(Record.contract).join(Record.product).join(Contract.school)\
+                .with_entities(School, Product, func.count(Product.name)).group_by(School.nick, Product.name).all()
         return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
             .with_entities(School, Product, func.count(Product.type)).group_by(School.nick, Product.type).all()
 
@@ -137,6 +146,13 @@ class DatabaseManager(ABC):
     def remove_record(id):
         Record.query.filter(Record.id == id).delete()
         db.session.commit()
+
+    @staticmethod
+    def remove_application(id):
+        #@TODO acutally check if deleted
+        Application.query.filter(Application.id == id).delete()
+        db.session.commit()
+        return True
 
     @staticmethod
     def add_row(model=None):
@@ -158,14 +174,15 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_next_summary_no(year):
-        return 1
+        return 2
 
     @staticmethod
     def get_product_amount(school_id, product_name, weeks=list()):
         product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()[0]
         item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
         data = Record.query.join(Contract).join(Product).filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
-                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id).with_entities(func.sum(item_to_sum).label('product_amount')).one()
+                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id)\
+            .filter(Record.state == RecordState.DELIVERED).with_entities(func.sum(item_to_sum).label('product_amount')).one()
         return data.product_amount if data.product_amount else 0
 
     @staticmethod
@@ -224,10 +241,14 @@ class DatabaseManager(ABC):
     def get_records(school_id, product_type, weeks=(1, 12)):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
         data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
-            Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
-            Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
+            Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
+            order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
         return data
 
     @staticmethod
     def get_record(id):
         return Record.query.filter(Record.id.like(id)).one()
+
+    @staticmethod
+    def get_remaining_product():
+        return DatabaseManager.get_product_no()

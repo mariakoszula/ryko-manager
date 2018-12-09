@@ -14,16 +14,20 @@ class DocumentCreator(ABC):
             app.logger.error("[%s] template document: %s does not exists", __class__.__name__, template_document)
         self.document = DocumentCreator.start_doc_gen(template_document, output_directory)
         self.fields_to_merge = self.document.get_merge_fields()
-        app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
+        if cfg.devDebug:
+            app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
 
         self.template_document = template_document
         self.output_directory = output_directory
         super(DocumentCreator, self).__init__()
 
     @abstractmethod
-    def generate(self, new_doc_name):
+    def generate(self, new_doc_name, gen_pdf=True):
         generated_file = path.join(self.output_directory, new_doc_name)
-        DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory)
+
+        res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
+        if gen_pdf and res:
+            DocumentCreator.generate_pdf(generated_file, self.output_directory)
 
     def generate_many(self):
         pass
@@ -55,7 +59,7 @@ class DocumentCreator(ABC):
     def end_doc_gen(document, generated_file, output_dir):
         document.write(generated_file)
         app.logger.info("[%s] Created new output directory: %s", __class__.__name__, generated_file, )
-        DocumentCreator.generate_pdf(generated_file, output_dir)
+        return True
 
     @abstractmethod
     def create(self):

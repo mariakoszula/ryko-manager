@@ -162,6 +162,14 @@
             language: {"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Polish.json"}
         });
     });
+        $(document).ready(function() {
+        $('#wz-table').DataTable({
+            responsive: true,
+            "pageLength": 100,
+             stateSave: true,
+            language: {"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Polish.json"}
+        });
+    });
     {% block script %}
 
     {% endblock %}

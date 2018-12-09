@@ -14,6 +14,7 @@ rykomanager/documentManager/ApplicationCreator.py
 rykomanager/documentManager/DatabaseManager.py
 rykomanager/documentManager/DocumentCreator.py
 rykomanager/documentManager/RecordCreator.py
+rykomanager/documentManager/RegisterCreator.py
 rykomanager/documentManager/SummaryCreator.py
 rykomanager/documentManager/__init__.py
 rykomanager/static/sign.css
@@ -181,6 +182,7 @@ rykomanager/templates/add_annex_form.html
 rykomanager/templates/base.html
 rykomanager/templates/create_records.html
 rykomanager/templates/generated_record.html
+rykomanager/templates/generated_record_per_school.html
 rykomanager/templates/index.html
 rykomanager/templates/school_form.html
 rykomanager/templates/schools_all.html

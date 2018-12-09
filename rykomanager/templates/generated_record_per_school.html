@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if current_date %}
-        Wygenerowane WZ na {{ current_date }}
-    {% endif %}
+        Wygenerowane WZ dla {{ records[0].contract.school.nick }}
 {% endblock %}
 
 {% block content %}
@@ -11,7 +9,7 @@
                             <table width="100%" class="table table-bordered table-hover" id="wz-table">
                                 <thead>
                                 <tr>
-                                        <th>Szkoła</th>
+                                        <th>Data</th>
                                         <th>Product</th>
                                         <th>Typ</th>
                                         <th>Ilość</th>
@@ -19,14 +17,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {% if daily_records %}
-                                    {% for record in daily_records %}
+                                {% if records %}
+                                    {% for record in records %}
                                         {% if record.state|string() == 'RecordState.DELIVERED' %}
                                             <tr class="success">
                                         {% else %}
                                             <tr class="warning">
                                         {% endif %}
-                                            <td>{{ record.contract.school.nick }}</td>
+                                            <td>{{ record.date.date() }}</td>
                                             <td>{{ record.product.get_name_mapping() }}</td>
                                             <td>{{ record.product.get_type_mapping() }}</td>
                                             {% if record.product.get_type_mapping() == "wo" %}
@@ -62,9 +60,9 @@
                                 </div>
                             </div>
                         </div>
-                        <a href="{{ url_for( 'create_records_per_week', week_id=week_id) }}">
+                        <a href="{{ url_for( 'create_records') }}">
                             <div class="panel-footer">
-                                <span class="pull-left">Dodaj</span>
+                                <span class="pull-left">Wróć do wyboru szkoły</span>
                                 <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
                                 <div class="clearfix"></div>
                             </div>
