@@ -15,7 +15,9 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.week_no = week_no
         self.is_first = is_first
         self.year = SummaryCreator._get_current_year()
-        self.no = DatabaseManager.get_next_summary_no(self.year)
+        self.no = DatabaseManager.get_next_summary_no()
+        print("DDDD is_first", is_first)
+        print(self.no)
         self.summary = None
         output_directory = path.join(cfg.output_dir_main)
         self.fruit_all = 0
@@ -28,7 +30,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
     @staticmethod
     def _get_current_year():
-        return 2018
+        return 2019
 
     def __base_check(self):
         calculated_fruitVeg_price = (self.fruit_all + self.veg_all) * DatabaseManager.get_fruit_price()
@@ -65,7 +67,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 city="Zielona Góra",
                 kids_no_fruitVeg=str(self.summary.kids_no),
                 kids_no_milk=str(self.summary.kids_no_milk),
-                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(program_id=1), week_range),
+                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(cfg.current_program_id), week_range),
                 is_first="X" if self.summary.is_first else "",
                 is_not_first="X" if not self.summary.is_first else "",
                 apple=str(self.summary.apple),

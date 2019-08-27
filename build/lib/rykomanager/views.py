@@ -2,6 +2,7 @@ from flask import render_template, request, flash, redirect, url_for
 import datetime
 from rykomanager import app
 from rykomanager.documentManager.AnnexCreator import AnnexCreator
+from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
@@ -10,6 +11,7 @@ from rykomanager.models import ProductName, ProductType
 import rykomanager.configuration as cfg
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
+from rykomanager.DateConverter import DateConverter
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -17,6 +19,7 @@ def index(weeks=(1,12)):
     school_data=dict()
     data = DatabaseManager.get_remaining_product()
     schools = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id)
+    print("Program", cfg.current_program_id, "SCHOOLDS", schools)
     for school in schools:
         for d in data:
             if (school == d[0]):
@@ -62,9 +65,9 @@ def index(weeks=(1,12)):
 
 @app.route('/schools_all')
 def schools_all():
-    all_schools_with_contract = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id)
-    
-    return render_template("schools_all.html", Schools=all_schools_with_contract)
+    all_schools = DatabaseManager.get_all_schools()
+    print("SCHOOLS", all_schools)
+    return render_template("schools_all.html", Schools=all_schools, program_id=cfg.current_program_id)
 
 
 @app.route('/create_register')
@@ -80,22 +83,43 @@ def school_form(school_id=None):
 
 
 @app.route('/school_form/<int:school_id>/add_annex/', methods=['GET', 'POST'])
-def school_form_add_annex(school_id=None):
+def school_form_add_annex(school_id):
+    school = DatabaseManager.get_school(school_id)
     if request.method == 'POST':
         if not request.form['contract_date'] or not request.form['validity_date']:
             flash('Uzupełnij wszystkie daty', 'error')
         elif not request.form['fruitVeg_products'] and not request.form['dairy_products']:
             flash('Uzupełnij wartość produktu, którego liczba zmieniła się', 'error')
         else:
-            if request.form['is_contract']: # @TODO add properly action when checkbox is checked
-                app.logger.warn("Var is_annex is not set: Creating contract is not yet implemented")
-            else:
-                ac = AnnexCreator(school_id, cfg.current_program_id)
-                ac.create(request.form['contract_date'], request.form['validity_date'],
-                           request.form['fruitVeg_products'], request.form['dairy_products'])
+            ac = AnnexCreator(school_id, cfg.current_program_id)
+            ac.create(request.form['contract_date'], request.form['validity_date'],
+                       request.form['fruitVeg_products'], request.form['dairy_products'])
 
             return redirect(url_for('school_form', school_id=school_id))
-    return render_template("add_annex_form.html", school=None)
+    return render_template("add_annex_form.html", school=school)
+
+
+@app.route('/school_form/<int:school_id>/add_contract/', methods=['GET', 'POST'])
+def school_form_add_contract(school_id):
+    school = DatabaseManager.get_school(school_id)
+    school_contract = DatabaseManager.get_contract(school_id, cfg.current_program_id)
+    if request.method == 'POST':
+        date = DateConverter.to_date(request.form['contract_date'])
+        fruitVeg_products = request.form['fruitVeg_products']
+        dairy_products = request.form['dairy_products']
+
+        if not school_contract:
+            if not date:
+                flash('Uzupełnij datę zawarcia umowy', 'error')
+            else:
+                new_contract = ContractCreator(school, cfg.current_program_id)
+                new_contract.create(date)
+                return redirect(url_for('school_form', school_id=school_id))
+
+        if school_contract:
+            school_contract.update(date, date, fruitVeg_products, dairy_products)
+            return redirect(url_for('school_form', school_id=school_id))
+    return render_template("add_contract_form.html", school=school, contract=school_contract)
 
 
 @app.route('/create_records', methods=['GET', 'POST'])
@@ -216,7 +240,9 @@ def my_utility_processor():
 
 @app.route('/create_summary/<int:week_id>')
 def create_summary(week_id, week_no=6):
-    summary = SummaryCreator(week_id, week_no, False)
+    print("MMMM")
+    print(DatabaseManager.get_summary(program_id=cfg.current_program_id) is None)
+    summary = SummaryCreator(week_id, week_no, DatabaseManager.get_summary(program_id=cfg.current_program_id) is None)
     summary.create()
 
     appCreators = list()

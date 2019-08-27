@@ -1,11 +1,12 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 import rykomanager.configuration as cfg
-from rykomanager import app
 from docx import Document
 from os import path
 from datetime import datetime
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from rykomanager.DateConverter import DateConverter
+
 
 class RegisterCreator(DocumentCreator):
     template_document = cfg.register_docx
@@ -47,13 +48,12 @@ class RegisterCreator(DocumentCreator):
                 record_dict['school_regon'] = RegisterCreator.CELL_TO_MERGE_MARK
                 record_dict['school_phone'] = RegisterCreator.CELL_TO_MERGE_MARK
                 record_dict['school_email'] = RegisterCreator.CELL_TO_MERGE_MARK
-                validity_date = DatabaseManager.date_from_str(contract.validity_date)
+                validity_date = DateConverter.to_date(contract.validity_date)
                 record_dict['contract_info'] = "{}/{}".format(contract.contract_no.split("_")[0], contract.contract_year)
-                record_dict['annex_info'] = "{}*".format(DatabaseManager.str_from_date(validity_date,"%d-%m-%Y"))
+                record_dict['annex_info'] = "{}*".format(DateConverter.to_string(validity_date,"%d-%m-%Y"))
             record_dict['kids_milk'] = str(contract.dairy_products)
             record_dict['kids_fruitveg'] = str(contract.fruitVeg_products)
             self.records_to_merge.append(record_dict)
-
 
     def generate(self, new_doc_name, gen_pdf=True):
         self._prepare_school_data()

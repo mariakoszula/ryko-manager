@@ -1,9 +1,11 @@
 from rykomanager.models import School, Contract, Program, Week, Product, ProductType, Record, ProductName, Summary, Application, RecordState
 from rykomanager import db, app
 from abc import ABC, abstractmethod
-import datetime
 import re
 from sqlalchemy import func, exc
+import datetime
+from rykomanager.DateConverter import DateConverter
+import rykomanager.configuration as cfg
 
 
 class DatabaseManager(ABC):
@@ -16,32 +18,17 @@ class DatabaseManager(ABC):
         pass
 
     @staticmethod
-    def date_from_str(date, pattern=None):
-        if isinstance(date, str):
-            pattern_used = '%Y-%m-%d' if not pattern else pattern
-            return datetime.datetime.strptime(date, pattern_used)
-        elif isinstance(date, datetime.datetime):
-            return date
-        else:
-            print("LOG ERROR")
-
-    @staticmethod
     def modify_row():
         db.session.commit()
-
-    @staticmethod
-    def str_from_date(date, pattern=None):
-        # @TODO check if given strig has this pattern
-        pattern_used = '%Y-%m-%d' if not pattern else pattern
-        return datetime.datetime.strftime(date, pattern_used)
 
     @staticmethod
     def get_school(school_id):
         return School.query.filter_by(id=school_id).first()
 
     @staticmethod
-    def get_contract(school_id):
-        return Contract.query.filter(Contract.school_id==school_id).filter(Contract.is_annex==False).one()
+    def get_contract(school_id, program_id):
+        return Contract.query.filter(Contract.school_id==school_id).filter(Contract.program_id==program_id)\
+            .filter(Contract.is_annex==False).first()
 
     @staticmethod
     def get_contracts(program_id):
@@ -49,7 +36,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_current_sem():
-        return "I" #@TODO fill with sql query
+        return "II" #@TODO fill with sql query
 
     @staticmethod
     def get_school_year():
@@ -57,9 +44,9 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def is_annex(validity_date, school_id):
-        rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DatabaseManager.date_from_str(validity_date)
+        rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DateConverter.to_string(validity_date)
         return Contract.query.join(Contract.school).filter(School.id==school_id)\
-            .filter(Contract.validity_date==DatabaseManager.str_from_date(rdate)).all()
+            .filter(Contract.validity_date == DateConverter.to_date(rdate)).all()
 
     @staticmethod
     def is_summary(no, year):
@@ -75,9 +62,21 @@ class DatabaseManager(ABC):
             return max(annex_no_list) + 1
 
     @staticmethod
+    def get_next_contract_no(program_id):
+        last_contract = Contract.query.filter(Contract.program_id == program_id).order_by(Contract.contract_no.desc()).first()
+        if not last_contract:
+            return 1
+        else:
+            return last_contract.contract_no + 1
+
+    @staticmethod
+    def get_contract_year(program_id):
+        return 2019
+
+    @staticmethod
     def get_all_schools_with_contract(program_id):
         return db.session.query(School).join(School.contracts).filter(
-            Program.id.like(program_id)).all()
+            Contract.program_id.like(program_id)).all()
 
     @staticmethod
     def get_school(school_id):
@@ -93,7 +92,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_current_contract(school_id, program_id, date=None):
-        date_to_compare = DatabaseManager.date_from_str(date) if date else datetime.datetime.now()
+        date_to_compare = DateConverter.to_date(date) if date else datetime.datetime.now()
         res = School.query.filter(School.id.like(school_id)).first()
         for contract in res.contracts:
             if contract.program_id == program_id and contract.validity_date.date() <= date_to_compare.date():
@@ -102,15 +101,15 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_weeks(program_id):
-        return Week.query.filter(Program.id == program_id).all()
+        return Week.query.filter(Week.program_id == program_id).all()
 
     @staticmethod
     def get_week(week_id, program_id):
-        return Week.query.filter(Program.id == program_id).filter(Week.id == week_id).first()
+        return Week.query.filter(Week.program_id == program_id).filter(Week.id == week_id).first()
 
     @staticmethod
     def get_week_by_date(date):
-        rdate = date if not isinstance(date, datetime.datetime) else DatabaseManager.date_from_str(date)
+        rdate = date if not isinstance(date, datetime.datetime) else DateConverter.to_string(date, pattern="%Y-%m-%d %H:%M:%S")
         return Week.query.filter(Week.start_date <= rdate).filter(Week.end_date >= rdate).first()
 
     @staticmethod
@@ -123,12 +122,12 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_daily_records(current_date):
-        g_date = current_date if isinstance(current_date, datetime.datetime) else DatabaseManager.date_from_str(current_date)
-        return Record.query.filter(Record.date.like(g_date)).all()
+        g_date = current_date if isinstance(current_date, datetime.datetime) else DateConverter.to_date(current_date)
+        return Record.query.filter(Program.id.like(cfg.current_program_id)).filter(Record.date.like(g_date)).all()
 
     @staticmethod
     def get_school_records(school_id):
-        return Record.query.join(Record.contract).join(Contract.school).filter(School.id.like(school_id)).all()
+        return Record.query.join(Record.contract).join(Contract.school).filter(Program.id.like(cfg.current_program_id)).filter(School.id.like(school_id)).all()
 
     @staticmethod
     def get_product(program_id, product_id):
@@ -137,9 +136,10 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_product_no(week_no=None):
         if not week_no:
-            return Record.query.join(Record.contract).join(Record.product).join(Contract.school)\
+            return Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Contract.program_id == cfg.current_program_id)\
                 .with_entities(School, Product, func.count(Product.name)).group_by(School.nick, Product.name).all()
         return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
+            .filter(Week.program_id == cfg.current_program_id)\
             .with_entities(School, Product, func.count(Product.type)).group_by(School.nick, Product.type).all()
 
     @staticmethod
@@ -173,15 +173,16 @@ class DatabaseManager(ABC):
         return True
 
     @staticmethod
-    def get_next_summary_no(year):
-        return 2
+    def get_next_summary_no():
+        return DatabaseManager.get_summary(program_id=cfg.current_program_id).no + 1
 
     @staticmethod
     def get_product_amount(school_id, product_name, weeks=list()):
-        product_type = Product.query.filter(Product.name==product_name).with_entities(Product.type).one()[0]
+        product_type = Product.query.filter(Product.name==product_name).filter(Product.program_id == cfg.current_program_id).with_entities(Product.type).one()[0]
         item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
-        data = Record.query.join(Contract).join(Product).filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
-                                                                 Week.week_no<=weeks[1]).filter(Contract.school_id==school_id)\
+        data = Record.query.join(Contract).join(Product).filter(Contract.program_id == cfg.current_program_id).\
+                                                         filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
+                                                         Week.week_no<=weeks[1]).filter(Contract.school_id==school_id)\
             .filter(Record.state == RecordState.DELIVERED).with_entities(func.sum(item_to_sum).label('product_amount')).one()
         return data.product_amount if data.product_amount else 0
 
@@ -195,26 +196,27 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_dates(week_no):
-        week = Week.query.filter(Week.program_id==1).filter(Week.week_no==week_no).one()
-        return "{0}-{1}\n{2}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
-                                DatabaseManager.str_from_date(week.end_date, "%d.%m"),
-                                DatabaseManager.str_from_date(week.end_date, "%Y"))
+        week = Week.query.filter(Week.program_id==cfg.current_program_id).filter(Week.week_no==week_no).one()
+        return "{0}-{1}\n{2}".format(DateConverter.to_string(week.start_date, "%d.%m"),
+                                     DateConverter.to_string(week.end_date, "%d.%m"),
+                                     DateConverter.to_string(week.end_date, "%Y"))
 
     @staticmethod
     def str_from_weeks(weeks, week_range=(1,12)):
         weeks_list=list()
         for week in weeks:
             if week.week_no in list(range(week_range[0], week_range[1]+1)):
-                weeks_list.append("{0}-{1}".format(DatabaseManager.str_from_date(week.start_date, "%d.%m"),
-                                  DatabaseManager.str_from_date(week.end_date, "%d.%m.%Y")))
+                weeks_list.append("{0}-{1}".format(DateConverter.to_string(week.start_date, "%d.%m"),
+                                  DateConverter.to_string(week.end_date, "%d.%m.%Y")))
         return ','.join(weeks_list)
 
 
     @staticmethod
     def get_maxKids_perWeek(school_id, product_type, weeks=(1,12)):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
-        data =  Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
-                Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
+        data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).\
+                filter(Week.program_id == cfg.current_program_id).\
+                filter(Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
                 func.max(item_to_sum).label('max_amount')).one()
         return data.max_amount if data.max_amount else 0
 
@@ -227,7 +229,8 @@ class DatabaseManager(ABC):
         if summary_id:
             return Summary.query.filter_by(id=summary_id).first()
         if program_id:
-            return Summary.query.filter(Summary.program_id==program_id).all()
+            return Summary.query.filter(Summary.program_id == program_id).order_by(Summary.no.desc()).first()
+        return None
 
     @staticmethod
     def get_school_with_summary(summary_id):
@@ -240,8 +243,8 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_records(school_id, product_type, weeks=(1, 12)):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
-        data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(
-            Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
+        data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(Week.program_id == cfg.current_program_id).\
+            filter(Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
             order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
         return data
 
@@ -252,3 +255,7 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_remaining_product():
         return DatabaseManager.get_product_no()
+
+    @staticmethod
+    def get_program(program_id):
+        return Program.query.filter(Program.id.like(program_id)).first()

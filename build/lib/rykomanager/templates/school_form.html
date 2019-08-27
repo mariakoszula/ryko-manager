@@ -50,12 +50,39 @@
                                             <td>{{ contract.validity_date.date() }}</td>
                                             <td>{{ contract.fruitVeg_products }}</td>
                                             <td>{{ contract.dairy_products }}</td>
+                                            <td>
+                                                {% if not contract.is_anex %}
+                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form_add_contract' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
+                                                {% else %}
+                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-
+                                {% if not Contracts %}
+                                <div class="panel panel-green">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-3">
+                                                <i class="fa fa-tasks fa-5x"></i>
+                                            </div>
+                                            <div class="col-xs-9 text-right">
+                                                <div class="huge">Nowa Umowa</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for( 'school_form_add_contract', school_id=School.id) }}">
+                                    <div class="panel-footer">
+                                        <span class="pull-left">Dodaj</span>
+                                        <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                    </a>
+                                </div>
+                                {% endif %}
                              <div class="panel panel-yellow">
                             <div class="panel-heading">
                                 <div class="row">
@@ -63,7 +90,7 @@
                                         <i class="fa fa-tasks fa-5x"></i>
                                     </div>
                                     <div class="col-xs-9 text-right">
-                                        <div class="huge">Aneks</div>
+                                        <div class="huge">Nowy Aneks</div>
                                     </div>
                                 </div>
                             </div>

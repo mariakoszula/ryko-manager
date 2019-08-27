@@ -3,15 +3,22 @@ from rykomanager.documentManager.DatabaseManager import DatabaseManager
 import rykomanager.configuration as cfg
 from rykomanager.models import Summary, ProductName, ProductType, Application, Product
 from rykomanager import app
-
-from os import path
+from datetime import datetime
+from shutil import copyfile
+from os import path, makedirs, remove
+from rykomanager.DateConverter import DateConverter
 
 
 class ApplicationCreator(DocumentCreator, DatabaseManager):
     template_document_v = cfg.applicaton_docx_5
     template_document_va = cfg.application_docx_5a
 
+    main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_folder_name)
+
     def __init__(self, school_id, summary_id):
+        if not path.exists(ApplicationCreator.main_annex_dir):
+            makedirs(ApplicationCreator.main_annex_dir)
+
         self.school_id = school_id
         self.school = DatabaseManager.get_school(school_id)
         self.summary = DatabaseManager.get_summary(summary_id)
@@ -39,6 +46,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.records_to_merge_milk = []
         self.sum_product_vegFruit = 0
         self.sum_product_milk = 0
+        self.sign_date = datetime(2019, 6, 17)
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick,
                                      cfg.annex_folder_name)
         self.output_directory = output_directory
@@ -58,8 +66,8 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             school_regon=self.school.regon,
             school_address=self.school.address,
             city=self.school.city,
-            max_kids_fruitVeg=str(max(DatabaseManager.get_maxKids_perWeek(self.school.id, ProductType.FRUIT_VEG), DatabaseManager.get_contract(self.school.id).fruitVeg_products)),
-            max_kids_milk=str(max(DatabaseManager.get_maxKids_perWeek(self.school.id, ProductType.DAIRY), DatabaseManager.get_contract(self.school.id).dairy_products)),
+            max_kids_fruitVeg=str(max(DatabaseManager.get_maxKids_perWeek(self.school.id, ProductType.FRUIT_VEG), DatabaseManager.get_contract(self.school.id, cfg.current_program_id).fruitVeg_products)),
+            max_kids_milk=str(max(DatabaseManager.get_maxKids_perWeek(self.school.id, ProductType.DAIRY), DatabaseManager.get_contract(self.school.id, cfg.current_program_id).dairy_products)),
             week_date_1=DatabaseManager.get_dates(1) if self.summary.is_first else "-",
             week_date_2=DatabaseManager.get_dates(2) if self.summary.is_first else "-",
             week_date_3=DatabaseManager.get_dates(3) if self.summary.is_first else "-",
@@ -111,9 +119,19 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             yoghurt=str(self.yoghurt),
             kefir=str(self.kefir),
             cheese=str(self.cheese),
-            dairy_all=str(self.dairy_all)
+            dairy_all=str(self.dairy_all),
+            date_day=DateConverter.two_digits(self.sign_date.day),
+            date_month=DateConverter.two_digits(self.sign_date.month),
+            date_year=str(self.sign_date.year)
         )
-        DocumentCreator.generate(self, "Oswiadczenie_V_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year), False)
+        doc_5_name = "Oswiadczenie_V_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year)
+        doc_5_name_copy = path.join(ApplicationCreator.main_annex_dir,
+                                                    "{0}_OswiadczenieV_{1}_{2}.docx".format(self.school.nick, self.summary.no, self.summary.year))
+        DocumentCreator.generate(self, doc_5_name, False)
+        if path.exists(doc_5_name_copy):
+            remove(doc_5_name_copy)
+        copyfile(path.join(self.output_directory, doc_5_name), doc_5_name_copy)
+
 
     def _generate_5a(self):
         DocumentCreator.__init__(self, ApplicationCreator.template_document_va, self.output_directory)
@@ -126,25 +144,34 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             school_regon=self.school.regon,
             school_address=self.school.address,
             city=self.school.city,
-            weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(1), self.weeks),
+            weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(cfg.current_program_id), self.weeks),
             sum_vegFruit=str(self.sum_product_vegFruit),
             sum_kids_vegFruit=str(self.sum_product_vegFruit),
             sum_milk=str(self.sum_product_milk),
-            sum_kids_milk=str(self.sum_product_milk)
+            sum_kids_milk=str(self.sum_product_milk),
+            date_day=DateConverter.two_digits(self.sign_date.day),
+            date_month=DateConverter.two_digits(self.sign_date.month),
+            date_year=str(self.sign_date.year)
         )
-        DocumentCreator.generate(self, "Ewidencja_VA_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year), False)
+        doc_5a_name = "Ewidencja_VA_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year)
+        doc_5a_name_copy = path.join(ApplicationCreator.main_annex_dir,
+                                                    "{0}_EwidencjaVa_{1}_{2}.docx".format(self.school.nick, self.summary.no, self.summary.year))
+        DocumentCreator.generate(self, doc_5a_name, False)
+        if path.exists(doc_5a_name_copy):
+            remove(doc_5a_name_copy)
+        copyfile(path.join(self.output_directory, doc_5a_name), doc_5a_name_copy)
 
     def __prepare_data(self):
         for record in DatabaseManager.get_records(self.school_id, ProductType.FRUIT_VEG, self.weeks):
             record_dict = dict()
-            record_dict['date_vegFruit'] = DatabaseManager.str_from_date(record.date, "%d.%m.%Y")
+            record_dict['date_vegFruit'] = DateConverter.to_string(record.date, "%d.%m.%Y")
             record_dict['kids_vegFruit'] = str(record.product_no)
             record_dict['vegFruit'] = Product.get_name_map(record.product)
             self.records_to_merge_vegFruit.append(record_dict)
 
         for record in DatabaseManager.get_records(self.school_id, ProductType.DAIRY, self.weeks):
             record_dict = dict()
-            record_dict['date_milk'] = DatabaseManager.str_from_date(record.date, "%d.%m.%Y")
+            record_dict['date_milk'] = DateConverter.to_string(record.date, "%d.%m.%Y")
             record_dict['kids_milk'] = str(record.product_no)
             record_dict['milk'] = Product.get_name_map(record.product)
             self.records_to_merge_milk.append(record_dict)

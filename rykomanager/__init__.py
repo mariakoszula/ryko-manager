@@ -1,7 +1,8 @@
 from flask import Flask
 import logging.handlers
 from flask_sqlalchemy import SQLAlchemy
-import  rykomanager.configuration  as cfg
+import rykomanager.configuration as cfg
+
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'vDMWkzeO1d'

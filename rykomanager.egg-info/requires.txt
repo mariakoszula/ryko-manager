@@ -2,3 +2,4 @@ flask
 flask_sqlalchemy
 docx-mailmerge
 python-docx
+pywin32

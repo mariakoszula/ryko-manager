@@ -1,5 +1,6 @@
 MANIFEST.in
 setup.py
+rykomanager/DateConverter.py
 rykomanager/__init__.py
 rykomanager/configuration.py
 rykomanager/models.py
@@ -11,6 +12,7 @@ rykomanager.egg-info/requires.txt
 rykomanager.egg-info/top_level.txt
 rykomanager/documentManager/AnnexCreator.py
 rykomanager/documentManager/ApplicationCreator.py
+rykomanager/documentManager/ContractCreator.py
 rykomanager/documentManager/DatabaseManager.py
 rykomanager/documentManager/DocumentCreator.py
 rykomanager/documentManager/RecordCreator.py
@@ -179,6 +181,7 @@ rykomanager/static/vendor/morrisjs/morris.min.js
 rykomanager/static/vendor/raphael/raphael.js
 rykomanager/static/vendor/raphael/raphael.min.js
 rykomanager/templates/add_annex_form.html
+rykomanager/templates/add_contract_form.html
 rykomanager/templates/base.html
 rykomanager/templates/create_records.html
 rykomanager/templates/generated_record.html

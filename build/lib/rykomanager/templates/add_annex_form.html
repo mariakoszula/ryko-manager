@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Dane szkoły{% endblock %}
+{% block title %}Szkoła {{ school.nick }}{% endblock %}
 
 {% block content %}
       <div class="col-lg-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            Dodaj aneks dla
+                            Dodaj aneks
                         </div>
                         <div class="panel-body">
                             <div class="col-lg-6">
@@ -17,16 +17,10 @@
                                 {%- endfor %}
                                 <form role="form" action="{{ request.path }}" method="post">
                                             <div class="form-group">
-                                                <label>Data zawaracia</label><input class="form-control" name="contract_date">
-                                                <label>Data obowiązywania</label><input class="form-control" name="validity_date">
+                                                <label>Data zawaracia (dd.mm.rrrr)</label><input class="form-control" name="contract_date">
+                                                <label>Data obowiązywania (dd.mm.rrrr)</label><input class="form-control" name="validity_date">
                                                 <label>Produkt owocowo-warzywny</label><input class="form-control" name="fruitVeg_products">
                                                 <label>Produkt mleczny</label><input class="form-control" name="dairy_products">
-                                                <div class="checkbox">
-                                                <label>
-                                                    <input type="hidden" name="is_contract" value=""/>
-                                                    <input type="checkbox" name="is_contract" value="1"/>Nowa umowa
-                                                </label>
-                                                </div>
                                             </div>
 
                                     <button type="submit" class="btn btn-primary btn-lg btn-block">Dodaj</button>

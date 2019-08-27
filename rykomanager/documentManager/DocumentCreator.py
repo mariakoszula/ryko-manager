@@ -5,9 +5,12 @@ from mailmerge import MailMerge
 from abc import ABC, abstractmethod
 from os import path, makedirs
 import subprocess
-
+import win32api
+from shutil import copy
+from os import path, makedirs, remove, rename
 
 class DocumentCreator(ABC):
+    wdFormatPDF = 17
 
     def __init__(self, template_document, output_directory):
         if not path.exists(template_document):
@@ -28,6 +31,26 @@ class DocumentCreator(ABC):
         res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
         if gen_pdf and res:
             DocumentCreator.generate_pdf(generated_file, self.output_directory)
+            return generated_file
+        elif res:
+            DocumentCreator.print_pdf(generated_file)
+            return generated_file
+        return None #@TODO create exception here and return the ProperException
+
+    @staticmethod
+    def copy_to_path(source, dest):
+        print("source ", source)
+        print("dst ", dest)
+        old_file_name = path.basename(source)
+        new_file_name = path.basename(dest)
+        new_dst = path.dirname(dest)
+        if not path.exists(new_dst):
+            makedirs(new_dst)
+        if source:
+            if path.exists(path.join(dest)):
+                remove(path.join(dest))
+            copy(source, new_dst)
+            rename(path.join(new_dst, old_file_name), path.join(new_dst, new_file_name))
 
     def generate_many(self):
         pass
@@ -43,6 +66,12 @@ class DocumentCreator(ABC):
         except Exception as e:
             app.logger.error("[%s] Serious error when generating pdf from docx %s out_dir %s: err_msg: %s. Check libreoffice converter path: %s",
                                    __class__.__name__, docx_to_convert, output_dir , e, cfg.libreoffice_converter)
+
+    @staticmethod
+    def print_pdf(filename):
+        pass
+        #win32api.ShellExecute(0, 'open', 'gsprint.exe',
+        #                      '-printer "\\\\' + self.server + '\\' + self.printer_name + '" ' + file, '.', 0)
 
     @staticmethod
     def create_directory(output_directory):

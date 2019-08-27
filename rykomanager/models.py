@@ -1,5 +1,6 @@
 from rykomanager import db
 import enum
+from rykomanager.DateConverter import  DateConverter
 
 
 class School(db.Model):
@@ -54,6 +55,15 @@ class Contract(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
+    def update(self, contract_date, validity_date, fruitVeg_products, dairy_products):
+        self.contract_date = DateConverter.to_date(contract_date)
+        self.validity_date = validity_date
+        self.fruitVeg_products = fruitVeg_products
+        self.dairy_products = dairy_products
+        db.session.commit()
+
+    def convert_date_to_string(self):
+        return DateConverter.to_string(self.contract_date)
 
     __table_args__ = (
         db.UniqueConstraint('validity_date', 'school_id'),
