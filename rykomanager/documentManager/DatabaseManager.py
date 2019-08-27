@@ -2,7 +2,7 @@ from rykomanager.models import School, Contract, Program, Week, Product, Product
 from rykomanager import db, app
 from abc import ABC, abstractmethod
 import re
-from sqlalchemy import func, exc
+from sqlalchemy import func, exc, update
 import datetime
 from rykomanager.DateConverter import DateConverter
 import rykomanager.configuration as cfg
@@ -259,3 +259,22 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_program(program_id):
         return Program.query.filter(Program.id.like(program_id)).first()
+
+    @staticmethod
+    def update_school_data(school, **data_to_update):
+        if isinstance(school, School):
+            school.nick = data_to_update['nick']
+            school.name = data_to_update['name']
+            school.address = data_to_update['address']
+            school.regon = data_to_update['regon']
+            school.city = data_to_update['city']
+            school.email = data_to_update['email']
+            school.phone = data_to_update['phone']
+            school.nip = data_to_update['nip']
+            school.responsible_person = data_to_update['responsible_person']
+            school.representative_nip = data_to_update['representative_nip']
+            school.representative = data_to_update['representative']
+            school.representative_regon = data_to_update['representative_regon']
+
+            db.session.commit()
+            return school.id

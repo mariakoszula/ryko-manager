@@ -75,10 +75,26 @@ def create_register():
     RegisterCreator().create()
     return schools_all()
 
+def empty_if_none(value):
+    if not value:
+        return ""
+    return value
 
-@app.route('/school_form/<int:school_id>')
+@app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
 def school_form(school_id=None):
-    return render_template("school_form.html",  School=DatabaseManager.get_school(school_id),
+    current_school = DatabaseManager.get_school(school_id)
+    if request.method == 'POST':
+            data_to_update = {"nick": empty_if_none(request.form["nick"]), "name": empty_if_none(request.form["name"]),
+                              "address": empty_if_none(request.form["address"]), "city": empty_if_none(request.form["city"]),
+                              "nip": empty_if_none(request.form["nip"]), "regon": empty_if_none(request.form["regon"]),
+                              "email": empty_if_none(request.form["email"]), "phone": empty_if_none(request.form["phone"]),
+                              "responsible_person": empty_if_none(request.form["responsible_person"]),
+                              "representative": empty_if_none(request.form["representative"]),
+                              "representative_nip": empty_if_none(request.form["representative_nip"]),
+                              "representative_regon": empty_if_none(request.form["representative_regon"])}
+            school_id = DatabaseManager.update_school_data(current_school, **data_to_update)
+            return redirect(url_for('school_form', school_id=school_id))
+    return render_template("school_form.html",  School=current_school,
                                                 Contracts=DatabaseManager.get_all_contracts(school_id, cfg.current_program_id))
 
 

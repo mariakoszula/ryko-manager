@@ -10,20 +10,20 @@
                         </div>
                         <div class="panel-body">
                             <div class="col-lg-6">
-                                <form role="form">
+                                <form role="form" action="{{ request.path }}"   method="post">
                                             <div class="form-group">
-                                                <label>Nick</label><input class="form-control" {% if  School.nick  %}value="{{ School.nick }}"{% endif %}>
-                                                <label>Nazwa</label><input class="form-control" {% if  School.name  %}value="{{ School.name }}"{% endif %}>
-                                                <label>Adres</label><input class="form-control" {% if  School.address  %}value="{{ School.address }}"{% endif %}>
-                                                <label>REGON</label><input class="form-control" {% if  School.regon  %}value="{{ School.regon }}"{% endif %}>
-                                                <label>NIP*</label><input class="form-control" {% if  School.nip  %}value="{{ School.nip }}"{% endif %}>
-                                                <label>Email</label><input class="form-control" {% if  School.email  %}value="{{ School.email }}"{% endif %}>
-                                                <label>Telefon</label><input class="form-control" {% if  School.phone  %}value="{{ School.phone }}"{% endif %}>
-                                                <label>Miasto</label><input class="form-control" {% if  School.city  %}value="{{ School.city }}"{% endif %}>
-                                                <label>Osoba reprezentująca</label><input class="form-control" {% if  School.responsible_person  %}value="{{ School.responsible_person }}"{% endif %}>
-                                                <label>Nazwa organu prowadzącego*</label><input class="form-control" {% if  School.representative  %}value="{{ School.representative }}"{% endif %}>
-                                                <label>NIP organu prowadzącego*</label><input class="form-control" {% if  School.representative_nip  %}value="{{ School.representative_nip }}"{% endif %}>
-                                                <label>REGON organu prowadzącego*</label><input class="form-control" {% if  School.representative_regon  %}value="{{ School.representative_regon }}"{% endif %}>
+                                                <label>Nick</label><input class="form-control" name="nick" {% if  School.nick  %} value="{{ School.nick }}"{% endif %}>
+                                                <label>Nazwa</label><input class="form-control" name="name" {% if  School.name  %} value="{{ School.name }}"{% endif %}>
+                                                <label>Adres</label><input class="form-control" name="address" {% if  School.address  %} value="{{ School.address }}"{% endif %}>
+                                                <label>REGON</label><input class="form-control" name="regon" {% if  School.regon  %}value="{{ School.regon }}"{% endif %}>
+                                                <label>NIP*</label><input class="form-control" name="nip" {% if  School.nip  %}value="{{ School.nip }}"{% endif %}>
+                                                <label>Email</label><input class="form-control" name="email" {% if  School.email  %}value="{{ School.email }}"{% endif %}>
+                                                <label>Telefon</label><input class="form-control" name="phone" {% if  School.phone  %}value="{{ School.phone }}"{% endif %}>
+                                                <label>Miasto</label><input class="form-control" name="city" {% if  School.city  %}value="{{ School.city }}"{% endif %}>
+                                                <label>Osoba reprezentująca</label><input class="form-control" name="responsible_person" {% if  School.responsible_person  %}value="{{ School.responsible_person }}"{% endif %}>
+                                                <label>Nazwa organu prowadzącego*</label><input class="form-control" name="representative" {% if  School.representative  %}value="{{ School.representative }}"{% endif %}>
+                                                <label>NIP organu prowadzącego*</label><input class="form-control" name="representative_nip" {% if  School.representative_nip  %}value="{{ School.representative_nip }}"{% endif %}>
+                                                <label>REGON organu prowadzącego*</label><input class="form-control" name="representative_regon" {% if  School.representative_regon  %}value="{{ School.representative_regon }}"{% endif %}>
                                                 <p class="help-block">*pola nieobowiązkowe</p>
                                             </div>
 
@@ -70,7 +70,7 @@
                                                 <i class="fa fa-tasks fa-5x"></i>
                                             </div>
                                             <div class="col-xs-9 text-right">
-                                                <div class="huge">Nowa Umowa</div>
+                                                <div class="huge">Dodaj Umowe</div>
                                             </div>
                                         </div>
                                     </div>
@@ -90,7 +90,7 @@
                                         <i class="fa fa-tasks fa-5x"></i>
                                     </div>
                                     <div class="col-xs-9 text-right">
-                                        <div class="huge">Nowy Aneks</div>
+                                        <div class="huge">Dodaj Aneks</div>
                                     </div>
                                 </div>
                             </div>
