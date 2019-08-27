@@ -257,6 +257,13 @@ def create_summary(week_id, week_no=6):
     summary.generate()
     return redirect(url_for("index", weeks=(1,12), dairy_summary=None, school_data="", product_remaining=""))
 
+@app.route('/program')
+def program():
+    return render_template("program.html")
+
+@app.route('/add_program')
+def add_program():
+    return render_template("program.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

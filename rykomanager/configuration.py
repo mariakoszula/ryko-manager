@@ -16,6 +16,5 @@ annex_dir_name = 'Aneksy'
 record_folder_name = 'WZ'
 #libreoffice_converter = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe' # development server
 libreoffice_converter = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe' #production server
-#current_program_id = 1
-current_program_id = 2
+current_program_id = 0
 devDebug = True
