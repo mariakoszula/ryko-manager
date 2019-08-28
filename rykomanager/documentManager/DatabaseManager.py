@@ -278,3 +278,7 @@ class DatabaseManager(ABC):
 
             db.session.commit()
             return school.id
+
+    @staticmethod
+    def id_of_school_being_added(depicting_str):
+        return School.query.filter(School.nick == depicting_str).first()

@@ -7,12 +7,13 @@ from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
 from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
-from rykomanager.models import ProductName, ProductType
+from rykomanager.models import ProductName, ProductType, School
 import rykomanager.configuration as cfg
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
 
+INVALID_SCHOOL_ID = 0xFFFF
 
 @app.route('/', methods=['GET', 'POST'])
 def index(weeks=(1,12)):
@@ -66,8 +67,7 @@ def index(weeks=(1,12)):
 @app.route('/schools_all')
 def schools_all():
     all_schools = DatabaseManager.get_all_schools()
-    print("SCHOOLS", all_schools)
-    return render_template("schools_all.html", Schools=all_schools, program_id=cfg.current_program_id)
+    return render_template("schools_all.html", Schools=all_schools, program_id=cfg.current_program_id, invalid_school_id=INVALID_SCHOOL_ID)
 
 
 @app.route('/create_register')
@@ -81,7 +81,24 @@ def empty_if_none(value):
     return value
 
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
-def school_form(school_id=None):
+def school_form(school_id=INVALID_SCHOOL_ID):
+    if school_id == INVALID_SCHOOL_ID:
+        FILL_STR = "Wpisz poprawne"
+        FILL_BY_SCHOOL = " lub zostaw kropki .........................................."
+        id_of_school_being_added = DatabaseManager.id_of_school_being_added(FILL_STR)
+        if not id_of_school_being_added:
+            new_school = School(nick=FILL_STR, name=FILL_STR,
+                            address=FILL_STR,
+                            city=FILL_STR, regon=FILL_STR,
+                            email=FILL_STR, responsible_person=FILL_STR + FILL_BY_SCHOOL,
+                            phone=FILL_STR + FILL_BY_SCHOOL)
+            if DatabaseManager.add_row(new_school):
+                return redirect(url_for('school_form', school_id=new_school.id))
+            else:
+                return redirect(url_for('school_form', school_id=INVALID_SCHOOL_ID))
+        else:
+            return redirect(url_for('school_form', school_id=id_of_school_being_added.id))
+
     current_school = DatabaseManager.get_school(school_id)
     if request.method == 'POST':
             data_to_update = {"nick": empty_if_none(request.form["nick"]), "name": empty_if_none(request.form["name"]),
@@ -136,7 +153,6 @@ def school_form_add_contract(school_id):
             school_contract.update(date, date, fruitVeg_products, dairy_products)
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_contract_form.html", school=school, contract=school_contract)
-
 
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
