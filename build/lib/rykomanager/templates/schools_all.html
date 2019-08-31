@@ -22,7 +22,7 @@
                                 <tbody>
                                     {% for school in Schools %}
                                     <tr class="odd gradeX">
-                                        <td>{{ school.id }}</td>
+                                        <td>{{ self.school.id }}</td>
                                         <td>{{ school.nick }}</td>
                                         <td>{{ school.name }}</td>
                                         <td>{{ school.regon }}</td>
@@ -36,7 +36,7 @@
                                         <td class="center"></td>
                                         {% endif %}
                                         <td class="center">
-                                            <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=school.id ) }}';" class="btn btn-default">Edytuj</button>
+                                            <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=self.school.id ) }}';" class="btn btn-default">Edytuj</button>
                                         </td>
                                     </tr>
                                     {% endfor %}

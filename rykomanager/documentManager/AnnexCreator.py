@@ -15,7 +15,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
     def __init__(self, school_id, program_id):
         self.program_id = program_id
         self.school = DatabaseManager.get_school(school_id)
-        self.contract = DatabaseManager.get_contract(school_id, cfg.current_program_id)
+        self.contract = DatabaseManager.get_contract(school_id, session.get('program_id'))
         self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id, self.program_id ))
         self.contract_year = self.contract.contract_year
         self.contract_date = None
@@ -32,7 +32,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.fruitVeg_products = fruitVeg_products # @TODO if None get_the_latest_value
         self.dairy_products = dairy_products
 
-        if DatabaseManager.is_annex(self.validity_date, self.school.id):
+        if DatabaseManager.is_annex(self.validity_date, self.self.school.id):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
             return

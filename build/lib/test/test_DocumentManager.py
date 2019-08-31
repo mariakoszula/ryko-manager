@@ -27,7 +27,7 @@ def test_get_current_contract_value_for_school_id_3():
     contract = DatabaseManager.get_current_contract(3, 1)
     assert (isinstance(contract, Contract))
     assert (contract.dairy_products == 99 and contract.fruitVeg_products == 99)
-    assert (contract.school.id == 3)
+    assert (contract.self.school.id == 3)
 
 
 def test_get_all_school_withContract_is25():
@@ -83,5 +83,5 @@ def test_get_product():
 
 
 def test_get_weekly_product():
-    schools_with_contract = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id)
+    schools_with_contract = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     assert(DatabaseManager.get_product_no(schools_with_contract[0].contracts[0].id, week_no=1) == 0)

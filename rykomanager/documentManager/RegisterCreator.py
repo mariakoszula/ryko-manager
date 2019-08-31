@@ -14,7 +14,7 @@ class RegisterCreator(DocumentCreator):
 
     def __init__(self):
         self.date = datetime.today().strftime('%d-%m-%Y')
-        self.contracts = DatabaseManager.get_contracts(cfg.current_program_id)
+        self.contracts = DatabaseManager.get_contracts(session.get('program_id'))
         self.program_semester = DatabaseManager.get_current_sem()
         self.year = DatabaseManager.get_school_year()
         self.records_to_merge = []

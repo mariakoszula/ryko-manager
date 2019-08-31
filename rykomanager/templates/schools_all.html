@@ -29,12 +29,19 @@
                                         <td>{{ school.regon }}</td>
                                         <td>{{ school.email }}</td>
                                         <td>{{ school.phone }}</td>
-                                        {% if school.contracts and school.contracts[0].program_id == program_id %}
-                                        <td class="center">{{ school.contracts[0].fruitVeg_products }}</td>
-                                        <td class="center">{{ school.contracts[0].dairy_products }}</td>
-                                        {% else %}
-                                        <td class="center"></td>
-                                        <td class="center"></td>
+                                        {% set search = {'val': True} %}
+                                        {% for contract in school.contracts %}
+                                            {% if search.val %}
+                                                {% if  contract.program_id == program_id %}
+                                                <td class="center">{{ contract.fruitVeg_products }}</td>
+                                                <td class="center">{{ contract.dairy_products }}</td>
+                                                {% if search.update({'val': False}) %} {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if search.val == True %}
+                                            <td class="center"></td>
+                                            <td class="center"></td>
                                         {% endif %}
                                         <td class="center">
                                             <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=school.id ) }}';" class="btn btn-default">Edytuj</button>

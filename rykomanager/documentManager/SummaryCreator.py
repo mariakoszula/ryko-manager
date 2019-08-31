@@ -3,22 +3,20 @@ from rykomanager.documentManager.DatabaseManager import DatabaseManager
 import rykomanager.configuration as cfg
 from rykomanager.models import Summary
 from rykomanager import app
-
+import datetime
 from os import path
 
 
 class SummaryCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.summary_docx
 
-    def __init__(self, week_start_id, week_no, is_first):
+    def __init__(self, program_id, week_start_id, week_no):
+        self.program_id = program_id
         self.week_start_id = week_start_id
         self.week_no = week_no
-        self.is_first = is_first
+        self.is_first = DatabaseManager.get_summary(program_id=self.program_id) is None
         self.year = SummaryCreator._get_current_year()
-        self.no = DatabaseManager.get_next_summary_no()
-        print("DDDD is_first", is_first)
-        print(self.no)
-        self.summary = None
+        self.no = DatabaseManager.get_next_summary_no(self.program_id)
         output_directory = path.join(cfg.output_dir_main)
         self.fruit_all = 0
         self.veg_all = 0
@@ -30,7 +28,8 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
     @staticmethod
     def _get_current_year():
-        return 2019
+        now = datetime.datetime.now()
+        return now.year
 
     def __base_check(self):
         calculated_fruitVeg_price = (self.fruit_all + self.veg_all) * DatabaseManager.get_fruit_price()
@@ -67,7 +66,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 city="Zielona Góra",
                 kids_no_fruitVeg=str(self.summary.kids_no),
                 kids_no_milk=str(self.summary.kids_no_milk),
-                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(cfg.current_program_id), week_range),
+                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), week_range),
                 is_first="X" if self.summary.is_first else "",
                 is_not_first="X" if not self.summary.is_first else "",
                 apple=str(self.summary.apple),
@@ -99,9 +98,10 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             self.update_row()
         else:
             self.clear()
+        return self.summary
 
     def update_row(self):
-        summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=cfg.current_program_id)
+        summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=self.program_id)
         if DatabaseManager.add_row(summary):
             self.summary = DatabaseManager.is_summary(self.no, self.year)[0]
 

@@ -39,7 +39,7 @@
                                                                 <div class="panel-body">
                                                                     <select name="schools_{{ current_date }}" multiple class="form-control" size="25">
                                                                         {% for school in schools_with_contracts %}
-                                                                        <option name="schools_{{ current_date }}" value="{{school.id}}">{{ school.nick }}</option>
+                                                                        <option name="schools_{{ current_date }}" value="{{self.school.id}}">{{ school.nick }}</option>
                                                                         {% endfor %}
                                                                     </select>
                                                                 </div>
@@ -55,16 +55,16 @@
                                                        <input type="hidden" name="record_selector" value="{{ current_date }}"/>
                                                         {% for school in selected_schools_product_view[current_date.strftime('%Y-%m-%d')] %}
                                                         <label>{{ school.nick }}</label>
-                                                        <select name="records_schoolId_{{ school.id }}" class="form-control">
-                                                            <option name="records_schoolId_{{ school.id }}" value=""></option>
+                                                        <select name="records_schoolId_{{ self.school.id }}" class="form-control">
+                                                            <option name="records_schoolId_{{ self.school.id }}" value=""></option>
                                                             {% for fruitVeg in products_veg %}
-                                                            <option name="records_schoolId_{{ school.id }}" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
+                                                            <option name="records_schoolId_{{ self.school.id }}" value="{{ fruitVeg.id }}">{{ fruitVeg.get_name_mapping() }}</option>
                                                             {% endfor %}
                                                         </select>
-                                                        <select name="records_schoolId_{{ school.id }}" class="form-control">
-                                                            <option name="records_schoolId_{{ school.id }}" value=""></option>
+                                                        <select name="records_schoolId_{{ self.school.id }}" class="form-control">
+                                                            <option name="records_schoolId_{{ self.school.id }}" value=""></option>
                                                             {% for dairy in products_dairy %}
-                                                            <option name="records_schoolId_{{ school.id }}" value="{{ dairy.id }}">{{ dairy.get_name_mapping() }}</option>
+                                                            <option name="records_schoolId_{{ self.school.id }}" value="{{ dairy.id }}">{{ dairy.get_name_mapping() }}</option>
                                                             {% endfor %}
                                                         </select>
                                                         {% endfor %}
@@ -91,7 +91,7 @@
                                     <label>Wybierz szkołę</label>
                                             <select class="form-control" name="wz_school">
                                                 {% for school in Schools %}
-                                                <option value="{{ school.id }}">{{ school.nick }}</option>
+                                                <option value="{{ self.school.id }}">{{ school.nick }}</option>
                                                 {% endfor %}
                                             </select>
                                     <p class="help-block"></p>

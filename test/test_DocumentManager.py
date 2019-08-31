@@ -83,5 +83,5 @@ def test_get_product():
 
 
 def test_get_weekly_product():
-    schools_with_contract = DatabaseManager.get_all_schools_with_contract(cfg.current_program_id)
+    schools_with_contract = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     assert(DatabaseManager.get_product_no(schools_with_contract[0].contracts[0].id, week_no=1) == 0)
