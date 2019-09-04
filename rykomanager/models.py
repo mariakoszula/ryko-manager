@@ -38,6 +38,12 @@ class Program(db.Model):
     db.UniqueConstraint('school_year', 'semester_no')
     __table_args__ = {'extend_existing': True, }
 
+    def convert_start_date_to_string(self):
+        return DateConverter.to_string(self.start_date)
+
+    def convert_start_end_to_string(self):
+        return DateConverter.to_string(self.end_date)
+
 
 class Contract(db.Model):
     __table_args__ = {'extend_existing': True}
@@ -49,6 +55,8 @@ class Contract(db.Model):
     fruitVeg_products = db.Column(db.Integer, nullable=False)
     dairy_products = db.Column(db.Integer, nullable=False)
     is_annex = db.Column(db.Boolean, nullable=False, default=0)
+
+
 
     school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
     school = db.relationship('School', backref=db.backref('contracts', lazy=True, order_by='Contract.validity_date.desc()'))
@@ -79,8 +87,15 @@ class Week(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('weeks', lazy=True))
 
+    def convert_start_date_to_string(self):
+        return DateConverter.to_string(self.start_date)
+
+    def convert_start_end_to_string(self):
+        return DateConverter.to_string(self.end_date)
+
     db.UniqueConstraint('week_no', 'program_id')
     __table_args__ = {'extend_existing': True}
+
 
 
 class ProductType(enum.Enum):

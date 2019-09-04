@@ -1,29 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}Program {% endblock %}
+{% block title %} Aktualnie wybrany: semestr {{current.semester_no }} na {{current.school_year }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-6">
-        <div class="panel panel-green">
-            <div class="panel-heading">
-                <div class="row">
-                    <div class="col-xs-3">
-                        <i class="fa fa-tasks fa-5x"></i>
-                    </div>
-                    <div class="col-xs-9 text-right">
-                        <div class="huge">Nowy program</div>
-                    </div>
-                </div>
-            </div>
-            <a href="{{ url_for( 'add_program') }}">
-                <div class="panel-footer">
-                    <span class="pull-left">Dodaj</span>
-                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                    <div class="clearfix"></div>
-                </div>
-            </a>
-        </div>
-    </div>
- </div>
+                        <div class="panel-body">
+
+                            <table width="100%" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Semestr</th>
+                                        <th>Rok szkolny</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for program in Programs %}
+                                    <tr {% if current.id==program.id %} class="success" {% endif %} >
+                                        <td>{{ program.semester_no }}</td>
+                                        <td>{{ program.school_year }}</td>
+                                        <td class="center">
+                                            <button type="button" onclick="window.location.href='{{ url_for( 'program_form' , program_id=program.id ) }}';" class="btn btn-default">Więcej informacji</button>
+                                        </td>
+                                        <td class="center">
+                                            {% if current.id != program.id %}
+                                            <button type="button" onclick="window.location.href='{{ url_for( 'program' , current=program.id ) }}';" class="btn btn-default">Ustaw jako aktualny</button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="panel panel-green">
+                                        <div class="panel-heading">
+                                            <div class="row">
+                                                <div class="col-xs-3">
+                                                    <i class="fa fa-tasks fa-5x"></i>
+                                                </div>
+                                                <div class="col-xs-9 text-right">
+                                                    <div class="huge">Nowy program</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a href="{{ url_for( 'program_form', program_id=invalid_program_id) }}">
+                                            <div class="panel-footer">
+                                                <span class="pull-left">Dodaj</span>
+                                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
     {% endblock %}

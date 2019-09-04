@@ -263,6 +263,26 @@ class DatabaseManager(ABC):
         else:
             return Program.query.order_by(Program.id.desc()).first()
 
+    @staticmethod
+    def get_programs_all():
+        return Program.query.all()
+
+    @staticmethod
+    def update_program_data(program, **data_to_update):
+        if isinstance(program, Program):
+            program.semester_no = data_to_update['semester_no']
+            program.school_year = data_to_update['school_year']
+            program.fruitVeg_price = float(data_to_update['fruitVeg_price'].replace(",", "."))
+            program.dairy_price = float(data_to_update['dairy_price'].replace(",", "."))
+            program.start_date = data_to_update['start_date']
+            program.end_date = data_to_update['end_date']
+            program.dairy_min_per_week = data_to_update['dairy_min_per_week']
+            program.fruitVeg_min_per_week = data_to_update['fruitVeg_min_per_week']
+            program.dairy_amount = data_to_update['dairy_amount']
+            program.fruitVeg_amount = data_to_update['fruitVeg_amount']
+
+            db.session.commit()
+            return program.id
 
     @staticmethod
     def update_school_data(school, **data_to_update):
@@ -286,3 +306,7 @@ class DatabaseManager(ABC):
     @staticmethod
     def id_of_school_being_added(depicting_str):
         return School.query.filter(School.nick == depicting_str).first()
+
+    @staticmethod
+    def id_of_program_being_added(depicting_str):
+        return Program.query.filter(Program.semester_no == depicting_str).first()

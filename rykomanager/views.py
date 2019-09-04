@@ -6,12 +6,12 @@ from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
 from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
-from rykomanager.models import ProductName, ProductType, School
+from rykomanager.models import ProductName, ProductType, School, Program, Week
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
 
-INVALID_SCHOOL_ID = 0xFFFF
+INVALID_ID = 0xFFFF
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -68,7 +68,7 @@ def index(weeks=(1,12)):
 @app.route('/schools_all')
 def schools_all():
     all_schools = DatabaseManager.get_all_schools()
-    return render_template("schools_all.html", Schools=all_schools, program_id=session['program_id'], invalid_school_id=INVALID_SCHOOL_ID)
+    return render_template("schools_all.html", Schools=all_schools, program_id=session['program_id'], invalid_school_id=INVALID_ID)
 
 
 @app.route('/create_register')
@@ -82,8 +82,8 @@ def empty_if_none(value):
     return value
 
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
-def school_form(school_id=INVALID_SCHOOL_ID):
-    if school_id == INVALID_SCHOOL_ID:
+def school_form(school_id=INVALID_ID):
+    if school_id == INVALID_ID:
         FILL_STR = "Wpisz poprawne"
         FILL_BY_SCHOOL = " lub zostaw kropki .........................................."
         id_of_school_being_added = DatabaseManager.id_of_school_being_added(FILL_STR)
@@ -96,7 +96,7 @@ def school_form(school_id=INVALID_SCHOOL_ID):
             if DatabaseManager.add_row(new_school):
                 return redirect(url_for('school_form', school_id=new_school.id))
             else:
-                return redirect(url_for('school_form', school_id=INVALID_SCHOOL_ID))
+                return redirect(url_for('school_form', school_id=INVALID_ID))
         else:
             return redirect(url_for('school_form', school_id=id_of_school_being_added.id))
 
@@ -294,13 +294,61 @@ def create_summary(week_id, week_no=6):
 
 @app.route('/program')
 def program():
-    return render_template("program.html")
+    all_programs=DatabaseManager.get_programs_all()
+    current = request.args.get('current')
+    current_session_program =  DatabaseManager.get_program(current) if current else DatabaseManager.get_program(session['program_id'])
+    session['program_id'] = current_session_program.id
+    return render_template("program.html", Programs=all_programs, current=current_session_program, invalid_program_id=INVALID_ID)
 
 
-@app.route('/add_program')
-def add_program():
-    return render_template("program.html")
+@app.route('/program_form/<int:program_id>', methods=['GET', 'POST'])
+def program_form(program_id=INVALID_ID):
+    if program_id == INVALID_ID:
+        FILL_STR = 0
+        DEFAULT_DATE_STR = "1990-01-01"
+        id_of_program_being_added = DatabaseManager.id_of_program_being_added(FILL_STR)
+        if not id_of_program_being_added:
+            new_program = Program(semester_no=FILL_STR, school_year=FILL_STR, fruitVeg_price=FILL_STR,
+                                  dairy_price=FILL_STR, start_date=DateConverter.to_date(DEFAULT_DATE_STR),
+                                  end_date=DateConverter.to_date(DEFAULT_DATE_STR),
+                                  dairy_min_per_week=FILL_STR, fruitVeg_min_per_week=FILL_STR, dairy_amount=FILL_STR,
+                                  fruitVeg_amount=FILL_STR)
+            if DatabaseManager.add_row(new_program):
+                return redirect(url_for('program_form', program_id=new_program.id))
+            else:
+                return redirect(url_for('program_form', program_id=INVALID_ID))
+        else:
+            return redirect(url_for('program_form', program_id=id_of_program_being_added.id))
 
+    current_program = DatabaseManager.get_program(program_id)
+    if request.method == 'POST':
+        data_to_update = {"semester_no": empty_if_none(request.form["semester_no"]), "school_year": empty_if_none(request.form["school_year"]),
+                          "fruitVeg_price": empty_if_none(request.form["fruitVeg_price"]), "dairy_price": empty_if_none(request.form["dairy_price"]),
+                          "start_date": empty_if_none(DateConverter.to_date(request.form["start_date"])),
+                          "end_date": empty_if_none(DateConverter.to_date(request.form["end_date"])),
+                          "dairy_min_per_week": empty_if_none(request.form["dairy_min_per_week"]),
+                          "fruitVeg_min_per_week": empty_if_none(request.form["fruitVeg_min_per_week"]),
+                          "dairy_amount": empty_if_none(request.form["dairy_amount"]),
+                          "fruitVeg_amount": empty_if_none(request.form["fruitVeg_amount"])}
+        program_id = DatabaseManager.update_program_data(current_program, **data_to_update)
+        return redirect(url_for('program_form', program_id=program_id))
+    return render_template("program_form.html", Program=current_program)
+
+
+@app.route('/program_form/<int:program_id>/add_week', methods=['GET', 'POST'])
+def add_week(program_id):
+    program = request.args.get('program')
+    if not program:
+        program = DatabaseManager.get_program(program_id)
+    if request.method == 'POST':
+        if not request.form['week_no'] or not request.form['start_date'] or not request.form['end_date']:
+            flash('Uzupełnij wszystkie dane', 'error')
+        else:
+            new_week = Week(week_no=request.form['week_no'], start_date=DateConverter.to_date(request.form['start_date']),
+                            end_date=DateConverter.to_date(request.form['end_date']), program_id=program.id)
+            if DatabaseManager.add_row(new_week):
+                return redirect(url_for("program_form", program_id=program.id))
+    return render_template("add_week.html", program=program)
 
 if __name__ == "__main__":
     app.run(debug=True)

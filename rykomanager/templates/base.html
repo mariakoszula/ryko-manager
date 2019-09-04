@@ -11,6 +11,15 @@
 
     <title>Program dla szkół</title>
 
+
+    <!-- jQuery -->
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/js/bootstrap-datetimepicker.min.js"></script>
+
     <!-- Bootstrap Core CSS -->
     <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
@@ -32,7 +41,7 @@
     <!-- DataTables Responsive CSS -->
     <link href="/static/vendor/datatables-responsive/dataTables.responsive.css" rel="stylesheet">
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.css" rel="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -133,12 +142,6 @@
     </div>
     <!-- /#wrapper -->
 
-    <!-- jQuery -->
-    <script src="/static/vendor/jquery/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
-    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
-
     <!-- Metis Menu Plugin JavaScript -->
     <script src="/static/vendor/metisMenu/metisMenu.min.js"></script>
 
@@ -169,6 +172,10 @@
              stateSave: true,
             language: {"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Polish.json"}
         });
+    });
+
+    $(function() {
+      $('#datapicer').datetimepicker();
     });
     {% block script %}
 
