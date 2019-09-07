@@ -80,6 +80,7 @@ def schools_all():
 @app.route('/create_register')
 def create_register():
     RegisterCreator(session['program_id']).create()
+    flash('Rejestr został wygenerowany pomyślnie', 'info')
     return schools_all()
 
 
@@ -370,6 +371,7 @@ def generate_contracts(program_id):
                 if school.nick != FILL_STR_SCHOOL: #Dont create contract for school with not full date filled
                     new_contract = ContractCreator(school, session['program_id'])
                     new_contract.create(DateConverter.to_date(contract_date))
+            flash("Umowy zostały wygenerowane pomyślnie", 'success')
         else:
             flash('Możesz wygnerować umowy tylko dla akutalnie wybranego programu', 'error')
     return render_template("program_form.html", Program=current_program)

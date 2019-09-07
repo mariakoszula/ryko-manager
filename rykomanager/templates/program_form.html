@@ -70,14 +70,18 @@
                                     </div>
                                     </a>
                                 </div>
-                                   <div class="col-lg-6">
-                                    <form role="form" action="{{ url_for( 'generate_contracts', program_id=Program.id) }}"  method="post">
-                                            <label>Liczba zawartych umów: {{ Program.contract_no() }}</label>
-                                        {%- for category, message in get_flashed_messages(with_categories = true) %}
-                                         <div class = "alert alert-danger">
+                                   {%- for category, message in get_flashed_messages(with_categories = true) %}
+                                            {% if category == 'error' %}
+                                                <div class = "alert alert-danger">
+                                            {% elif category == 'success'%}
+                                                <div class = "alert alert-success">
+                                             {% endif %}
                                             {{ message }}
                                          </div>
                                         {%- endfor %}
+                                   <div class="col-lg-6">
+                                    <form role="form" action="{{ url_for( 'generate_contracts', program_id=Program.id) }}"  method="post">
+                                            <label>Liczba zawartych umów: {{ Program.contract_no() }}</label>
                                         <div class="form-group">
                                                 <label>Data zawarcia umów</label><input class="form-control" name="contract_date" value="{{ Program.contract_date() }}">
                                             </td>

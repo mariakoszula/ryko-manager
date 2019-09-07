@@ -52,6 +52,11 @@
                             </table>
                             <!-- /.table-responsive -->
                             <!-- /.panel-body -->
+                            {%- for category, message in get_flashed_messages(with_categories = true) %}
+                             <div class = "alert alert-success">
+                                {{ message }}
+                             </div>
+                            {%- endfor %}
                             <div class="col-lg-6 col-md-6">
                                 <div class="panel panel-green">
                                     <div class="panel-heading">
@@ -73,6 +78,7 @@
                                         </div>
                                     </a>
                                 </div>
+
                                 <div class="panel panel-blue">
                                     <div class="panel-heading">
                                         <div class="row">

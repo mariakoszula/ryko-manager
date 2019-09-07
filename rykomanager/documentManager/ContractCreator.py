@@ -58,7 +58,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
             date=DateConverter.to_string(self.contract_date, "%d.%m.%Y"),
             no=str(self.contract_no),
             year=str(self.contract_year),
-            semester=self.prgoram.get_current_semester(),
+            semester=self.program.get_current_semester(),
             name=self.school.name,
             address=self.school.address,
             nip=self.school.nip,

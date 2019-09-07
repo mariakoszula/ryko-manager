@@ -25,7 +25,7 @@ class DocumentCreator(ABC):
         super(DocumentCreator, self).__init__()
 
     @abstractmethod
-    def generate(self, new_doc_name, gen_pdf=True):
+    def generate(self, new_doc_name, gen_pdf=False): #@TODO fix this method for generating pdfs
         generated_file = path.join(self.output_directory, new_doc_name)
 
         res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5

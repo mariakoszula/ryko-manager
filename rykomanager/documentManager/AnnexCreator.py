@@ -10,7 +10,7 @@ from datetime import datetime
 
 class AnnexCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.annex_docx
-    main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_folder_name, cfg.annex_dir_name)
+    main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_dir_name)
 
     def __init__(self, school_id, program_id):
         self.program_id = program_id
@@ -23,7 +23,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.validity_date = None
         self.fruitVeg_products = None
         self.dairy_products = None
-        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.annex_folder_name)
+        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.annex_dir_name)
         DocumentCreator.__init__(self, AnnexCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 
@@ -33,7 +33,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
         self.fruitVeg_products = fruitVeg_products # @TODO if None get_the_latest_value
         self.dairy_products = dairy_products
 
-        if DatabaseManager.is_annex(self.validity_date, self.self.school.id):
+        if DatabaseManager.is_annex(self.validity_date, self.school.id):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
             return
@@ -73,7 +73,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
     def update_row(self):
         annex = Contract(contract_no=self.contract_no, contract_year=self.contract_year, contract_date=self.contract_date,
                          validity_date=self.validity_date, fruitVeg_products=self.fruitVeg_products, dairy_products=self.dairy_products, is_annex=True,
-                         school_id=self.self.school.id, program_id=self.program_id)
+                         school_id=self.school.id, program_id=self.program_id)
         return DatabaseManager.add_row(annex)
 
     def modify_row(self):

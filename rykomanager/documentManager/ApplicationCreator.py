@@ -13,7 +13,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
     template_document_v = cfg.applicaton_docx_5
     template_document_va = cfg.application_docx_5a
 
-    main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_folder_name)
+    main_annex_dir = path.join(cfg.output_dir_main, cfg.application_dir_name)
 
     def __init__(self, program_id, school, summary):
         if not path.exists(ApplicationCreator.main_annex_dir):
@@ -46,7 +46,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.sum_product_milk = 0
         self.sign_date = datetime(2019, 6, 17)
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick,
-                                     cfg.annex_folder_name)
+                                     cfg.application_dir_name)
         self.output_directory = output_directory
         DatabaseManager.__init__(self)
 
