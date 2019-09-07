@@ -12,11 +12,12 @@ class RegisterCreator(DocumentCreator):
     template_document = cfg.register_docx
     CELL_TO_MERGE_MARK = "MERGE"
 
-    def __init__(self):
+    def __init__(self, program_id):
         self.date = datetime.today().strftime('%d-%m-%Y')
-        self.contracts = DatabaseManager.get_contracts(session.get('program_id'))
-        self.program_semester = DatabaseManager.get_current_sem()
-        self.year = DatabaseManager.get_school_year()
+        self.program = DatabaseManager.get_program(program_id)
+        self.contracts = DatabaseManager.get_contracts(program_id)
+        self.program_semester = self.program.get_current_semester()
+        self.year = self.program.school_year
         self.records_to_merge = []
         output_directory = path.join(cfg.output_dir_main)
         DocumentCreator.__init__(self, RegisterCreator.template_document, output_directory)

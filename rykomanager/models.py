@@ -44,6 +44,26 @@ class Program(db.Model):
     def convert_start_end_to_string(self):
         return DateConverter.to_string(self.end_date)
 
+    def contract_no(self):
+        cno = 0
+        for contract in self.contracts:
+            if not contract.is_annex:
+                cno = cno + 1
+        return cno
+
+    def contract_date(self):
+        if self.contracts:
+            return DateConverter.to_string(self.contracts[0].contract_date)
+        else:
+            return "rrrr-mm-dd"
+
+    def get_current_semester(self):
+        if self.semester_no == 1:
+            return "I"
+        elif self.semester_no == 2:
+            return "II"
+        return "INVALID"
+
 
 class Contract(db.Model):
     __table_args__ = {'extend_existing': True}
@@ -63,12 +83,16 @@ class Contract(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('contracts', lazy=True))
 
-    def update(self, contract_date, validity_date, fruitVeg_products, dairy_products):
+    def update(self, contract_date, validity_date=None, fruitVeg_products=None, dairy_products=None):
         self.contract_date = DateConverter.to_date(contract_date)
-        self.validity_date = validity_date
-        self.fruitVeg_products = fruitVeg_products
-        self.dairy_products = dairy_products
+        if validity_date:
+            self.validity_date = validity_date
+        if fruitVeg_products:
+            self.fruitVeg_products = fruitVeg_products
+        if dairy_products:
+            self.dairy_products = dairy_products
         db.session.commit()
+
 
     def convert_date_to_string(self):
         return DateConverter.to_string(self.contract_date)

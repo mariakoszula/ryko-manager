@@ -54,7 +54,7 @@
                                                 {% if not contract.is_anex %}
                                                 <button type="button" onclick="window.location.href='{{ url_for( 'school_form_add_contract' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
                                                 {% else %}
-                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
+                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=contract.school_id, school=School ) }}';" class="btn btn-default">Edytuj</button>
                                                 {% endif %}
                                             </td>
                                         </tr>

@@ -35,14 +35,6 @@ class DatabaseManager(ABC):
         return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.school_id).order_by(Contract.contract_no).all()
 
     @staticmethod
-    def get_current_sem():
-        return "II" #@TODO fill with sql query
-
-    @staticmethod
-    def get_school_year():
-        return "2018/2019"  #@TODO fill with sql query
-
-    @staticmethod
     def is_annex(validity_date, school_id):
         rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DateConverter.to_string(validity_date)
         return Contract.query.join(Contract.school).filter(School.id==school_id)\
@@ -63,7 +55,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_next_contract_no(program_id):
-        last_contract = Contract.query.filter(Contract.program_id == program_id).order_by(Contract.contract_no.desc()).first()
+        last_contract = Contract.query.filter(Contract.program_id == program_id).filter(Contract.is_annex==False).order_by(Contract.contract_no.desc()).first()
         if not last_contract:
             return 1
         else:
@@ -178,13 +170,22 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_product_amount(program_id, school_id, product_name, weeks=list()):
-        product_type = Product.query.filter(Product.name==product_name).filter(Product.program_id == program_id).with_entities(Product.type).one()[0]
-        item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
-        data = Record.query.join(Contract).join(Product).filter(Contract.program_id == program_id).\
-                                                         filter(Product.name==product_name).join(Week).filter(Week.week_no>=weeks[0],
-                                                         Week.week_no<=weeks[1]).filter(Contract.school_id==school_id)\
-            .filter(Record.state == RecordState.DELIVERED).with_entities(func.sum(item_to_sum).label('product_amount')).one()
-        return data.product_amount if data.product_amount else 0
+        product_type_qr = None
+        try:
+            product_type_qr = Product.query.filter(Product.name==product_name).filter(Product.program_id == program_id).with_entities(Product.type).one()
+            if product_type_qr:
+                product_type = product_type_qr[0]
+                item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
+                data = Record.query.join(Contract).join(Product).filter(Contract.program_id == program_id). \
+                    filter(Product.name == product_name).join(Week).filter(Week.week_no >= weeks[0],
+                                                                           Week.week_no <= weeks[1]).filter(
+                    Contract.school_id == school_id) \
+                    .filter(Record.state == RecordState.DELIVERED).with_entities(
+                    func.sum(item_to_sum).label('product_amount')).one()
+                return data.product_amount if data and data.product_amount else 0
+        except:
+            app.logger.warning("No data for program")
+        return 0
 
     @staticmethod
     def get_fruit_price():

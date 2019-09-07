@@ -39,8 +39,6 @@ class DocumentCreator(ABC):
 
     @staticmethod
     def copy_to_path(source, dest):
-        print("source ", source)
-        print("dst ", dest)
         old_file_name = path.basename(source)
         new_file_name = path.basename(dest)
         new_dst = path.dirname(dest)

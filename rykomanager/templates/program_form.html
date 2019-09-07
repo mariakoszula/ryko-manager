@@ -51,7 +51,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                                <div class="panel panel-green">
+                                <div class="panel panel-primary">
                                     <div class="panel-heading">
                                         <div class="row">
                                             <div class="col-xs-3">
@@ -70,6 +70,21 @@
                                     </div>
                                     </a>
                                 </div>
+                                   <div class="col-lg-6">
+                                    <form role="form" action="{{ url_for( 'generate_contracts', program_id=Program.id) }}"  method="post">
+                                            <label>Liczba zawartych umów: {{ Program.contract_no() }}</label>
+                                        {%- for category, message in get_flashed_messages(with_categories = true) %}
+                                         <div class = "alert alert-danger">
+                                            {{ message }}
+                                         </div>
+                                        {%- endfor %}
+                                        <div class="form-group">
+                                                <label>Data zawarcia umów</label><input class="form-control" name="contract_date" value="{{ Program.contract_date() }}">
+                                            </td>
+                                            </div>
+                                    <button type="submit"  class="btn btn-success btn-lg btn-block">Generuj Umowy</button>
+                                    </form>
+                            </div>
                         </div>
                         </div>
                     </div>

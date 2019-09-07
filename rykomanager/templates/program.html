@@ -20,7 +20,7 @@
                                         <td>{{ program.semester_no }}</td>
                                         <td>{{ program.school_year }}</td>
                                         <td class="center">
-                                            <button type="button" onclick="window.location.href='{{ url_for( 'program_form' , program_id=program.id ) }}';" class="btn btn-default">Więcej informacji</button>
+                                            <button type="button" onclick="window.location.href='{{ url_for( 'program_form' , program_id=program.id ) }}';" class="btn btn-default">Edytuj/Generuj Umowy</button>
                                         </td>
                                         <td class="center">
                                             {% if current.id != program.id %}

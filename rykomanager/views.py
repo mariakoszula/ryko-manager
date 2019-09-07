@@ -12,6 +12,10 @@ from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
 
 INVALID_ID = 0xFFFF
+FILL_STR = 0
+DEFAULT_DATE_STR = "1990-01-01"
+FILL_STR_SCHOOL = ""
+FILL_BY_SCHOOL = ".........................................."
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -49,6 +53,8 @@ def index(weeks=(1,12)):
     dairy_summary['kefir_all'] = 0
     dairy_summary['cheese_all'] = 0
     schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+
+
     for school in schools:
         dairy = dict()
         dairy['milk']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, weeks)
@@ -73,8 +79,9 @@ def schools_all():
 
 @app.route('/create_register')
 def create_register():
-    RegisterCreator().create()
+    RegisterCreator(session['program_id']).create()
     return schools_all()
+
 
 def empty_if_none(value):
     if not value:
@@ -84,23 +91,22 @@ def empty_if_none(value):
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
 def school_form(school_id=INVALID_ID):
     if school_id == INVALID_ID:
-        FILL_STR = "Wpisz poprawne"
-        FILL_BY_SCHOOL = " lub zostaw kropki .........................................."
-        id_of_school_being_added = DatabaseManager.id_of_school_being_added(FILL_STR)
+        id_of_school_being_added = DatabaseManager.id_of_school_being_added(FILL_STR_SCHOOL)
         if not id_of_school_being_added:
-            new_school = School(nick=FILL_STR, name=FILL_STR,
-                            address=FILL_STR,
-                            city=FILL_STR, regon=FILL_STR,
-                            email=FILL_STR, responsible_person=FILL_STR + FILL_BY_SCHOOL,
-                            phone=FILL_STR + FILL_BY_SCHOOL)
+            new_school = School(nick=FILL_STR_SCHOOL, name=FILL_STR_SCHOOL,
+                            address=FILL_STR_SCHOOL,
+                            city=FILL_STR_SCHOOL, regon=FILL_STR_SCHOOL,
+                            email=FILL_STR_SCHOOL, responsible_person=FILL_STR_SCHOOL + FILL_BY_SCHOOL,
+                            phone=FILL_STR_SCHOOL + FILL_BY_SCHOOL)
             if DatabaseManager.add_row(new_school):
-                return redirect(url_for('school_form', school_id=new_school.id))
+                return redirect(url_for('school_form', school_id=new_school.id, School=new_school))
             else:
                 return redirect(url_for('school_form', school_id=INVALID_ID))
         else:
-            return redirect(url_for('school_form', school_id=id_of_school_being_added.id))
+            return redirect(url_for('school_form', school_id=id_of_school_being_added.id, School=id_of_school_being_added))
 
     current_school = DatabaseManager.get_school(school_id)
+    contracts = DatabaseManager.get_all_contracts(school_id, session['program_id'])
     if request.method == 'POST':
             data_to_update = {"nick": empty_if_none(request.form["nick"]), "name": empty_if_none(request.form["name"]),
                               "address": empty_if_none(request.form["address"]), "city": empty_if_none(request.form["city"]),
@@ -111,7 +117,7 @@ def school_form(school_id=INVALID_ID):
                               "representative_nip": empty_if_none(request.form["representative_nip"]),
                               "representative_regon": empty_if_none(request.form["representative_regon"])}
             school_id = DatabaseManager.update_school_data(current_school, **data_to_update)
-            return redirect(url_for('school_form', school_id=school_id))
+            return redirect(url_for('school_form', school_id=current_school.id))
     return render_template("school_form.html",  School=current_school,
                                                 Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
 
@@ -134,7 +140,7 @@ def school_form_add_annex(school_id):
 
 
 @app.route('/school_form/<int:school_id>/add_contract/', methods=['GET', 'POST'])
-def school_form_add_contract(school_id):
+def school_form_add_contract(school_id=INVALID_ID):
     school = DatabaseManager.get_school(school_id)
     school_contract = DatabaseManager.get_contract(school_id, session['program_id'])
     if request.method == 'POST':
@@ -154,6 +160,7 @@ def school_form_add_contract(school_id):
             school_contract.update(date, date, fruitVeg_products, dairy_products)
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_contract_form.html", school=school, contract=school_contract)
+
 
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
@@ -296,16 +303,15 @@ def create_summary(week_id, week_no=6):
 def program():
     all_programs=DatabaseManager.get_programs_all()
     current = request.args.get('current')
-    current_session_program =  DatabaseManager.get_program(current) if current else DatabaseManager.get_program(session['program_id'])
-    session['program_id'] = current_session_program.id
+    current_session_program = DatabaseManager.get_program(current) if current else DatabaseManager.get_program(session['program_id'])
+    if current_session_program:
+        session['program_id'] = current_session_program.id
     return render_template("program.html", Programs=all_programs, current=current_session_program, invalid_program_id=INVALID_ID)
 
 
 @app.route('/program_form/<int:program_id>', methods=['GET', 'POST'])
 def program_form(program_id=INVALID_ID):
     if program_id == INVALID_ID:
-        FILL_STR = 0
-        DEFAULT_DATE_STR = "1990-01-01"
         id_of_program_being_added = DatabaseManager.id_of_program_being_added(FILL_STR)
         if not id_of_program_being_added:
             new_program = Program(semester_no=FILL_STR, school_year=FILL_STR, fruitVeg_price=FILL_STR,
@@ -349,6 +355,25 @@ def add_week(program_id):
             if DatabaseManager.add_row(new_week):
                 return redirect(url_for("program_form", program_id=program.id))
     return render_template("add_week.html", program=program)
+
+
+@app.route('/program_form/<int:program_id>/generate_contracts', methods=['GET', 'POST'])
+def generate_contracts(program_id):
+    current_program = DatabaseManager.get_program(program_id)
+    contract_date = request.form["contract_date"]
+    if not contract_date or contract_date == "dd.mm.rrrr":
+        flash('Uzupełnij datę zawarcia umów', 'error')
+    else:
+        if session['program_id'] == program_id :
+            all_schols = DatabaseManager.get_all_schools()
+            for school in all_schols:
+                if school.nick != FILL_STR_SCHOOL: #Dont create contract for school with not full date filled
+                    new_contract = ContractCreator(school, session['program_id'])
+                    new_contract.create(DateConverter.to_date(contract_date))
+        else:
+            flash('Możesz wygnerować umowy tylko dla akutalnie wybranego programu', 'error')
+    return render_template("program_form.html", Program=current_program)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

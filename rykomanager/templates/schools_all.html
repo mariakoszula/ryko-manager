@@ -23,7 +23,7 @@
                                 <tbody>
                                     {% for school in Schools %}
                                     <tr class="odd gradeX">
-                                        <td>{{ school.id }}</td>
+                                        <td>{{ loop.index}}</td>
                                         <td>{{ school.nick }}</td>
                                         <td>{{ school.name }}</td>
                                         <td>{{ school.regon }}</td>
