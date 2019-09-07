@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj produkt do {{ program.semester_no }} sem. {{ program.school_year }}{% endblock %}
+
+{% block content %}
+      <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Dodaj product
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-lg-6">
+                                {%- for category, message in get_flashed_messages(with_categories = true) %}
+                                 <div class = "alert alert-danger">
+                                    {{ message }}
+                                 </div>
+                                {%- endfor %}
+                                <form role="form" action="{{ request.path }}" method="post">
+                                            <div class="form-group">
+                                                {% if not product_type %}
+                                                    <label>Typ</label>
+                                                    <select class="form-control" name="type">
+                                                    {% for product_type in program.get_products_types() %}
+                                                    <option value="{{ product_type[0].value }}">{{ product_type[1] }}</option>
+                                                    {% endfor %}
+                                                    </select>
+                                                {% else %}
+                                                <label>Nazwa</label>
+                                                 <select class="form-control" name="name">
+                                                {% for key, value in program.get_products_names(product_type).items() %}
+                                                <option value="{{ key.value }}">{{ value }}</option>
+                                                {% endfor %}
+                                                </select>
+                                                <label>Ilość podań</label><input class="form-control" name="min_amount">
+                                                {% endif %}
+                                            </div>
+
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                         {% if not product_type %}
+                                         Dalej
+                                         {% else %}
+                                         Dodaj
+                                         {% endif%}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+      </div>
+{% endblock %}

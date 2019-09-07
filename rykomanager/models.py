@@ -2,6 +2,49 @@ from rykomanager import db
 import enum
 from rykomanager.DateConverter import  DateConverter
 
+class ProductType(enum.Enum):
+    NONE = 0
+    FRUIT_VEG = 1
+    DAIRY = 2
+
+
+class ProductName(enum.Enum):
+    APPLE = 1
+    PEAR = 2
+    STRAWBERRY = 3
+    PLUM = 4
+    JUICE = 5
+    END_FRUITS = 10
+
+    CARROT = 11
+    RADISH = 12
+    PEPPER = 13
+    TOMATO = 14
+    KOHLRABI = 15
+    END_VEG = 20
+
+    MILK = 21
+    YOGHURT = 22
+    KEFIR = 23
+    CHEESE = 24
+    END_DIARY = 25
+
+
+fruit_veg_mapping = {  ProductName.APPLE: "jabłko",
+                       ProductName.PEAR: "gruszka",
+                       ProductName.PLUM: "śliwka",
+                       ProductName.STRAWBERRY: "truskawka",
+                       ProductName.JUICE: "sok owocowy",
+                       ProductName.CARROT: "marchew",
+                       ProductName.RADISH: "rzodkiewka",
+                       ProductName.PEPPER: "papryka",
+                       ProductName.TOMATO: "pomidor",
+                       ProductName.KOHLRABI: "kalarepa" }
+
+dairy_mapping = {   ProductName.CHEESE: "ser twarogowy",
+                    ProductName.KEFIR: "kefir",
+                    ProductName.YOGHURT: "jogurt",
+                    ProductName.MILK: "mleko" }
 
 class School(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,7 +64,6 @@ class School(db.Model):
 
     def __repr__(self):
         return '<School: %r>' % self.name
-
 
 class Program(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,6 +106,17 @@ class Program(db.Model):
             return "II"
         return "INVALID"
 
+    @staticmethod
+    def get_products_types():
+        return [(ProductType.FRUIT_VEG, "owocowo-warzywny"), (ProductType.DAIRY, "nabiał")]
+
+    @staticmethod
+    def get_products_names(product_type):
+        if int(product_type) == ProductType.FRUIT_VEG.value:
+            return fruit_veg_mapping
+        if int(product_type) == ProductType.DAIRY.value:
+            return dairy_mapping
+        return {}
 
 class Contract(db.Model):
     __table_args__ = {'extend_existing': True}
@@ -75,8 +128,6 @@ class Contract(db.Model):
     fruitVeg_products = db.Column(db.Integer, nullable=False)
     dairy_products = db.Column(db.Integer, nullable=False)
     is_annex = db.Column(db.Boolean, nullable=False, default=0)
-
-
 
     school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
     school = db.relationship('School', backref=db.backref('contracts', lazy=True, order_by='Contract.validity_date.desc()'))
@@ -121,33 +172,6 @@ class Week(db.Model):
     __table_args__ = {'extend_existing': True}
 
 
-
-class ProductType(enum.Enum):
-    FRUIT_VEG = 1
-    DAIRY = 2
-
-
-class ProductName(enum.Enum):
-    APPLE = 1
-    PEAR = 2
-    STRAWBERRY = 3
-    PLUM = 4
-    END_FRUITS = 10
-
-    CARROT = 11
-    RADISH = 12
-    PEPPER = 13
-    TOMATO = 14
-    KOHLRABI = 15
-    END_VEG = 20
-
-    MILK = 21
-    YOGHURT = 22
-    KEFIR = 23
-    CHEESE = 24
-    END_DIARY = 25
-
-
 class Product(db.Model):
     __table_args__ = {'extend_existing': True}
 
@@ -157,40 +181,16 @@ class Product(db.Model):
     min_amount = db.Column(db.Integer, nullable=False)
 
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
-    program = db.relationship('Program', backref=db.backref('week', lazy=True))
-
-    @staticmethod
-    def get_name_map(name):
-        if name == ProductName.APPLE:
-            return "jabłko"
-        if name == ProductName.PEAR:
-            return "gruszka"
-        if name == ProductName.PLUM:
-            return "śliwka"
-        if name == ProductName.STRAWBERRY:
-            return "truskawka"
-        if name == ProductName.CARROT:
-            return "marchew"
-        if name == ProductName.RADISH:
-            return "rzodkiewka"
-        if name == ProductName.PEPPER:
-            return "papryka"
-        if name == ProductName.TOMATO:
-            return "pomidor"
-        if name == ProductName.KOHLRABI:
-            return "kalarepa"
-        if name == ProductName.MILK:
-            return "mleko"
-        if name == ProductName.YOGHURT:
-            return "jogurt"
-        if name == ProductName.KEFIR:
-            return "kefir"
-        if name == ProductName.CHEESE:
-            return "ser twarogowy"
+    program = db.relationship('Program', backref=db.backref('products', lazy=True))
 
     #@TODO remove language dependency
     def get_name_mapping(self):
-        return Product.get_name_map(self.name)
+        name = fruit_veg_mapping.get(self.name, None)
+        if name:
+            return name
+        else:
+            name = dairy_mapping.get(self.name, "")
+        return name
 
     def get_record_title_mapping(self):
         if self.type == ProductType.DAIRY:
@@ -204,6 +204,11 @@ class Product(db.Model):
         if self.type == ProductType.FRUIT_VEG:
             return "wo"
 
+    def is_dairy(self):
+        return self.type == ProductType.DAIRY
+
+    def is_fruit_veg(self):
+        return self.type == ProductType.FRUIT_VEG
 
 class RecordState(enum.Enum):
     NOT_DELIVERED = 1
@@ -278,7 +283,7 @@ class Summary(db.Model):
 
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program',
-                             backref=db.backref('program', lazy=True))
+                             backref=db.backref('summary', lazy=True))
 
     def get_application_no(self):
         return "{0}/{1}".format(self.no, self.year)
@@ -311,10 +316,10 @@ class Application(db.Model):
     max_kids_perWeeks_milk = db.Column(db.Integer, default=0)
 
     summary_id = db.Column(db.Integer,  db.ForeignKey('summary.id'), nullable=False)
-    summary = db.relationship('Summary', backref=db.backref('summary', lazy=True, order_by='Contract.validity_date.desc()'))
+    summary = db.relationship('Summary', backref=db.backref('application', lazy=True, order_by='Contract.validity_date.desc()'))
 
     school_id = db.Column(db.Integer,  db.ForeignKey('school.id'), nullable=False)
-    school = db.relationship('School', backref=db.backref('school', lazy=True, order_by='Contract.validity_date.desc()'))
+    school = db.relationship('School', backref=db.backref('application', lazy=True, order_by='Contract.validity_date.desc()'))
 
     __table_args__ = (
                         db.UniqueConstraint('summary_id', 'school_id'),)

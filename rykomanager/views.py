@@ -6,7 +6,7 @@ from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
 from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
-from rykomanager.models import ProductName, ProductType, School, Program, Week
+from rykomanager.models import ProductName, ProductType, School, Program, Week, Product
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
@@ -344,18 +344,37 @@ def program_form(program_id=INVALID_ID):
 
 @app.route('/program_form/<int:program_id>/add_week', methods=['GET', 'POST'])
 def add_week(program_id):
-    program = request.args.get('program')
-    if not program:
-        program = DatabaseManager.get_program(program_id)
+    current_program = request.args.get('program')
+    if not current_program:
+        current_program = DatabaseManager.get_program(program_id)
+    print(type(current_program), current_program.semester_no)
     if request.method == 'POST':
         if not request.form['week_no'] or not request.form['start_date'] or not request.form['end_date']:
             flash('Uzupełnij wszystkie dane', 'error')
         else:
             new_week = Week(week_no=request.form['week_no'], start_date=DateConverter.to_date(request.form['start_date']),
-                            end_date=DateConverter.to_date(request.form['end_date']), program_id=program.id)
+                            end_date=DateConverter.to_date(request.form['end_date']), program_id=current_program.id)
             if DatabaseManager.add_row(new_week):
-                return redirect(url_for("program_form", program_id=program.id))
-    return render_template("add_week.html", program=program)
+                return redirect(url_for("program_form", program_id=current_program.id))
+    return render_template("add_week.html", program_id=program_id, program=current_program)
+
+
+@app.route('/program_form/<int:program_id>/add_product/<int:product_type>', methods=['GET', 'POST'])
+def add_product(program_id, product_type):
+    current_program = DatabaseManager.get_program(program_id)
+    if request.method == 'POST':
+        if not product_type:
+            product_type = request.form['type']
+            return redirect(url_for("add_product", program_id=current_program.id, product_type=product_type,  program=current_program))
+        if product_type:
+            if not request.form['name'] or not request.form['min_amount']:
+                flash('Uzupełnij nazwe i liczbe podań', 'error')
+            else:
+                new_product = Product(name=ProductName(int(request.form['name'])).name, type=ProductType(int(product_type)).name,
+                                      min_amount=int(request.form['min_amount']), program_id=current_program.id)
+                if DatabaseManager.add_row(new_product):
+                    return redirect(url_for("program_form", program_id=current_program.id))
+    return render_template("add_product.html", program_id=current_program.id, program=current_program, product_type=product_type)
 
 
 @app.route('/program_form/<int:program_id>/generate_contracts', methods=['GET', 'POST'])

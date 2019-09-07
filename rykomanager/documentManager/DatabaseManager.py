@@ -101,21 +101,21 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_week_by_date(date):
-        rdate = date if not isinstance(date, datetime.datetime) else DateConverter.to_string(date, pattern="%Y-%m-%d %H:%M:%S")
+        rdate = date if isinstance(date, datetime.datetime) else DateConverter.to_date(date, pattern="%Y-%m-%d %H:%M:%S")
         return Week.query.filter(Week.start_date <= rdate).filter(Week.end_date >= rdate).first()
 
     @staticmethod
     def get_fruitVeg_products(program_id):
-        return Product.query.filter(Program.id.like(program_id)).filter(Product.type.like(ProductType.FRUIT_VEG)).all()
+        return Product.query.filter(Product.program_id.like(program_id)).filter(Product.type.like(ProductType.FRUIT_VEG)).all()
 
     @staticmethod
     def get_dairy_products(program_id):
-        return Product.query.filter(Program.id.like(program_id)).filter(Product.type.like(ProductType.DAIRY)).all()
+        return Product.query.filter(Product.program_id.like(program_id)).filter(Product.type.like(ProductType.DAIRY)).all()
 
     @staticmethod
     def get_daily_records(program_id, current_date):
         g_date = current_date if isinstance(current_date, datetime.datetime) else DateConverter.to_date(current_date)
-        return Record.query.filter(Program.id.like(program_id)).filter(Record.date.like(g_date)).all()
+        return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(g_date)).all()
 
     @staticmethod
     def get_school_records(program_id, school_id):
@@ -123,7 +123,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_product(program_id, product_id):
-        return Product.query.filter(Program.id.like(program_id)).filter(Product.id.like(product_id)).first()
+        return Product.query.filter(Product.program_id.like(program_id)).filter(Product.id.like(product_id)).first()
 
     @staticmethod
     def get_product_no(program_id, week_no=None):
