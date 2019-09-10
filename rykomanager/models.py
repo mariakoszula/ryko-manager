@@ -14,20 +14,17 @@ class ProductName(enum.Enum):
     STRAWBERRY = 3
     PLUM = 4
     JUICE = 5
-    END_FRUITS = 10
 
     CARROT = 11
     RADISH = 12
     PEPPER = 13
     TOMATO = 14
     KOHLRABI = 15
-    END_VEG = 20
 
     MILK = 21
     YOGHURT = 22
     KEFIR = 23
     CHEESE = 24
-    END_DIARY = 25
 
 
 fruit_veg_mapping = {  ProductName.APPLE: "jabłko",

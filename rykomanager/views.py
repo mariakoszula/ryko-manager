@@ -165,22 +165,22 @@ def school_form_add_contract(school_id=INVALID_ID):
 
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
-    weeks = DatabaseManager.get_weeks(session['program_id'])
-    Schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    all_weeks = DatabaseManager.get_weeks(session['program_id'])
+    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
     if request.method == 'POST':
         school_id = request.form.get('wz_school', None)
         if school_id:
             return redirect(url_for('school_records', school_id=school_id))
-    return render_template("create_records.html", Weeks=weeks, week=None, Schools=Schools)
+    return render_template("create_records.html", Weeks=all_weeks, School=all_schools)
 
 
 @app.route('/create_records/<int:week_id>', methods=['GET', 'POST'])
 def create_records_per_week(week_id):
     selected_schools_product_view = dict()
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id']) # schools which don't have record for this day
+    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id']) # schools which don't have record for this day
     weeks = DatabaseManager.get_product_no(session['program_id'], week_no=1)
     record_context = {
-        'schools_with_contracts': schools,
+        'schools_with_contracts': all_schools,
         'weekly_product': DatabaseManager.get_product_no(session['program_id'], week_no=1),
         'products_dairy': DatabaseManager.get_dairy_products(session['program_id']),
         'products_veg': DatabaseManager.get_fruitVeg_products(session['program_id']),
