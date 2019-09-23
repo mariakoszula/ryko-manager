@@ -53,6 +53,9 @@
                                             <td>
                                                 {% if not contract.is_annex %}
                                                 <button type="button" onclick="window.location.href='{{ url_for( 'school_form_add_contract' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
+                                                    {% if contract.fruitVeg_products == 0 and contract.dairy_products == 0 %}
+                                                    <button type="button" onclick="window.location.href='{{ url_for( 'contract_delete' , school_id=contract.school_id, contract_id=contract.id ) }}';" class="btn btn-default">Usuń</button>
+                                                    {% endif %}
                                                 {% else %}
                                                 <button type="button" onclick="window.location.href='{{ url_for( 'school_form_edit_annex' , school_id=contract.school_id, annex_id=contract.id ) }}';" class="btn btn-default">Edytuj</button>
                                                 {% endif %}

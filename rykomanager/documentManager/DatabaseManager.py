@@ -151,6 +151,11 @@ class DatabaseManager(ABC):
         return True
 
     @staticmethod
+    def remove_contract(id):
+        Contract.query.filter(Contract.id == id).delete()
+        db.session.commit()
+
+    @staticmethod
     def add_row(model=None):
         if isinstance(model, db.Model):
             #@TODO fix to handle incerting unique values

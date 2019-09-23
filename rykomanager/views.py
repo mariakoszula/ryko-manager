@@ -107,7 +107,6 @@ def school_form(school_id=INVALID_ID):
             return redirect(url_for('school_form', school_id=id_of_school_being_added.id, School=id_of_school_being_added))
 
     current_school = DatabaseManager.get_school(school_id)
-    contracts = DatabaseManager.get_all_contracts(school_id, session['program_id'])
     if request.method == 'POST':
             data_to_update = {"nick": empty_if_none(request.form["nick"]), "name": empty_if_none(request.form["name"]),
                               "address": empty_if_none(request.form["address"]), "city": empty_if_none(request.form["city"]),
@@ -177,6 +176,12 @@ def school_form_add_contract(school_id=INVALID_ID):
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_contract_form.html", school=school, contract=school_contract)
 
+
+@app.route('/contract_delete/<int:school_id>/delete/<int:contract_id>', methods=['GET', 'POST'])
+def contract_delete(school_id, contract_id):
+    DatabaseManager.remove_contract(contract_id)
+    return render_template("school_form.html",  School=DatabaseManager.get_school(school_id),
+                                                Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
 
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
