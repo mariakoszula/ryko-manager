@@ -31,6 +31,10 @@ class DatabaseManager(ABC):
             .filter(Contract.is_annex==False).first()
 
     @staticmethod
+    def get_annex(annex_id):
+        return Contract.query.filter(Contract.id==annex_id).filter(Contract.is_annex==True).first()
+
+    @staticmethod
     def get_contracts(program_id):
         return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.school_id).order_by(Contract.contract_no).all()
 

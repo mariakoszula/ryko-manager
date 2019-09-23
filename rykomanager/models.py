@@ -141,9 +141,11 @@ class Contract(db.Model):
             self.dairy_products = dairy_products
         db.session.commit()
 
-
     def convert_date_to_string(self):
         return DateConverter.to_string(self.contract_date)
+
+    def convert_validity_date_to_string(self):
+        return DateConverter.to_string(self.validity_date)
 
     __table_args__ = (
         db.UniqueConstraint('validity_date', 'school_id'),

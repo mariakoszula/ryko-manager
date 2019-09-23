@@ -44,17 +44,17 @@
                                     </thead>
                                     <tbody>
                                      {% for contract in Contracts %}
-                                        <tr {% if contract.is_anex %} class="warning" {% endif %} {% if not contract.is_anex %} class="info" {% endif %}>
+                                        <tr {% if contract.is_annex %} class="warning" {% endif %} {% if not contract.is_annex %} class="info" {% endif %}>
                                             <td>{{ contract.contract_no}}/{{contract.contract_year }}</td>
                                             <td>{{ contract.contract_date.date() }}</td>
                                             <td>{{ contract.validity_date.date() }}</td>
                                             <td>{{ contract.fruitVeg_products }}</td>
                                             <td>{{ contract.dairy_products }}</td>
                                             <td>
-                                                {% if not contract.is_anex %}
+                                                {% if not contract.is_annex %}
                                                 <button type="button" onclick="window.location.href='{{ url_for( 'school_form_add_contract' , school_id=contract.school_id ) }}';" class="btn btn-default">Edytuj</button>
                                                 {% else %}
-                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form' , school_id=contract.school_id, school=School ) }}';" class="btn btn-default">Edytuj</button>
+                                                <button type="button" onclick="window.location.href='{{ url_for( 'school_form_edit_annex' , school_id=contract.school_id, annex_id=contract.id ) }}';" class="btn btn-default">Edytuj</button>
                                                 {% endif %}
                                             </td>
                                         </tr>

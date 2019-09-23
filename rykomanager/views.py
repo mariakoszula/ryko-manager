@@ -73,7 +73,7 @@ def index(weeks=(1,12)):
 
 @app.route('/schools_all')
 def schools_all():
-    all_schools = DatabaseManager.get_all_schools()
+    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
     return render_template("schools_all.html", Schools=all_schools, program_id=session['program_id'], invalid_school_id=INVALID_ID)
 
 
@@ -123,7 +123,7 @@ def school_form(school_id=INVALID_ID):
                                                 Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
 
 
-@app.route('/school_form/<int:school_id>/add_annex/', methods=['GET', 'POST'])
+@app.route('/school_form/<int:school_id>/add_annex', methods=['GET', 'POST'])
 def school_form_add_annex(school_id):
     school = DatabaseManager.get_school(school_id)
     if request.method == 'POST':
@@ -138,6 +138,21 @@ def school_form_add_annex(school_id):
 
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=school)
+
+
+@app.route('/school_form/<int:school_id>/edit_annex/<int:annex_id>', methods=['GET', 'POST'])
+def school_form_edit_annex(school_id, annex_id):
+    school = DatabaseManager.get_school(school_id)
+    annex = DatabaseManager.get_annex(annex_id)
+    if request.method == 'POST':
+        date = DateConverter.to_date(request.form['contract_date'])
+        date_valid = DateConverter.to_date(request.form['validity_date'])
+        fruitVeg_products = request.form['fruitVeg_products']
+        dairy_products = request.form['dairy_products']
+        if annex:
+            annex.update(date, date_valid, fruitVeg_products, dairy_products)
+            return redirect(url_for('school_form', school_id=school_id))
+    return render_template("add_annex_form.html", school=school, annex=annex)
 
 
 @app.route('/school_form/<int:school_id>/add_contract/', methods=['GET', 'POST'])
