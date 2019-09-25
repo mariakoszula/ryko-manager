@@ -227,6 +227,9 @@ def create_records_per_week(week_id):
             record_data = request.form.to_dict(flat=False)
             current_date = record_data.pop('record_selector')[0]
             record_list = list()
+            existing_daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
+            for edr in existing_daily_records:
+                record_list.append(RecordCreator.from_record(edr))
             for school_key, product_list in record_data.items():
                 school_id = RecordCreator.extract_school_id(school_key)
                 for product_id in product_list:
@@ -245,7 +248,10 @@ def create_records_per_week(week_id):
 
 @app.route('/create_records/<int:week_id>/<string:current_date>', methods=['GET', 'POST'])
 def record_created(current_date, week_id):
+    #week = DatabaseManager.get_week(week_id, session['program_id'])
     daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
+    #previous_date = DatabaseManager.get_prev_date(current_date, week)
+    #next_date = DatabaseManager.get_next_date(current_date)
     if request.method == 'POST':
         if request.form['action']:
             action_record_list = request.form['action'].split("_")
@@ -260,6 +266,8 @@ def record_created(current_date, week_id):
                 pass
             if action == "delete":
                 DatabaseManager.remove_record(record_id)
+                daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
+                RecordCreator.regenerate_documentation(current_date, daily_records)
                 app.logger.info("Remove: Record.id %s", record_id)
         return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
     return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)
@@ -280,6 +288,7 @@ def school_records(school_id):
                 pass #@TODO modify records
             if action == "delete":
                 DatabaseManager.remove_record(record_id)
+
                 app.logger.info("Remove: Record.id %s", record_id)
         return redirect(url_for('school_records', school_id=school_id))
     return render_template("generated_record_per_school.html", records=records)

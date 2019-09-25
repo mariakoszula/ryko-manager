@@ -23,11 +23,17 @@ class RecordCreator(DocumentCreator, DatabaseManager):
                                      self.contract.school.nick, cfg.record_folder_name)
         DocumentCreator.__init__(self, RecordCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
+        self._prepare_data_for_doc()
+
+    @classmethod
+    def from_record(cls, record):
+        if not isinstance(record, Record):
+            raise Exception("Not Record instance")
+        return cls(record.contract.program.id, record.date, record.contract.school.id, record.product_id)
 
     def create(self):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
                         __class__.__name__, self.date, self.contract.school.nick, self.product.name)
-        self._prepare_data_for_doc()
         if self.update_row():
             self.generate()
 
@@ -46,6 +52,13 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         )
         DocumentCreator.generate(self, "WZ_{0}_{1}.docx".format(DateConverter.to_string(self.date),
                                                                 self.product.get_name_mapping()))
+
+    @staticmethod
+    def regenerate_documentation(current_date, daily_records):
+        record_list = list()
+        for daily_record in daily_records:
+            record_list.append(RecordCreator.from_record(daily_record))
+        RecordCreator.generate_many(current_date, record_list)
 
     @staticmethod
     def generate_many(date, records_to_merge):
