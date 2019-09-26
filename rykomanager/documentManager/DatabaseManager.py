@@ -117,8 +117,10 @@ class DatabaseManager(ABC):
         return Product.query.filter(Product.program_id.like(program_id)).filter(Product.type.like(ProductType.DAIRY)).all()
 
     @staticmethod
-    def get_daily_records(program_id, current_date):
+    def get_daily_records(program_id, current_date, generation_date=None):
         g_date = current_date if isinstance(current_date, datetime.datetime) else DateConverter.to_date(current_date)
+        if generation_date:
+            return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(g_date)).filter(Record.generation_date.like(generation_date)).all()
         return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(g_date)).all()
 
     @staticmethod

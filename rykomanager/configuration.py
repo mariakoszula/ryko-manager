@@ -16,6 +16,5 @@ annex_dir_name = 'ANKESY'
 contract_dir_name = 'UMOWY'
 application_dir_name = 'EWIDENCJE'
 record_folder_name = 'WZ'
-#libreoffice_converter = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe' # development server
 libreoffice_converter = 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe' #production server
 devDebug = False

@@ -12,13 +12,14 @@ import datetime
 class RecordCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.record_docx
 
-    def __init__(self, program_id, date, school_id, product_id):
+    def __init__(self, program_id, date, school_id, product_id, generation_date=""):
         self.program_id = program_id
         self.date = DateConverter.to_date(date)
         self.state = RecordState.NOT_DELIVERED
         self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, date)
         self.product = DatabaseManager.get_product(self.program_id, product_id)
         self.doc_data = dict()
+        self.generation_date = DateConverter.to_date(generation_date) if generation_date else (datetime.date.today())
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school,
                                      self.contract.school.nick, cfg.record_folder_name)
         DocumentCreator.__init__(self, RecordCreator.template_document, output_directory)
@@ -29,7 +30,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def from_record(cls, record):
         if not isinstance(record, Record):
             raise Exception("Not Record instance")
-        return cls(record.contract.program.id, record.date, record.contract.school.id, record.product_id)
+        return cls(record.contract.program.id, record.date, record.contract.school.id, record.product_id, record.generation_date)
 
     def create(self):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
@@ -51,7 +52,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
             record_title=self.doc_data['record_title']
         )
         DocumentCreator.generate(self, "WZ_{0}_{1}.docx".format(DateConverter.to_string(self.date),
-                                                                self.product.get_name_mapping()))
+                                                                self.product.get_name_mapping()), gen_pdf=True)
 
     @staticmethod
     def regenerate_documentation(current_date, daily_records):
@@ -66,14 +67,14 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
         if not isinstance(date, datetime.datetime):
             date = DateConverter.to_date(date)
-        out_doc = path.join(out_dir, "{}.docx".format(DateConverter.to_string(date)))
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
-
+        gen_date = records_to_merge[0].generation_date
+        out_doc = path.join(out_dir, "{}_gen_{}.docx".format(DateConverter.to_string(date), DateConverter.to_string(gen_date, '%Y%m%d')))
         doc.merge_pages(records_to_merge_list)
 
         app.logger.info("[%s] Created merge docx of records in dir: [%s]", RecordCreator.__qualname__, out_doc)
-        DocumentCreator.end_doc_gen(doc, out_doc, out_dir)
+        DocumentCreator.end_doc_gen(doc, out_doc, out_dir, gen_pdf=True)
 
     def _prepare_data_for_doc(self):
         self.doc_data['city'] = self.contract.school.city
@@ -101,7 +102,8 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
     def update_row(self):
         record = Record(date=self.date, state=RecordState.NOT_DELIVERED, product_id=self.product.id,
-                        contract_id=self.contract.id, week_id=DatabaseManager.get_week_by_date(self.date).id)
+                        contract_id=self.contract.id, week_id=DatabaseManager.get_week_by_date(self.date).id,
+                        generation_date=self.generation_date)
 
         return DatabaseManager.add_row(record)
 

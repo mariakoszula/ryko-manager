@@ -54,7 +54,6 @@ def index(weeks=(1,12)):
     dairy_summary['cheese_all'] = 0
     schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
 
-
     for school in schools:
         dairy = dict()
         dairy['milk']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, weeks)
@@ -88,6 +87,7 @@ def empty_if_none(value):
     if not value:
         return ""
     return value
+
 
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
 def school_form(school_id=INVALID_ID):
@@ -226,20 +226,22 @@ def create_records_per_week(week_id):
         if request.form['record_selector']:
             record_data = request.form.to_dict(flat=False)
             current_date = record_data.pop('record_selector')[0]
+            generation_date = ""
             record_list = list()
-            existing_daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
-            for edr in existing_daily_records:
-                record_list.append(RecordCreator.from_record(edr))
             for school_key, product_list in record_data.items():
                 school_id = RecordCreator.extract_school_id(school_key)
                 for product_id in product_list:
                     if product_id != "":
                         rc = RecordCreator(session['program_id'], current_date, school_id, product_id)
                         rc.create()
+                        generation_date = rc.generation_date
                         record_list.append(rc)
                     else:
                         #@TODO warning msg display pop up
                         app.logger.warn("[$s] Product_id was not set for school_id: %s", "create_records_per_week", school_id)
+            existing_daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
+            for edr in existing_daily_records:
+                record_list.append(RecordCreator.from_record(edr))
             RecordCreator.generate_many(current_date, record_list)
             return redirect(url_for('record_created', current_date=current_date, week_id=week_id))
 
@@ -265,9 +267,11 @@ def record_created(current_date, week_id):
             if action == "update_product":
                 pass
             if action == "delete":
+                generation_date = DatabaseManager.get_record(record_id).generation_date
                 DatabaseManager.remove_record(record_id)
-                daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
-                RecordCreator.regenerate_documentation(current_date, daily_records)
+                daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
+                if daily_records:
+                    RecordCreator.regenerate_documentation(current_date, daily_records)
                 app.logger.info("Remove: Record.id %s", record_id)
         return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
     return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)

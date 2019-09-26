@@ -83,9 +83,11 @@ class DocumentCreator(ABC):
         return MailMerge(doc_template)
 
     @staticmethod
-    def end_doc_gen(document, generated_file, output_dir):
+    def end_doc_gen(document, generated_file, output_dir, gen_pdf=False):
         document.write(generated_file)
         app.logger.info("[%s] Created new output directory: %s", __class__.__name__, generated_file, )
+        if gen_pdf:
+            DocumentCreator.generate_pdf(generated_file, output_dir)
         return True
 
     @abstractmethod

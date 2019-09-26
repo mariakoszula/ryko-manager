@@ -43,6 +43,7 @@ dairy_mapping = {   ProductName.CHEESE: "ser twarogowy",
                     ProductName.YOGHURT: "jogurt",
                     ProductName.MILK: "mleko" }
 
+
 class School(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nick = db.Column(db.String(60), unique=True, nullable=False)
@@ -61,6 +62,7 @@ class School(db.Model):
 
     def __repr__(self):
         return '<School: %r>' % self.name
+
 
 class Program(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -220,6 +222,7 @@ class Record(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
+    generation_date = db.Column(db.DateTime)
     state = db.Column(db.Enum(RecordState), nullable=False, default=RecordState.NOT_DELIVERED)
 
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
