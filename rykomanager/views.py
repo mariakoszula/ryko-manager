@@ -10,12 +10,7 @@ from rykomanager.models import ProductName, ProductType, School, Program, Week, 
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
-
-INVALID_ID = 0xFFFF
-FILL_STR = 0
-DEFAULT_DATE_STR = "1990-01-01"
-FILL_STR_SCHOOL = ""
-FILL_BY_SCHOOL = ".........................................."
+from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID,FILL_STR, FILL_BY_SCHOOL,DEFAULT_DATE_STR,FILL_STR_SCHOOL, ALL_RECORDS_DOC_NAME
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -226,7 +221,6 @@ def create_records_per_week(week_id):
         if request.form['record_selector']:
             record_data = request.form.to_dict(flat=False)
             current_date = record_data.pop('record_selector')[0]
-            generation_date = ""
             record_list = list()
             for school_key, product_list in record_data.items():
                 school_id = RecordCreator.extract_school_id(school_key)
@@ -234,17 +228,16 @@ def create_records_per_week(week_id):
                     if product_id != "":
                         rc = RecordCreator(session['program_id'], current_date, school_id, product_id)
                         rc.create()
-                        generation_date = rc.generation_date
                         record_list.append(rc)
                     else:
                         #@TODO warning msg display pop up
                         app.logger.warn("[$s] Product_id was not set for school_id: %s", "create_records_per_week", school_id)
+            RecordCreator.generate_many(record_list, RECORDS_NEW_NAME)
+            #REGENERATE_FOR_ALL
+            generation_date = datetime.date.today()
             existing_daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
-            for edr in existing_daily_records:
-                record_list.append(RecordCreator.from_record(edr))
-            RecordCreator.generate_many(current_date, record_list)
+            RecordCreator.regenerate_documentation(existing_daily_records)
             return redirect(url_for('record_created', current_date=current_date, week_id=week_id))
-
     return render_template("create_records.html", **record_context)
 
 
@@ -269,9 +262,9 @@ def record_created(current_date, week_id):
             if action == "delete":
                 generation_date = DatabaseManager.get_record(record_id).generation_date
                 DatabaseManager.remove_record(record_id)
-                daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
-                if daily_records:
-                    RecordCreator.regenerate_documentation(current_date, daily_records)
+                if generation_date:
+                    daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
+                    RecordCreator.regenerate_documentation(daily_records)
                 app.logger.info("Remove: Record.id %s", record_id)
         return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
     return render_template("generated_record.html", daily_records=daily_records, current_date=current_date, week_id=week_id)
@@ -380,7 +373,6 @@ def add_week(program_id):
     current_program = request.args.get('program')
     if not current_program:
         current_program = DatabaseManager.get_program(program_id)
-    print(type(current_program), current_program.semester_no)
     if request.method == 'POST':
         if not request.form['week_no'] or not request.form['start_date'] or not request.form['end_date']:
             flash('Uzupełnij wszystkie dane', 'error')

@@ -1,4 +1,5 @@
 import datetime
+from rykomanager.name_strings import COMMON_DATE_PATTERN
 
 
 class DateConverter(object):
@@ -11,12 +12,14 @@ class DateConverter(object):
     @staticmethod
     def to_date(date, pattern=None):
         if isinstance(date, str):
-            pattern_used = '%Y-%m-%d' if not pattern else pattern
+            pattern_used = COMMON_DATE_PATTERN if not pattern else pattern
             return datetime.datetime.strptime(date, pattern_used)
         elif isinstance(date, datetime.datetime):
             return date
+        elif isinstance(date, datetime.date):
+            return datetime.datetime.combine(date, datetime.datetime.min.time())
         else:
-            print("LOG ERROR")
+            print("WRONG DATE CONVERTION for: ", date , " tpye: ", type(date)) #@TODO here should exception be thrown
 
     @staticmethod
     def two_digits(date_part):

@@ -5,21 +5,22 @@ import rykomanager.configuration as cfg
 from rykomanager import app
 from rykomanager.DateConverter import DateConverter
 import re
-from os import path
+from os import path, listdir, makedirs
 import datetime
+from rykomanager.name_strings import ALL_RECORDS_DOC_NAME
 
 
 class RecordCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.record_docx
 
-    def __init__(self, program_id, date, school_id, product_id, generation_date=""):
+    def __init__(self, program_id, current_date, school_id, product_id, generation_date=""):
         self.program_id = program_id
-        self.date = DateConverter.to_date(date)
+        self.date = DateConverter.to_date(current_date)
         self.state = RecordState.NOT_DELIVERED
-        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, date)
+        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, current_date)
         self.product = DatabaseManager.get_product(self.program_id, product_id)
         self.doc_data = dict()
-        self.generation_date = DateConverter.to_date(generation_date) if generation_date else (datetime.date.today())
+        self.generation_date = DateConverter.to_date(generation_date) if generation_date else datetime.date.today()
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school,
                                      self.contract.school.nick, cfg.record_folder_name)
         DocumentCreator.__init__(self, RecordCreator.template_document, output_directory)
@@ -52,27 +53,55 @@ class RecordCreator(DocumentCreator, DatabaseManager):
             record_title=self.doc_data['record_title']
         )
         DocumentCreator.generate(self, "WZ_{0}_{1}.docx".format(DateConverter.to_string(self.date),
-                                                                self.product.get_name_mapping()), gen_pdf=True)
+                                                                self.product.get_type_mapping()), gen_pdf=True)
 
     @staticmethod
-    def regenerate_documentation(current_date, daily_records):
+    def regenerate_documentation(daily_records):
+        if not daily_records:
+            return
         record_list = list()
         for daily_record in daily_records:
             record_list.append(RecordCreator.from_record(daily_record))
-        RecordCreator.generate_many(current_date, record_list)
+        RecordCreator.generate_many(record_list, ALL_RECORDS_DOC_NAME)
 
     @staticmethod
-    def generate_many(date, records_to_merge):
+    def generate_many(records_to_merge, file_prefix=None):
+        if not records_to_merge:
+            return
+
         out_dir = path.join(cfg.output_dir_main, cfg.record_folder_name)
         doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
-        if not isinstance(date, datetime.datetime):
-            date = DateConverter.to_date(date)
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
-        gen_date = records_to_merge[0].generation_date
-        out_doc = path.join(out_dir, "{}_gen_{}.docx".format(DateConverter.to_string(date), DateConverter.to_string(gen_date, '%Y%m%d')))
-        doc.merge_pages(records_to_merge_list)
+        if not records_to_merge_list:
+            return
 
+        date = records_to_merge[0].date
+        if not isinstance(date, datetime.date):
+            date = DateConverter.to_date(date)
+
+        gen_date = records_to_merge[0].generation_date
+        if not isinstance(gen_date, datetime.date):
+            gen_date = DateConverter.to_date(gen_date)
+
+        assert(gen_date and date) #@TODO remove later
+        if not gen_date or not date:
+            return
+
+        out_dir = path.join(out_dir, DateConverter.to_string(gen_date, '%Y_%m_%d'), DateConverter.to_string(date))
+        if not path.exists(out_dir):
+            makedirs(out_dir)
+
+        out_file_name = ALL_RECORDS_DOC_NAME
+        if file_prefix and file_prefix != ALL_RECORDS_DOC_NAME:
+            counter = 1
+            for filename in listdir(out_dir):
+                if file_prefix in filename:
+                    counter += 1
+            out_file_name = "{}_{}{}".format(out_file_name, file_prefix, counter)
+
+        out_doc = path.join(out_dir, "{}.docx".format(out_file_name))
+        doc.merge_pages(records_to_merge_list)
         app.logger.info("[%s] Created merge docx of records in dir: [%s]", RecordCreator.__qualname__, out_doc)
         DocumentCreator.end_doc_gen(doc, out_doc, out_dir, gen_pdf=True)
 

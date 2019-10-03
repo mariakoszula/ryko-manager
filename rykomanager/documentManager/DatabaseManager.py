@@ -118,10 +118,12 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_daily_records(program_id, current_date, generation_date=None):
-        g_date = current_date if isinstance(current_date, datetime.datetime) else DateConverter.to_date(current_date)
-        if generation_date:
-            return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(g_date)).filter(Record.generation_date.like(generation_date)).all()
-        return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(g_date)).all()
+        cdate = DateConverter.to_date(current_date)
+        gen_date = DateConverter.to_date(generation_date)
+        print(cdate, type(cdate), gen_date, type(gen_date))
+        if gen_date:
+            return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).filter(Record.generation_date.like(gen_date)).all()
+        return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).all()
 
     @staticmethod
     def get_school_records(program_id, school_id):
