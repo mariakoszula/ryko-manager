@@ -15,7 +15,6 @@ from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID,FILL_STR, FILL
 
 @app.route('/', methods=['GET', 'POST'])
 def index(weeks=(1,12)):
-    session['program_id'] = DatabaseManager.get_program().id if DatabaseManager.get_program() else None
     if not session['program_id']:
         return redirect(url_for('program'))
     school_data=dict()

@@ -127,7 +127,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_school_records(program_id, school_id):
-        return Record.query.join(Record.contract).join(Contract.school).filter(Program.id.like(program_id)).filter(School.id.like(school_id)).all()
+        return Record.query.join(Record.contract).filter(Contract.program_id.like(program_id)).filter(Contract.school_id.like(school_id)).all()
 
     @staticmethod
     def get_product(program_id, product_id):

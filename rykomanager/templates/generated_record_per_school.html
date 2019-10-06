@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block title %}
-Wygenerowane WZ dla {{ records[0].contract.school.nick }}
+Wygenerowane WZ dla
+{% if records %}
+{{ records[0].contract.school.nick }}
+{% endif %}
 {% endblock %}
 
 {% block content %}
