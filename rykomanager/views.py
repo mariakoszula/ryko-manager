@@ -6,7 +6,7 @@ from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
 from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
-from rykomanager.models import ProductName, ProductType, School, Program, Week, Product
+from rykomanager.models import ProductName, ProductType, School, Program, Week, Product, RecordState
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
@@ -23,50 +23,117 @@ def dairy_summrize(weeks=(1, 12)):
     if not session['program_id']:
         return redirect(url_for('program'))
     school_data=dict()
-    data = DatabaseManager.get_remaining_product(session['program_id'])
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-    for school in schools:
-        for d in data:
-            if (school == d[0]):
-                if not school_data.get(school.nick, None):
-                    school_data[school.nick]=list()
-                kids_no = 0
-                if d[1].type == ProductType.DAIRY:
-                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).dairy_products
-                elif d[1].type == ProductType.FRUIT_VEG:
-                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).fruitVeg_products
-                remaining_product = d[1].min_amount - d[2]
-                school_data[school.nick].append((d[1].get_name_mapping(), d[2], remaining_product, remaining_product*kids_no))
-    product_remaining = dict()
-    for key, value in school_data.items():
-        for v in value:
-            if not product_remaining.get(v[0], None):
-                product_remaining[v[0]] = 0
-            product_remaining[v[0]] += v[3]
-
+    product_remaining = get_remaning_products(school_data, ProductType.DAIRY)
+    state_of_record = (RecordState.DELIVERED, RecordState.NOT_DELIVERED)
     if request.method == 'POST' and request.form["weeks_form"]:
-        weeks = int(request.form["weeks_form"].split("-")[0]), int(request.form["weeks_form"].split("-")[1])
+        weeks = request.form["weeks_form"]
+        if not "-" in weeks:
+            weeks = int(weeks), int(weeks)
+        else:
+            weeks = int(request.form["weeks_form"].split("-")[0]), int(request.form["weeks_form"].split("-")[1])
+        state = request.form["state"]
+        if state == "DELIVERED":
+            state_of_record = (RecordState.DELIVERED, RecordState.DELIVERED)
+        elif state == "ALL":
+            state_of_record = (RecordState.NOT_DELIVERED, RecordState.DELIVERED)
+    dairy_summary = get_dairy_summary(weeks, state=state_of_record)
+    return render_template("dairy_summrize.html", weeks=weeks, dairy_summary=dairy_summary,
+                           school_data=school_data, product_remaining=product_remaining)
+
+
+def get_dairy_summary(weeks, state):
     dairy_summary = dict()
     dairy_summary['milk_all'] = 0
     dairy_summary['yoghurt_all'] = 0
     dairy_summary['kefir_all'] = 0
     dairy_summary['cheese_all'] = 0
     schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-
     for school in schools:
         dairy = dict()
-        dairy['milk']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, weeks)
-        dairy_summary['milk_all']+=dairy['milk']
-        dairy['yoghurt']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.YOGHURT, weeks)
-        dairy_summary['yoghurt_all']+=dairy['yoghurt']
-        dairy['kefir']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KEFIR, weeks)
-        dairy_summary['kefir_all']+=dairy['kefir']
-        dairy['cheese']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CHEESE, weeks)
-        dairy_summary['cheese_all']+=dairy['cheese']
-        dairy_summary[school.nick]=dairy
+        dairy['milk'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, state, weeks)
+        dairy['yoghurt'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.YOGHURT, state, weeks)
+        dairy['kefir'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KEFIR, state, weeks)
+        dairy['cheese'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CHEESE, state, weeks)
+        dairy_summary['milk_all'] += dairy['milk']
+        dairy_summary['yoghurt_all'] += dairy['yoghurt']
+        dairy_summary['kefir_all'] += dairy['kefir']
+        dairy_summary['cheese_all'] += dairy['cheese']
+        dairy_summary[school.nick] = dairy
+    return dairy_summary
 
-    return render_template("dairy_summrize.html", weeks=weeks, dairy_summary=dairy_summary,
-                           school_data=school_data, product_remaining=product_remaining)
+
+def get_fruitVeg_summary(weeks, state):
+    fruitVeg_summary = dict()
+    fruitVeg_summary['apple_all'] = 0
+    fruitVeg_summary['pear_all'] = 0
+    fruitVeg_summary['plum_all'] = 0
+    fruitVeg_summary['strawberry_all'] = 0
+    fruitVeg_summary['juice_all'] = 0
+    fruitVeg_summary['carrot_all'] = 0
+    fruitVeg_summary['radish_all'] = 0
+    fruitVeg_summary['pepper_all'] = 0
+    fruitVeg_summary['tomato_all'] = 0
+    fruitVeg_summary['kohlrabi_all'] = 0
+
+    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    for school in schools:
+        fruitVeg = dict()
+        fruitVeg['apple'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.APPLE, state, weeks)
+        fruitVeg['pear'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PEAR, state, weeks)
+        fruitVeg['plum'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PLUM, state, weeks)
+        fruitVeg['strawberry'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.STRAWBERRY, state, weeks)
+        fruitVeg['juice'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.JUICE, state, weeks)
+        fruitVeg['carrot'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CARROT, state, weeks)
+        fruitVeg['radish'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.RADISH, state, weeks)
+        fruitVeg['pepper'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PEPPER, state, weeks)
+        fruitVeg['tomato'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.TOMATO, state, weeks)
+        fruitVeg['kohlrabi'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KOHLRABI, state, weeks)
+
+        fruitVeg_summary['apple_all']+=fruitVeg['apple']
+        fruitVeg_summary['pear_all'] += fruitVeg['pear']
+        fruitVeg_summary['plum_all'] += fruitVeg['plum']
+        fruitVeg_summary['strawberry_all'] += fruitVeg['strawberry']
+        fruitVeg_summary['juice_all'] += fruitVeg['juice']
+        fruitVeg_summary['carrot_all'] += fruitVeg['carrot']
+        fruitVeg_summary['radish_all'] += fruitVeg['radish']
+        fruitVeg_summary['pepper_all'] += fruitVeg['pepper']
+        fruitVeg_summary['tomato_all'] += fruitVeg['tomato']
+        fruitVeg_summary['kohlrabi_all'] += fruitVeg['kohlrabi']
+
+        fruitVeg_summary[school.nick] = fruitVeg
+    return fruitVeg_summary
+
+
+def get_remaning_products(school_data, product_type):
+    data = DatabaseManager.get_product_no(session['program_id'], product_type)
+    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    product = DatabaseManager.get_products(session['program_id'], product_type)
+
+    for school in schools:
+        kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).dairy_products
+        if not kids_no or kids_no == 0 :
+            continue
+        for d in data:
+            if school == d[0]:
+                if not school_data.get(school.nick, None):
+                    school_data[school.nick] = list()
+                remaining_product = d[1].min_amount - d[2]
+                if d[1] in product:
+                    product.remove(d[1])
+                school_data[school.nick].append(
+                    (d[1].get_name_mapping(), d[2], remaining_product, remaining_product * kids_no))
+        for remain_prod in product:
+            remaining_product = remain_prod.min_amount
+            school_data[school.nick].append(
+                (remain_prod.get_name_mapping(), 0, remaining_product, remaining_product * kids_no))
+
+    product_remaining = dict()
+    for key, value in school_data.items():
+        for v in value:
+            if not product_remaining.get(v[0], None):
+                product_remaining[v[0]] = 0
+            product_remaining[v[0]] += v[3]
+    return product_remaining
 
 
 @app.route('/podsumowanie_owoceWarzywa', methods=['GET', 'POST'])
@@ -74,49 +141,21 @@ def fruitVeg_summrize(weeks=(1, 12)):
     if not session['program_id']:
         return redirect(url_for('program'))
     school_data=dict()
-    data = DatabaseManager.get_remaining_product(session['program_id'])
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-    for school in schools:
-        for d in data:
-            if (school == d[0]):
-                if not school_data.get(school.nick, None):
-                    school_data[school.nick]=list()
-                kids_no = 0
-                if d[1].type == ProductType.DAIRY:
-                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).dairy_products
-                elif d[1].type == ProductType.FRUIT_VEG:
-                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).fruitVeg_products
-                remaining_product = d[1].min_amount - d[2]
-                school_data[school.nick].append((d[1].get_name_mapping(), d[2], remaining_product, remaining_product*kids_no))
-    product_remaining = dict()
-    for key, value in school_data.items():
-        for v in value:
-            if not product_remaining.get(v[0], None):
-                product_remaining[v[0]] = 0
-            product_remaining[v[0]] += v[3]
-
+    product_remaining = get_remaning_products(school_data, ProductType.FRUIT_VEG)
+    state_of_record = (RecordState.DELIVERED, RecordState.NOT_DELIVERED)
     if request.method == 'POST' and request.form["weeks_form"]:
-        weeks = int(request.form["weeks_form"].split("-")[0]), int(request.form["weeks_form"].split("-")[1])
-    dairy_summary = dict()
-    dairy_summary['milk_all'] = 0
-    dairy_summary['yoghurt_all'] = 0
-    dairy_summary['kefir_all'] = 0
-    dairy_summary['cheese_all'] = 0
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-
-    for school in schools:
-        dairy = dict()
-        dairy['milk']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, weeks)
-        dairy_summary['milk_all']+=dairy['milk']
-        dairy['yoghurt']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.YOGHURT, weeks)
-        dairy_summary['yoghurt_all']+=dairy['yoghurt']
-        dairy['kefir']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KEFIR, weeks)
-        dairy_summary['kefir_all']+=dairy['kefir']
-        dairy['cheese']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CHEESE, weeks)
-        dairy_summary['cheese_all']+=dairy['cheese']
-        dairy_summary[school.nick]=dairy
-
-    return render_template("fruitVeg_summrize.html", weeks=weeks, dairy_summary=dairy_summary,
+        weeks = request.form["weeks_form"]
+        if not "-" in weeks:
+            weeks = int(weeks), int(weeks)
+        else:
+            weeks = int(request.form["weeks_form"].split("-")[0]), int(request.form["weeks_form"].split("-")[1])
+        state = request.form["state"]
+        if state == "DELIVERED":
+            state_of_record = (RecordState.DELIVERED, RecordState.DELIVERED)
+        elif state == "ALL":
+            state_of_record = (RecordState.NOT_DELIVERED, RecordState.DELIVERED)
+    fruitVeg_summary = get_fruitVeg_summary(weeks, state=state_of_record)
+    return render_template("fruitVeg_summrize.html", weeks=weeks, fruitVeg_summary=fruitVeg_summary,
                            school_data=school_data, product_remaining=product_remaining)
 
 
@@ -233,6 +272,7 @@ def contract_delete(school_id, contract_id):
     return render_template("school_form.html",  School=DatabaseManager.get_school(school_id),
                                                 Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
 
+
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
     all_weeks = DatabaseManager.get_weeks(session['program_id'])
@@ -248,10 +288,8 @@ def create_records():
 def create_records_per_week(week_id):
     selected_schools_product_view = dict()
     all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id']) # schools which don't have record for this day
-    weeks = DatabaseManager.get_product_no(session['program_id'], week_no=1)
     record_context = {
         'schools_with_contracts': all_schools,
-        'weekly_product': DatabaseManager.get_product_no(session['program_id'], week_no=1),
         'products_dairy': DatabaseManager.get_dairy_products(session['program_id']),
         'products_veg': DatabaseManager.get_fruitVeg_products(session['program_id']),
         'current_week': DatabaseManager.get_week(week_id, session['program_id']),

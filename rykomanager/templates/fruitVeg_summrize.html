@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="panel panel-default">
-                <div class="panel-heading">PODSUMOWANIE - NABIAŁ {{ weeks[0] }}- {{ weeks[1] }} tyg.</div>
+                <div class="panel-heading">PODSUMOWANIE - Owoce-Warzywa {{ weeks[0] }}- {{ weeks[1] }} tyg.</div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
                     <form role="form" method="post" action="{{ request.path }}">
@@ -15,6 +15,16 @@
                             <label>Wybierz tygodnie</label>
                             <input class="form-control" name="weeks_form" value="{{ weeks[0] }}-{{ weeks[1]}}">
                             <p class="help-block">wprowadź zakres tygodni np. 1-6, 1-9, 6-12 itp.</p>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="state" id="stateId0" value="DELIVERED">Tylko zatwierdzone
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="state" id="stateId1" value="ALL">Wszystkie
+                                </label>
+                            </div>
                             <button type="submit" class="btn btn-primary btn-sm btn-block">Odśwież</button>
                         </div>
                     </form>
@@ -28,20 +38,44 @@
                             </thead>
                             <tbody>
                             <tr>
-                                <td>Mleko</td>
-                                <td>{{ dairy_summary['milk_all'] }}</td>
+                                <td>Jabłko</td>
+                                <td>{{ fruitVeg_summary['apple_all'] }}</td>
                             </tr>
                             <tr>
-                                <td>Kefir</td>
-                                <td>{{ dairy_summary['kefir_all'] }}</td>
+                                <td>Gruszka</td>
+                                <td>{{ fruitVeg_summary['pear_all'] }}</td>
                             </tr>
                             <tr>
-                                <td>Ser twarogowy</td>
-                                <td>{{ dairy_summary['cheese_all'] }}</td>
+                                <td>Śliwka</td>
+                                <td>{{ fruitVeg_summary['plum_all'] }}</td>
                             </tr>
                             <tr>
-                                <td>Jogurt</td>
-                                <td>{{ dairy_summary['yoghurt_all'] }}</td>
+                                <td>Truskawka</td>
+                                <td>{{ fruitVeg_summary['strawberry_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Sok owocowy</td>
+                                <td>{{ fruitVeg_summary['juice_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Marchew</td>
+                                <td>{{ fruitVeg_summary['carrot_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Rzodkiewka</td>
+                                <td>{{ fruitVeg_summary['radish_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Papryka</td>
+                                <td>{{ fruitVeg_summary['pepper_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Pomidor</td>
+                                <td>{{ fruitVeg_summary['tomato_all'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>Kalarepa</td>
+                                <td>{{ fruitVeg_summary['kohlrabi_all'] }}</td>
                             </tr>
                             </tbody>
                         </table>
@@ -50,21 +84,33 @@
                                 <thead>
                                 <tr>
                                     <th>Szkoła</th>
-                                    <th>Mleko</th>
-                                    <th>Kefir</th>
-                                    <th>Ser twarogowy</th>
-                                    <th>Jogurt</th>
+                                    <th>Jabłko</th>
+                                    <th>Gruszka</th>
+                                    <th>Śliwka</th>
+                                    <th>Truskawka</th>
+                                    <th>Sok owocowy</th>
+                                    <th>Marchew</th>
+                                    <th>Rzodkiewka</th>
+                                    <th>Papryka</th>
+                                    <th>Pomidor</th>
+                                    <th>Kalarepa</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for school, dairy in dairy_summary.items() %}
+                                {% for school, fruitVeg in fruitVeg_summary.items() %}
                                 {% if "all" not in school %}
                                 <tr>
                                     <td>{{ school }}</td>
-                                    <td>{{ dairy['milk'] }}</td>
-                                    <td>{{ dairy['kefir'] }}</td>
-                                    <td>{{ dairy['cheese'] }}</td>
-                                    <td>{{ dairy['yoghurt'] }}</td>
+                                    <td>{{ fruitVeg['apple'] }}</td>
+                                    <td>{{ fruitVeg['pear'] }}</td>
+                                    <td>{{ fruitVeg['plum'] }}</td>
+                                    <td>{{ fruitVeg['strawberry'] }}</td>
+                                    <td>{{ fruitVeg['juice'] }}</td>
+                                    <td>{{ fruitVeg['carrot'] }}</td>
+                                    <td>{{ fruitVeg['radish'] }}</td>
+                                    <td>{{ fruitVeg['pepper'] }}</td>
+                                    <td>{{ fruitVeg['tomato'] }}</td>
+                                    <td>{{ fruitVeg['kohlrabi'] }}</td>
                                 </tr>
                                 {% endif %}
                                 {% endfor %}
@@ -114,7 +160,7 @@
                                     {% for item in items %}
                                     {% if item[2] == 0 %}
                                 <tr class="success">
-                                    {% elif item[2] == -1 %}
+                                    {% elif item[2] < 0 %}
                                 <tr class="warning">
                                     {% else %}
                                 <tr class="danger">

@@ -2,7 +2,7 @@ from rykomanager.models import School, Contract, Program, Week, Product, Product
 from rykomanager import db, app
 from abc import ABC, abstractmethod
 import re
-from sqlalchemy import func, exc, update
+from sqlalchemy import func, exc, update, or_
 import datetime
 from rykomanager.DateConverter import DateConverter
 import rykomanager.configuration as cfg
@@ -134,12 +134,17 @@ class DatabaseManager(ABC):
         return Product.query.filter(Product.program_id.like(program_id)).filter(Product.id.like(product_id)).first()
 
     @staticmethod
-    def get_product_no(program_id, week_no=None):
+    def get_products(program_id, product_type):
+        return Product.query.filter(Product.program_id.like(program_id)).filter(Product.type.like(product_type)).filter(Product.min_amount > 0).all()
+
+    @staticmethod
+    def get_product_no(program_id, product_type, week_no=None):
         if not week_no:
-            return Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Contract.program_id == program_id)\
+            print( Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Product.type.like(product_type)).filter(Contract.program_id == program_id).all()[0])
+            return Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Contract.program_id == program_id).filter(Product.type.like(product_type))\
                 .with_entities(School, Product, func.count(Product.name)).group_by(School.nick, Product.name).all()
         return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
-            .filter(Week.program_id == program_id)\
+            .filter(Week.program_id.like(program_id)).filter(Product.type.like(product_type))\
             .with_entities(School, Product, func.count(Product.type)).group_by(School.nick, Product.type).all()
 
     @staticmethod
@@ -182,18 +187,18 @@ class DatabaseManager(ABC):
         return DatabaseManager.get_summary(program_id=program_id).no + 1
 
     @staticmethod
-    def get_product_amount(program_id, school_id, product_name, weeks=list()):
+    def get_product_amount(program_id, school_id, product_name, state, weeks=list()):
         product_type_qr = None
         try:
             product_type_qr = Product.query.filter(Product.name==product_name).filter(Product.program_id == program_id).with_entities(Product.type).one()
             if product_type_qr:
                 product_type = product_type_qr[0]
                 item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
-                data = Record.query.join(Contract).join(Product).filter(Contract.program_id == program_id). \
-                    filter(Product.name == product_name).join(Week).filter(Week.week_no >= weeks[0],
+                data = Record.query.join(Contract).join(Product).filter(Contract.program_id.like(program_id))\
+                    .filter(Product.name == product_name).join(Week).filter(Week.week_no >= weeks[0],
                                                                            Week.week_no <= weeks[1]).filter(
                     Contract.school_id == school_id) \
-                    .filter(Record.state == RecordState.DELIVERED).with_entities(
+                    .filter(or_(Record.state == state[0], Record.state == state[1])).with_entities(
                     func.sum(item_to_sum).label('product_amount')).one()
                 return data.product_amount if data and data.product_amount else 0
         except:
@@ -265,10 +270,6 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_record(id):
         return Record.query.filter(Record.id.like(id)).one()
-
-    @staticmethod
-    def get_remaining_product(program_id):
-        return DatabaseManager.get_product_no(program_id)
 
     @staticmethod
     def get_program(program_id = None):
