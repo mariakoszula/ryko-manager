@@ -13,8 +13,13 @@ from rykomanager.DateConverter import DateConverter
 from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID,FILL_STR, FILL_BY_SCHOOL,DEFAULT_DATE_STR,FILL_STR_SCHOOL, ALL_RECORDS_DOC_NAME
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index(weeks=(1,12)):
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route('/podsumowanie_nabial', methods=['GET', 'POST'])
+def dairy_summrize(weeks=(1, 12)):
     if not session['program_id']:
         return redirect(url_for('program'))
     school_data=dict()
@@ -60,7 +65,58 @@ def index(weeks=(1,12)):
         dairy_summary['cheese_all']+=dairy['cheese']
         dairy_summary[school.nick]=dairy
 
-    return render_template("index.html", weeks=weeks, dairy_summary=dairy_summary,
+    return render_template("dairy_summrize.html", weeks=weeks, dairy_summary=dairy_summary,
+                           school_data=school_data, product_remaining=product_remaining)
+
+
+@app.route('/podsumowanie_owoceWarzywa', methods=['GET', 'POST'])
+def fruitVeg_summrize(weeks=(1, 12)):
+    if not session['program_id']:
+        return redirect(url_for('program'))
+    school_data=dict()
+    data = DatabaseManager.get_remaining_product(session['program_id'])
+    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    for school in schools:
+        for d in data:
+            if (school == d[0]):
+                if not school_data.get(school.nick, None):
+                    school_data[school.nick]=list()
+                kids_no = 0
+                if d[1].type == ProductType.DAIRY:
+                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).dairy_products
+                elif d[1].type == ProductType.FRUIT_VEG:
+                    kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).fruitVeg_products
+                remaining_product = d[1].min_amount - d[2]
+                school_data[school.nick].append((d[1].get_name_mapping(), d[2], remaining_product, remaining_product*kids_no))
+    product_remaining = dict()
+    for key, value in school_data.items():
+        for v in value:
+            if not product_remaining.get(v[0], None):
+                product_remaining[v[0]] = 0
+            product_remaining[v[0]] += v[3]
+
+    if request.method == 'POST' and request.form["weeks_form"]:
+        weeks = int(request.form["weeks_form"].split("-")[0]), int(request.form["weeks_form"].split("-")[1])
+    dairy_summary = dict()
+    dairy_summary['milk_all'] = 0
+    dairy_summary['yoghurt_all'] = 0
+    dairy_summary['kefir_all'] = 0
+    dairy_summary['cheese_all'] = 0
+    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+
+    for school in schools:
+        dairy = dict()
+        dairy['milk']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, weeks)
+        dairy_summary['milk_all']+=dairy['milk']
+        dairy['yoghurt']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.YOGHURT, weeks)
+        dairy_summary['yoghurt_all']+=dairy['yoghurt']
+        dairy['kefir']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KEFIR, weeks)
+        dairy_summary['kefir_all']+=dairy['kefir']
+        dairy['cheese']=DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CHEESE, weeks)
+        dairy_summary['cheese_all']+=dairy['cheese']
+        dairy_summary[school.nick]=dairy
+
+    return render_template("fruitVeg_summrize.html", weeks=weeks, dairy_summary=dairy_summary,
                            school_data=school_data, product_remaining=product_remaining)
 
 
