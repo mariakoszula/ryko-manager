@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='rykomanager',
-    version='3.3.8', #update to new semester
+    version='3.3.9', #update to new semester
     packages=find_packages(),
     include_package_data=True,
     install_requires=[

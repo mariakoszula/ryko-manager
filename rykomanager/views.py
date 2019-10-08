@@ -15,12 +15,12 @@ from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID,FILL_STR, FILL
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return redirect(url_for('program'))
 
 
 @app.route('/podsumowanie_nabial', methods=['GET', 'POST'])
 def dairy_summrize(weeks=(1, 12)):
-    if not session['program_id']:
+    if not session.get('program_id'):
         return redirect(url_for('program'))
     school_data=dict()
     product_remaining = get_remaning_products(school_data, ProductType.DAIRY)
@@ -47,13 +47,13 @@ def get_dairy_summary(weeks, state):
     dairy_summary['yoghurt_all'] = 0
     dairy_summary['kefir_all'] = 0
     dairy_summary['cheese_all'] = 0
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     for school in schools:
         dairy = dict()
-        dairy['milk'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.MILK, state, weeks)
-        dairy['yoghurt'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.YOGHURT, state, weeks)
-        dairy['kefir'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KEFIR, state, weeks)
-        dairy['cheese'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CHEESE, state, weeks)
+        dairy['milk'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.MILK, state, weeks)
+        dairy['yoghurt'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.YOGHURT, state, weeks)
+        dairy['kefir'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KEFIR, state, weeks)
+        dairy['cheese'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CHEESE, state, weeks)
         dairy_summary['milk_all'] += dairy['milk']
         dairy_summary['yoghurt_all'] += dairy['yoghurt']
         dairy_summary['kefir_all'] += dairy['kefir']
@@ -75,19 +75,19 @@ def get_fruitVeg_summary(weeks, state):
     fruitVeg_summary['tomato_all'] = 0
     fruitVeg_summary['kohlrabi_all'] = 0
 
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     for school in schools:
         fruitVeg = dict()
-        fruitVeg['apple'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.APPLE, state, weeks)
-        fruitVeg['pear'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PEAR, state, weeks)
-        fruitVeg['plum'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PLUM, state, weeks)
-        fruitVeg['strawberry'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.STRAWBERRY, state, weeks)
-        fruitVeg['juice'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.JUICE, state, weeks)
-        fruitVeg['carrot'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.CARROT, state, weeks)
-        fruitVeg['radish'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.RADISH, state, weeks)
-        fruitVeg['pepper'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.PEPPER, state, weeks)
-        fruitVeg['tomato'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.TOMATO, state, weeks)
-        fruitVeg['kohlrabi'] = DatabaseManager.get_product_amount(session['program_id'], school.id, ProductName.KOHLRABI, state, weeks)
+        fruitVeg['apple'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.APPLE, state, weeks)
+        fruitVeg['pear'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEAR, state, weeks)
+        fruitVeg['plum'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PLUM, state, weeks)
+        fruitVeg['strawberry'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.STRAWBERRY, state, weeks)
+        fruitVeg['juice'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.JUICE, state, weeks)
+        fruitVeg['carrot'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CARROT, state, weeks)
+        fruitVeg['radish'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.RADISH, state, weeks)
+        fruitVeg['pepper'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEPPER, state, weeks)
+        fruitVeg['tomato'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.TOMATO, state, weeks)
+        fruitVeg['kohlrabi'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KOHLRABI, state, weeks)
 
         fruitVeg_summary['apple_all']+=fruitVeg['apple']
         fruitVeg_summary['pear_all'] += fruitVeg['pear']
@@ -105,12 +105,12 @@ def get_fruitVeg_summary(weeks, state):
 
 
 def get_remaning_products(school_data, product_type):
-    data = DatabaseManager.get_product_no(session['program_id'], product_type)
-    schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-    product = DatabaseManager.get_products(session['program_id'], product_type)
+    data = DatabaseManager.get_product_no(session.get('program_id'), product_type)
+    schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
+    product = DatabaseManager.get_products(session.get('program_id'), product_type)
 
     for school in schools:
-        kids_no = DatabaseManager.get_current_contract(school.id, session['program_id']).dairy_products
+        kids_no = DatabaseManager.get_current_contract(school.id, session.get('program_id')).dairy_products
         if not kids_no or kids_no == 0 :
             continue
         for d in data:
@@ -138,7 +138,7 @@ def get_remaning_products(school_data, product_type):
 
 @app.route('/podsumowanie_owoceWarzywa', methods=['GET', 'POST'])
 def fruitVeg_summrize(weeks=(1, 12)):
-    if not session['program_id']:
+    if not session.get('program_id'):
         return redirect(url_for('program'))
     school_data=dict()
     product_remaining = get_remaning_products(school_data, ProductType.FRUIT_VEG)
@@ -161,13 +161,17 @@ def fruitVeg_summrize(weeks=(1, 12)):
 
 @app.route('/schools_all')
 def schools_all():
-    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
-    return render_template("schools_all.html", Schools=all_schools, program_id=session['program_id'], invalid_school_id=INVALID_ID)
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
+    return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'), invalid_school_id=INVALID_ID)
 
 
 @app.route('/create_register')
 def create_register():
-    RegisterCreator(session['program_id']).create()
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    RegisterCreator(session.get('program_id')).create()
     flash('Rejestr został wygenerowany pomyślnie', 'info')
     return schools_all()
 
@@ -180,6 +184,8 @@ def empty_if_none(value):
 
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
 def school_form(school_id=INVALID_ID):
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
     if school_id == INVALID_ID:
         id_of_school_being_added = DatabaseManager.id_of_school_being_added(FILL_STR_SCHOOL)
         if not id_of_school_being_added:
@@ -208,11 +214,13 @@ def school_form(school_id=INVALID_ID):
             school_id = DatabaseManager.update_school_data(current_school, **data_to_update)
             return redirect(url_for('school_form', school_id=current_school.id))
     return render_template("school_form.html",  School=current_school,
-                                                Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
+                                                Contracts=DatabaseManager.get_all_contracts(school_id, session.get('program_id')))
 
 
 @app.route('/school_form/<int:school_id>/add_annex', methods=['GET', 'POST'])
 def school_form_add_annex(school_id):
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
     school = DatabaseManager.get_school(school_id)
     if request.method == 'POST':
         if not request.form['contract_date'] or not request.form['validity_date']:
@@ -220,7 +228,7 @@ def school_form_add_annex(school_id):
         elif not request.form['fruitVeg_products'] and not request.form['dairy_products']:
             flash('Uzupełnij wartość produktu, którego liczba zmieniła się', 'error')
         else:
-            ac = AnnexCreator(school_id, session['program_id'])
+            ac = AnnexCreator(school_id, session.get('program_id'))
             ac.create(request.form['contract_date'], request.form['validity_date'],
                        request.form['fruitVeg_products'], request.form['dairy_products'])
 
@@ -230,6 +238,8 @@ def school_form_add_annex(school_id):
 
 @app.route('/school_form/<int:school_id>/edit_annex/<int:annex_id>', methods=['GET', 'POST'])
 def school_form_edit_annex(school_id, annex_id):
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
     school = DatabaseManager.get_school(school_id)
     annex = DatabaseManager.get_annex(annex_id)
     if request.method == 'POST':
@@ -245,8 +255,10 @@ def school_form_edit_annex(school_id, annex_id):
 
 @app.route('/school_form/<int:school_id>/add_contract/', methods=['GET', 'POST'])
 def school_form_add_contract(school_id=INVALID_ID):
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
     school = DatabaseManager.get_school(school_id)
-    school_contract = DatabaseManager.get_contract(school_id, session['program_id'])
+    school_contract = DatabaseManager.get_contract(school_id, session.get('program_id'))
     if request.method == 'POST':
         date = DateConverter.to_date(request.form['contract_date'])
         fruitVeg_products = request.form['fruitVeg_products']
@@ -256,7 +268,7 @@ def school_form_add_contract(school_id=INVALID_ID):
             if not date:
                 flash('Uzupełnij datę zawarcia umowy', 'error')
             else:
-                new_contract = ContractCreator(school, session['program_id'])
+                new_contract = ContractCreator(school, session.get('program_id'))
                 new_contract.create(date)
                 return redirect(url_for('school_form', school_id=school_id))
 
@@ -268,15 +280,19 @@ def school_form_add_contract(school_id=INVALID_ID):
 
 @app.route('/contract_delete/<int:school_id>/delete/<int:contract_id>', methods=['GET', 'POST'])
 def contract_delete(school_id, contract_id):
+    if not str(session.get('program_id')):
+        return redirect(url_for('program'))
     DatabaseManager.remove_contract(contract_id)
     return render_template("school_form.html",  School=DatabaseManager.get_school(school_id),
-                                                Contracts=DatabaseManager.get_all_contracts(school_id, session['program_id']))
+                                                Contracts=DatabaseManager.get_all_contracts(school_id, session.get('program_id')))
 
 
 @app.route('/create_records', methods=['GET', 'POST'])
 def create_records():
-    all_weeks = DatabaseManager.get_weeks(session['program_id'])
-    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id'])
+    if not str(session.get('program_id')):
+        return redirect(url_for('program'))
+    all_weeks = DatabaseManager.get_weeks(session.get('program_id'))
+    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     if request.method == 'POST':
         school_id = request.form.get('wz_school', None)
         if school_id:
@@ -286,15 +302,17 @@ def create_records():
 
 @app.route('/create_records/<int:week_id>', methods=['GET', 'POST'])
 def create_records_per_week(week_id):
+    if not str(session.get('program_id')):
+        return redirect(url_for('program'))
     selected_schools_product_view = dict()
-    all_schools = DatabaseManager.get_all_schools_with_contract(session['program_id']) # schools which don't have record for this day
+    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id')) # schools which don't have record for this day
     record_context = {
         'schools_with_contracts': all_schools,
-        'products_dairy': DatabaseManager.get_dairy_products(session['program_id']),
-        'products_veg': DatabaseManager.get_fruitVeg_products(session['program_id']),
-        'current_week': DatabaseManager.get_week(week_id, session['program_id']),
+        'products_dairy': DatabaseManager.get_dairy_products(session.get('program_id')),
+        'products_veg': DatabaseManager.get_fruitVeg_products(session.get('program_id')),
+        'current_week': DatabaseManager.get_week(week_id, session.get('program_id')),
         'datetime': datetime,
-        'weeks': DatabaseManager.get_weeks(session['program_id']),
+        'weeks': DatabaseManager.get_weeks(session.get('program_id')),
         'selected_schools_product_view': selected_schools_product_view
     }
     if request.method == 'POST':
@@ -319,7 +337,7 @@ def create_records_per_week(week_id):
                 school_id = RecordCreator.extract_school_id(school_key)
                 for product_id in product_list:
                     if product_id != "":
-                        rc = RecordCreator(session['program_id'], current_date, school_id, product_id)
+                        rc = RecordCreator(session.get('program_id'), current_date, school_id, product_id)
                         rc.create()
                         record_list.append(rc)
                     else:
@@ -328,7 +346,7 @@ def create_records_per_week(week_id):
             RecordCreator.generate_many(record_list, RECORDS_NEW_NAME)
             #REGENERATE_FOR_ALL
             generation_date = datetime.date.today()
-            existing_daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
+            existing_daily_records = DatabaseManager.get_daily_records(session.get('program_id'), current_date, generation_date)
             RecordCreator.regenerate_documentation(existing_daily_records)
             return redirect(url_for('record_created', current_date=current_date, week_id=week_id))
     return render_template("create_records.html", **record_context)
@@ -336,8 +354,10 @@ def create_records_per_week(week_id):
 
 @app.route('/create_records/<int:week_id>/<string:current_date>', methods=['GET', 'POST'])
 def record_created(current_date, week_id):
-    #week = DatabaseManager.get_week(week_id, session['program_id'])
-    daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date)
+    if not str(session.get('program_id')):
+        return redirect(url_for('program'))
+    #week = DatabaseManager.get_week(week_id, session.get('program_id'))
+    daily_records = DatabaseManager.get_daily_records(session.get('program_id'), current_date)
     #previous_date = DatabaseManager.get_prev_date(current_date, week)
     #next_date = DatabaseManager.get_next_date(current_date)
     if request.method == 'POST':
@@ -356,7 +376,7 @@ def record_created(current_date, week_id):
                 generation_date = DatabaseManager.get_record(record_id).generation_date
                 DatabaseManager.remove_record(record_id)
                 if generation_date:
-                    daily_records = DatabaseManager.get_daily_records(session['program_id'], current_date, generation_date)
+                    daily_records = DatabaseManager.get_daily_records(session.get('program_id'), current_date, generation_date)
                     RecordCreator.regenerate_documentation(daily_records)
                 app.logger.info("Remove: Record.id %s", record_id)
         return redirect(url_for('record_created', daily_records=daily_records, current_date=current_date, week_id=week_id))
@@ -365,7 +385,9 @@ def record_created(current_date, week_id):
 
 @app.route('/school_records/<int:school_id>', methods=['GET', 'POST'])
 def school_records(school_id):
-    records = DatabaseManager.get_school_records(session['program_id'], school_id)
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    records = DatabaseManager.get_school_records(session.get('program_id'), school_id)
     if request.method == 'POST':
         if request.form['action']:
             action_record_list = request.form['action'].split("_")
@@ -400,13 +422,15 @@ def my_utility_processor():
 
 @app.route('/create_summary/<int:week_id>')
 def create_summary(week_id, week_no=6):
-    summary_craetor = SummaryCreator(session['program_id'], week_id, week_no)
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    summary_craetor = SummaryCreator(session.get('program_id'), week_id, week_no)
     summary = summary_craetor.create()
 
     if summary:
         appCreators = list()
-        for school in DatabaseManager.get_all_schools_with_contract(session['program_id']):
-            app = ApplicationCreator(session['program_id'], school, summary)
+        for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
+            app = ApplicationCreator(session.get('program_id'), school, summary)
             if app.create():
                 appCreators.append(app)
 
@@ -422,8 +446,10 @@ def create_summary(week_id, week_no=6):
 @app.route('/program')
 def program():
     all_programs=DatabaseManager.get_programs_all()
+    if not str(session.get('program_id')):
+        session['program_id'] = DatabaseManager.get_program().id
     current = request.args.get('current')
-    current_session_program = DatabaseManager.get_program(current) if current else DatabaseManager.get_program(session['program_id'])
+    current_session_program = DatabaseManager.get_program(current) if current else DatabaseManager.get_program(session.get('program_id'))
     if current_session_program:
         session['program_id'] = current_session_program.id
     return render_template("program.html", Programs=all_programs, current=current_session_program, invalid_program_id=INVALID_ID)
@@ -502,11 +528,11 @@ def generate_contracts(program_id):
     if not contract_date or contract_date == "dd.mm.rrrr":
         flash('Uzupełnij datę zawarcia umów', 'error')
     else:
-        if session['program_id'] == program_id :
+        if session.get('program_id') == program_id :
             all_schols = DatabaseManager.get_all_schools()
             for school in all_schols:
                 if school.nick != FILL_STR_SCHOOL: #Dont create contract for school with not full date filled
-                    new_contract = ContractCreator(school, session['program_id'])
+                    new_contract = ContractCreator(school, session.get('program_id'))
                     new_contract.create(DateConverter.to_date(contract_date))
             flash("Umowy zostały wygenerowane pomyślnie", 'success')
         else:
