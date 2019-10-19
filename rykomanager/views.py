@@ -50,10 +50,10 @@ def get_dairy_summary(weeks, state):
     schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     for school in schools:
         dairy = dict()
-        dairy['milk'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.MILK, state, weeks)
-        dairy['yoghurt'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.YOGHURT, state, weeks)
-        dairy['kefir'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KEFIR, state, weeks)
-        dairy['cheese'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CHEESE, state, weeks)
+        dairy['milk'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.MILK, weeks, state)
+        dairy['yoghurt'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.YOGHURT, weeks, state)
+        dairy['kefir'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KEFIR, weeks, state)
+        dairy['cheese'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CHEESE, weeks, state)
         dairy_summary['milk_all'] += dairy['milk']
         dairy_summary['yoghurt_all'] += dairy['yoghurt']
         dairy_summary['kefir_all'] += dairy['kefir']
@@ -78,16 +78,16 @@ def get_fruitVeg_summary(weeks, state):
     schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     for school in schools:
         fruitVeg = dict()
-        fruitVeg['apple'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.APPLE, state, weeks)
-        fruitVeg['pear'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEAR, state, weeks)
-        fruitVeg['plum'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PLUM, state, weeks)
-        fruitVeg['strawberry'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.STRAWBERRY, state, weeks)
-        fruitVeg['juice'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.JUICE, state, weeks)
-        fruitVeg['carrot'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CARROT, state, weeks)
-        fruitVeg['radish'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.RADISH, state, weeks)
-        fruitVeg['pepper'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEPPER, state, weeks)
-        fruitVeg['tomato'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.TOMATO, state, weeks)
-        fruitVeg['kohlrabi'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KOHLRABI, state, weeks)
+        fruitVeg['apple'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.APPLE, weeks, state)
+        fruitVeg['pear'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEAR, weeks, state)
+        fruitVeg['plum'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PLUM, weeks, state)
+        fruitVeg['strawberry'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.STRAWBERRY, weeks, state)
+        fruitVeg['juice'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.JUICE, weeks, state)
+        fruitVeg['carrot'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.CARROT, weeks, state)
+        fruitVeg['radish'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.RADISH, weeks, state)
+        fruitVeg['pepper'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.PEPPER, weeks, state)
+        fruitVeg['tomato'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.TOMATO, weeks, state)
+        fruitVeg['kohlrabi'] = DatabaseManager.get_product_amount(session.get('program_id'), school.id, ProductName.KOHLRABI, weeks, state)
 
         fruitVeg_summary['apple_all']+=fruitVeg['apple']
         fruitVeg_summary['pear_all'] += fruitVeg['pear']
@@ -420,26 +420,32 @@ def my_utility_processor():
     return dict(update_state=update_record_state)
 
 
-@app.route('/create_summary/<int:week_id>')
-def create_summary(week_id, week_no=6):
+@app.route('/create_summary/<int:week_id>', methods=['POST'])
+def create_summary(week_id, week_no=1):
     if not session.get('program_id'):
         return redirect(url_for('program'))
-    summary_craetor = SummaryCreator(session.get('program_id'), week_id, week_no)
-    summary = summary_craetor.create()
 
-    if summary:
-        appCreators = list()
-        for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
-            app = ApplicationCreator(session.get('program_id'), school, summary)
-            if app.create():
-                appCreators.append(app)
+    if request.method == 'POST':
+        application_date = request.form["application_date"]
 
-        for appCreator in appCreators:
-            appCreator.generate()
+        if not application_date:
+            return redirect(url_for('program_form', program_id=session.get('program_id')))
+        summary_craetor = SummaryCreator(session.get('program_id'), week_id, week_no)
+        summary = summary_craetor.create()
 
-        summary_craetor.generate()
-    else:
-        app.logger.error("create_summary: summary is None. Can not create Application.")
+        if summary:
+            appCreators = list()
+            for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
+                app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+                if app.create():
+                    appCreators.append(app)
+
+            for appCreator in appCreators:
+                appCreator.generate()
+
+            summary_craetor.generate()
+        else:
+            app.logger.error("create_summary: summary is None. Can not create Application.")
     return redirect(url_for("index", weeks=(1,12), dairy_summary=None, school_data="", product_remaining=""))
 
 

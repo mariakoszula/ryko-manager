@@ -1,5 +1,6 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
+from rykomanager.models import ProductName
 import rykomanager.configuration as cfg
 from rykomanager.models import Summary
 from rykomanager import app
@@ -14,15 +15,13 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.program_id = program_id
         self.week_start_id = week_start_id
         self.week_no = week_no
-        self.is_first = DatabaseManager.get_summary(program_id=self.program_id) is None
+        self.summary: Summary = DatabaseManager.get_summary(self.program_id)
+        self.is_first = self.summary is None
         self.year = SummaryCreator._get_current_year()
-        self.no = DatabaseManager.get_next_summary_no(self.program_id)
+        self.no = (self.summary.no + 1 )if self.summary else 1
         output_directory = path.join(cfg.output_dir_main)
-        self.fruit_all = 0
-        self.veg_all = 0
+        self.fruitVeg_all = 0
         self.dairy_all = 0
-        self.summary = DatabaseManager.is_summary(self.no, self.year)[0] if DatabaseManager.is_summary(self.no,
-                                                                                                       self.year) else None
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 
@@ -32,13 +31,13 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         return now.year
 
     def __base_check(self):
-        calculated_fruitVeg_price = (self.fruit_all + self.veg_all) * DatabaseManager.get_fruit_price()
-        calculated_dairy_price = self.dairy_all * DatabaseManager.get_milk_price()
+        calculated_fruitVeg_price = self.summary.get_fruit_veg_income()
+        calculated_dairy_price = self.summary.get_dairy_income()
 
         if not calculated_fruitVeg_price == self.summary.fruitVeg_income:
             app.logger.error("Summary ABORT: the price for fruitVeg does not match calculated_fruitVeg_price: {} expected: {} fruitVeg amoung: {}"
                              " income: {} ".format(
-                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), (self.fruit_all + self.veg_all), self.summary.fruitVeg_income))
+                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), (self.fruitVeg_all), self.summary.fruitVeg_income))
             return False
 
         if not calculated_dairy_price == self.summary.milk_income:
@@ -52,9 +51,6 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             app.logger.error("Summary does not exists")
             return
 
-        self.fruit_all = sum([self.summary.apple, self.summary.pear, self.summary.plum, self.summary.strawberry])
-        self.veg_all = sum([self.summary.carrot, self.summary.tomato, self.summary.radish, self.summary.kohlrabi, self.summary.pepper])
-        self.dairy_all = self.summary.milk + self.summary.yoghurt + self.summary.kefir + self.summary.cheese
 
         if not self.__base_check():
             app.logger.error("Summary Base Check failed")
@@ -69,29 +65,80 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), week_range),
                 is_first="X" if self.summary.is_first else "",
                 is_not_first="X" if not self.summary.is_first else "",
-                apple=str(self.summary.apple),
-                plum=str(self.summary.plum),
-                pear=str(self.summary.pear),
-                strawberry=str(self.summary.strawberry),
-                fruit_all=str(self.fruit_all),
-                carrot=str(self.summary.carrot),
-                tomato=str(self.summary.tomato),
-                pepper=str(self.summary.pepper),
-                radish=str(self.summary.radish),
-                kohlrabi=str(self.summary.kohlrabi),
-                veg_all=str(self.veg_all),
-                milk=str(self.summary.milk),
-                yoghurt=str(self.summary.yoghurt),
-                kefir=str(self.summary.kefir),
-                cheese=str(self.summary.cheese),
+                apple=str(self.summary.get_from_fruit_list(ProductName.APPLE).amount),
+                applewn=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_netto()),
+                applevat=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_vat()),
+                applewb=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_brutto()),
+                plum=str(self.summary.get_from_fruit_list(ProductName.PLUM).amount),
+                plumwn=str(self.summary.get_from_fruit_list(ProductName.PLUM).calculate_netto()),
+                plumvat=str(self.summary.get_from_fruit_list(ProductName.PLUM).calculate_vat()),
+                plumwb=str(self.summary.get_from_fruit_list(ProductName.PLUM).calculate_brutto()),
+                pear=str(self.summary.get_from_fruit_list(ProductName.PEAR).amount),
+                pearwn=str(self.summary.get_from_fruit_list(ProductName.PEAR).calculate_netto()),
+                pearvat=str(self.summary.get_from_fruit_list(ProductName.PEAR).calculate_vat()),
+                pearwb=str(self.summary.get_from_fruit_list(ProductName.PEAR).calculate_brutto()),
+                strawberry=str(self.summary.get_from_fruit_list(ProductName.STRAWBERRY).amount),
+                strawberrywn=str(self.summary.get_from_fruit_list(ProductName.STRAWBERRY).calculate_netto()),
+                strawberryvat=str(self.summary.get_from_fruit_list(ProductName.STRAWBERRY).calculate_vat()),
+                strawberrywb=str(self.summary.get_from_fruit_list(ProductName.STRAWBERRY).calculate_brutto()),
+                juice=str(self.summary.get_from_fruit_list(ProductName.JUICE).amount),
+                juicewn=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_netto()),
+                juicevat=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_vat()),
+                juicewb=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_brutto()),
+                carrot=str(self.summary.get_from_fruit_list(ProductName.CARROT).amount),
+                carrotwn=str(self.summary.get_from_fruit_list(ProductName.CARROT).calculate_netto()),
+                carrotvat=str(self.summary.get_from_fruit_list(ProductName.CARROT).calculate_vat()),
+                carrotwb=str(self.summary.get_from_fruit_list(ProductName.CARROT).calculate_brutto()),
+                tomato=str(self.summary.get_from_fruit_list(ProductName.TOMATO).amount),
+                tomatown=str(self.summary.get_from_fruit_list(ProductName.TOMATO).calculate_netto()),
+                tomatovat=str(self.summary.get_from_fruit_list(ProductName.TOMATO).calculate_vat()),
+                tomatowb=str(self.summary.get_from_fruit_list(ProductName.TOMATO).calculate_brutto()),
+                pepper=str(self.summary.get_from_fruit_list(ProductName.PEPPER).amount),
+                pepperwn=str(self.summary.get_from_fruit_list(ProductName.PEPPER).calculate_netto()),
+                peppervat=str(self.summary.get_from_fruit_list(ProductName.PEPPER).calculate_vat()),
+                pepperwb=str(self.summary.get_from_fruit_list(ProductName.PEPPER).calculate_brutto()),
+                radish=str(self.summary.get_from_fruit_list(ProductName.RADISH).amount),
+                radishwn=str(self.summary.get_from_fruit_list(ProductName.RADISH).calculate_netto()),
+                radishvat=str(self.summary.get_from_fruit_list(ProductName.RADISH).calculate_vat()),
+                radishwb=str(self.summary.get_from_fruit_list(ProductName.RADISH).calculate_brutto()),
+                kohlrabi=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).amount),
+                kohlrabiwn=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_netto()),
+                kohlrabivat=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_vat()),
+                kohlrabiwb=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_brutto()),
+                fruitVeg_all=str(self.fruitVeg_all),
+                fruitVeg_wn="{0:.2f}".format(self.summary.get_fruit_netto()),
+                fruitVeg_vat="{0:.2f}".format(self.summary.get_fruit_vat()),
+                fruitVeg_wb="{0:.2f}".format(self.summary.get_fruit_veg_income()),
+                fruitVeg_income="{0:.2f}".format(self.summary.fruitVeg_income),
+
+                milk=str(self.summary.get_from_diary_list(ProductName.MILK).amount),
+                milkwn=str(self.summary.get_from_diary_list(ProductName.MILK).calculate_netto()),
+                milkvat=str(self.summary.get_from_diary_list(ProductName.MILK).calculate_vat()),
+                milkwb=str(self.summary.get_from_diary_list(ProductName.MILK).calculate_brutto()),
+                yoghurt=str(self.summary.get_from_diary_list(ProductName.YOGHURT).amount),
+                yoghurtwn=str(self.summary.get_from_diary_list(ProductName.YOGHURT).calculate_netto()),
+                yoghurtvat=str(self.summary.get_from_diary_list(ProductName.YOGHURT).calculate_vat()),
+                yoghurtwb=str(self.summary.get_from_diary_list(ProductName.YOGHURT).calculate_brutto()),
+                kefir=str(self.summary.get_from_diary_list(ProductName.KEFIR).amount),
+                kefirwn=str(self.summary.get_from_diary_list(ProductName.KEFIR).calculate_netto()),
+                kefirvat=str(self.summary.get_from_diary_list(ProductName.KEFIR).calculate_vat()),
+                kefirwb=str(self.summary.get_from_diary_list(ProductName.KEFIR).calculate_brutto()),
+                cheese=str(self.summary.get_from_diary_list(ProductName.CHEESE).amount),
+                cheesewn=str(self.summary.get_from_diary_list(ProductName.CHEESE).calculate_netto()),
+                cheesevat=str(self.summary.get_from_diary_list(ProductName.CHEESE).calculate_vat()),
+                cheesewb=str(self.summary.get_from_diary_list(ProductName.CHEESE).calculate_brutto()),
+
                 dairy_all=str(self.dairy_all),
-                fruitVeg_income="{0:.2f}".format(round(self.summary.fruitVeg_income, 2)),
-                dairy_income="{0:.2f}".format(round(self.summary.milk_income, 2)),
+                dairy_wn="{0:.2f}".format(self.summary.get_dairy_netto()),
+                dairy_vat="{0:.2f}".format(self.summary.get_dairy_vat()),
+                dairy_wb="{0:.2f}".format(self.summary.get_dairy_income()),
+                dairy_income="{0:.2f}".format(self.summary.milk_income),
+
                 school_no_fruitVeg=str(self.summary.school_no),
                 school_no_milk=str(self.summary.school_no_milk),
                 school_no=str(max(self.summary.school_no, self.summary.school_no_milk))
         )
-        DocumentCreator.generate(self, "Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year), False)
+        DocumentCreator.generate(self, f"Wniosek_{self.summary.no}.docx", False)
 
     def create(self):
         if not self.summary:
@@ -103,7 +150,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
     def update_row(self):
         summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=self.program_id)
         if DatabaseManager.add_row(summary):
-            self.summary = DatabaseManager.is_summary(self.no, self.year)[0]
+            self.summary = DatabaseManager.get_summary(self.no, self.year)[0]
 
     def get_id(self):
         return self.summary.id
@@ -116,6 +163,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.summary.pear = 0
         self.summary.plum = 0
         self.summary.strawberry = 0
+        self.summary.juice = 0
         self.summary.carrot = 0
         self.summary.radish = 0
         self.summary.pepper = 0

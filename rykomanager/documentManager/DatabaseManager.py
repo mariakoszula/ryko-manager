@@ -45,10 +45,6 @@ class DatabaseManager(ABC):
             .filter(Contract.validity_date == DateConverter.to_date(rdate)).all()
 
     @staticmethod
-    def is_summary(no, year):
-        return Summary.query.filter_by(no=no).filter_by(year=year).all()
-
-    @staticmethod
     def get_next_annex_no(school_id, program_id):
         contracts = Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
         annex_no_list = [int(re.findall(r"\d+_(\d+)", contract.contract_no)[0]) for contract in contracts if "_" in str(contract.contract_no)]
@@ -183,11 +179,7 @@ class DatabaseManager(ABC):
         return True
 
     @staticmethod
-    def get_next_summary_no(program_id):
-        return DatabaseManager.get_summary(program_id=program_id).no + 1
-
-    @staticmethod
-    def get_product_amount(program_id, school_id, product_name, state, weeks=list()):
+    def get_product_amount(program_id, school_id, product_name, weeks=list(), state=(RecordState.DELIVERED, RecordState.DELIVERED)):
         product_type_qr = None
         try:
             product_type_qr = Product.query.filter(Product.name==product_name).filter(Product.program_id == program_id).with_entities(Product.type).one()
@@ -204,14 +196,6 @@ class DatabaseManager(ABC):
         except:
             app.logger.warning("No data for program")
         return 0
-
-    @staticmethod
-    def get_fruit_price():
-        return 0.75
-
-    @staticmethod
-    def get_milk_price():
-        return 0.75
 
     @staticmethod
     def get_dates(program_id, week_no):
@@ -244,11 +228,9 @@ class DatabaseManager(ABC):
         return Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
 
     @staticmethod
-    def get_summary(summary_id=None, program_id=None):
-        if summary_id:
-            return Summary.query.filter_by(id=summary_id).first()
+    def get_summary(program_id=None):
         if program_id:
-            return Summary.query.filter(Summary.program_id == program_id).order_by(Summary.no.desc()).first()
+            return Summary.query.filter(Summary.program_id.like(program_id)).order_by(Summary.no.desc()).first()
         return None
 
     @staticmethod
@@ -264,7 +246,7 @@ class DatabaseManager(ABC):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
         data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(Week.program_id == program_id).\
             filter(Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
-            order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product.name.label("product")).all()
+            order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product).all()
         return data
 
     @staticmethod
@@ -325,3 +307,9 @@ class DatabaseManager(ABC):
     @staticmethod
     def id_of_program_being_added(depicting_str):
         return Program.query.filter(Program.semester_no == depicting_str).first()
+
+    @staticmethod
+    def get_portion_perWeek(program_id, school_id, product_type, week_no):
+        portion_no = Record.query.join(Record.contract).join(Record.product).join(Record.week).filter(Contract.program_id.like(program_id)).filter(Contract.school_id.like(school_id))\
+            .filter(Week.week_no.like(week_no)).filter(Product.type.like(product_type)).count()
+        return str(portion_no) if portion_no else "-"

@@ -1,7 +1,7 @@
 from rykomanager import db
 import enum
 from rykomanager.DateConverter import  DateConverter
-
+from typing import List
 class ProductType(enum.Enum):
     NONE = 0
     FRUIT_VEG = 1
@@ -181,7 +181,6 @@ class Product(db.Model):
     name = db.Column(db.Enum(ProductName), nullable=False)
     type = db.Column(db.Enum(ProductType), nullable=False)
     min_amount = db.Column(db.Integer, nullable=False)
-
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program', backref=db.backref('products', lazy=True))
 
@@ -238,6 +237,10 @@ class Record(db.Model):
     week = db.relationship('Week',
                              backref=db.backref('records', lazy=True))
 
+
+    def __str__(self):
+        return f"Week no {self.week.week_no} school {self.contract.school.nick} productType {self.product.type}"
+
     __table_args__ = (
         db.UniqueConstraint('date', 'product_id', 'contract_id'),
         )
@@ -257,6 +260,22 @@ class Record(db.Model):
         return self.product.type == ProductType.FRUIT_VEG
 
 
+class ProductHandler:
+    def __init__(self, amount: int = 0, vat: int = 0, prize: float = 0):
+        self.amount = amount
+        self.vat = vat
+        self.prize = prize
+
+    def calculate_netto(self):
+        return round(self.amount * self.prize, 2)
+
+    def calculate_vat(self):
+        return round((self.calculate_netto() * self.vat)/100, 2)
+
+    def calculate_brutto(self):
+         return round(self.calculate_netto() + self.calculate_vat(),2)
+
+
 class Summary(db.Model):
     __table_args__ = {'extend_existing': True}
 
@@ -269,6 +288,7 @@ class Summary(db.Model):
     pear = db.Column(db.Integer, default=0)
     plum = db.Column(db.Integer, default=0)
     strawberry = db.Column(db.Integer, default=0)
+    juice = db.Column(db.Integer, default=0)
     carrot = db.Column(db.Integer, default=0)
     radish = db.Column(db.Integer, default=0)
     pepper = db.Column(db.Integer, default=0)
@@ -288,11 +308,87 @@ class Summary(db.Model):
     program = db.relationship('Program',
                              backref=db.backref('summary', lazy=True))
 
+    def __fruit_list(self):
+        return [ProductHandler(self.apple, 5, float(self.program.fruitVeg_price)), ProductHandler(self.plum, 5, float(self.program.fruitVeg_price)),
+                ProductHandler(self.pear, 5, float(self.program.fruitVeg_price)),  ProductHandler(self.strawberry, 5, float(self.program.fruitVeg_price)),
+                ProductHandler(self.juice, 5, float(self.program.fruitVeg_price)), ProductHandler(self.carrot, 8, float(self.program.fruitVeg_price)),
+                ProductHandler(self.tomato, 5, float(self.program.fruitVeg_price)), ProductHandler(self.radish, 8, float(self.program.fruitVeg_price)),
+                ProductHandler(self.kohlrabi, 8, float(self.program.fruitVeg_price)), ProductHandler(self.pepper, 8, float(self.program.fruitVeg_price))]
+
+    def __dairy_list(self):
+        return [ProductHandler(self.milk, 5, float(self.program.dairy_price)), ProductHandler(self.yoghurt, 5, float(self.program.dairy_price)),
+                ProductHandler(self.kefir, 5, float(self.program.dairy_price)), ProductHandler(self.cheese, 5, float(self.program.dairy_price))]
+
+    def get_from_fruit_list(self, product: ProductName):
+        if product == ProductName.APPLE:
+            return self.__fruit_list()[0]
+        if product == ProductName.PLUM:
+            return self.__fruit_list()[1]
+        if product == ProductName.PEAR:
+            return self.__fruit_list()[2]
+        if product == ProductName.STRAWBERRY:
+            return self.__fruit_list()[3]
+        if product == ProductName.JUICE:
+            return self.__fruit_list()[4]
+        if product == ProductName.CARROT:
+            return self.__fruit_list()[5]
+        if product == ProductName.TOMATO:
+            return self.__fruit_list()[6]
+        if product == ProductName.RADISH:
+            return self.__fruit_list()[7]
+        if product == ProductName.KOHLRABI:
+            return self.__fruit_list()[8]
+        if product == ProductName.PEPPER:
+            return self.__fruit_list()[9]
+
+    def get_from_diary_list(self, product: ProductName):
+        if product == ProductName.MILK:
+            return self.__fruit_list()[0]
+        if product == ProductName.YOGHURT:
+            return self.__fruit_list()[1]
+        if product == ProductName.KEFIR:
+            return self.__fruit_list()[2]
+        if product == ProductName.CHEESE:
+            return self.__fruit_list()[3]
+
+    @staticmethod
+    def calculate_income(products_list: List[ProductHandler]):
+        return sum([product.calculate_brutto() for product in products_list])
+
+    @staticmethod
+    def calculate_netto(products_list: List[ProductHandler]):
+        return sum([product.calculate_netto() for product in products_list])
+
+    @staticmethod
+    def calculate_vat(products_list: List[ProductHandler]):
+        return sum([product.calculate_vat() for product in products_list])
+
+    def get_fruit_vat(self):
+        return Summary.calculate_vat(self.__fruit_list())
+
+    def get_fruit_netto(self):
+        return Summary.calculate_netto(self.__fruit_list())
+
+    def get_fruit_veg_income(self):
+        return self.calculate_income(self.__fruit_list())
+
+    def get_dairy_vat(self):
+        return Summary.calculate_vat(self.__dairy_list())
+
+    def get_dairy_netto(self):
+        return Summary.calculate_netto(self.__dairy_list())
+
+    def get_dairy_income(self):
+        return self.calculate_income(self.__dairy_list())
+
+    def __str__(self):
+        return f"[{self.id}]Summary {self.get_application_no()} program {self.program_id}"
+
     def get_application_no(self):
-        return "{0}/{1}".format(self.no, self.year)
+        return "{0}/{1}/{2}".format(self.program.semester_no, self.no, self.program.school_year)
 
     __table_args__ = (
-                        db.UniqueConstraint('no', 'year'),)
+                        db.UniqueConstraint('no', 'year', 'program_id'),)
 
 
 class Application(db.Model):
@@ -317,6 +413,7 @@ class Application(db.Model):
     dairy_all = db.Column(db.Integer, default=0)
     max_kids_perWeeks_fruitVeg = db.Column(db.Integer, default=0)
     max_kids_perWeeks_milk = db.Column(db.Integer, default=0)
+    juice = db.Column(db.Integer, default=0)
 
     summary_id = db.Column(db.Integer,  db.ForeignKey('summary.id'), nullable=False)
     summary = db.relationship('Summary', backref=db.backref('application', lazy=True, order_by='Contract.validity_date.desc()'))

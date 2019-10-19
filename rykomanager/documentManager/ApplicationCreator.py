@@ -15,7 +15,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
 
     main_annex_dir = path.join(cfg.output_dir_main, cfg.application_dir_name)
 
-    def __init__(self, program_id, school, summary):
+    def __init__(self, program_id, school, summary, date):
         if not path.exists(ApplicationCreator.main_annex_dir):
             makedirs(ApplicationCreator.main_annex_dir)
         self.program_id = program_id
@@ -26,6 +26,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.pear = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.PEAR, self.weeks)
         self.plum = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.PLUM, self.weeks)
         self.strawberry = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.STRAWBERRY, self.weeks)
+        self.juice = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.JUICE, self.weeks)
         self.carrot = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.CARROT, self.weeks)
         self.radish = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.RADISH, self.weeks)
         self.pepper = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.PEPPER, self.weeks)
@@ -35,7 +36,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.yoghurt = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.YOGHURT, self.weeks)
         self.kefir = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.KEFIR, self.weeks)
         self.cheese = DatabaseManager.get_product_amount(self.program_id, self.school.id, ProductName.CHEESE, self.weeks)
-        self.fruit_all = self.apple + self.pear + self.plum + self.strawberry
+        self.fruit_all = self.apple + self.pear + self.plum + self.strawberry + self.juice
         self.veg_all = self.carrot + self.radish + self.pepper + self.tomato + self.kohlrabi
         self.dairy_all = self.milk + self.yoghurt + self.kefir + self.cheese
         self.max_kids_perWeeks_fruitVeg = DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, self.weeks)
@@ -44,7 +45,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.records_to_merge_milk = []
         self.sum_product_vegFruit = 0
         self.sum_product_milk = 0
-        self.sign_date = datetime(2019, 6, 17)
+        self.sign_date = DateConverter.to_date(date)
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick,
                                      cfg.application_dir_name)
         self.output_directory = output_directory
@@ -90,6 +91,18 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             fuitVeg_week10=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, (10,10)) if not self.summary.is_first else "-"),
             fuitVeg_week11=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, (11,11)) if not self.summary.is_first else "-"),
             fuitVeg_week12=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, (12,12)) if not self.summary.is_first else "-"),
+            portion_no_fruitVeg_1 = str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 1)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_2=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 2)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_3=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 3)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_4=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 4)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_5=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 5)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_6=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 6)) if self.summary.is_first else "-",
+            portion_no_fruitVeg_7=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 7)) if not self.summary.is_first else "-",
+            portion_no_fruitVeg_8=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 8)) if not self.summary.is_first else "-",
+            portion_no_fruitVeg_9=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 9)) if not self.summary.is_first else "-",
+            portion_no_fruitVeg_10=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 10)) if not self.summary.is_first else "-",
+            portion_no_fruitVeg_11=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 11)) if not self.summary.is_first else "-",
+            portion_no_fruitVeg_12=str(DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.FRUIT_VEG, 12)) if not self.summary.is_first else "-",
             milk_week1=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (1,1)) if self.summary.is_first else "-"),
             milk_week2=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (2,2)) if self.summary.is_first else "-"),
             milk_week3=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (3,3)) if self.summary.is_first else "-"),
@@ -102,10 +115,35 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             milk_week10=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (10,10)) if not self.summary.is_first else "-"),
             milk_week11=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (11,11)) if not self.summary.is_first else "-"),
             milk_week12=str(DatabaseManager.get_maxKids_perWeek(self.program_id, self.school.id, ProductType.DAIRY, (12,12)) if not self.summary.is_first else "-"),
+            portion_no_milk_1=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 1)) if self.summary.is_first else "-",
+            portion_no_milk_2=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 2)) if self.summary.is_first else "-",
+            portion_no_milk_3=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 3)) if self.summary.is_first else "-",
+            portion_no_milk_4=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 4)) if self.summary.is_first else "-",
+            portion_no_milk_5=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 5)) if self.summary.is_first else "-",
+            portion_no_milk_6=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 6)) if self.summary.is_first else "-",
+            portion_no_milk_7=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 7)) if not self.summary.is_first else "-",
+            portion_no_milk_8=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 8)) if not self.summary.is_first else "-",
+            portion_no_milk_9=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 9)) if not self.summary.is_first else "-",
+            portion_no_milk_10=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 10)) if not self.summary.is_first else "-",
+            portion_no_milk_11=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 11)) if not self.summary.is_first else "-",
+            portion_no_milk_12=str(
+                DatabaseManager.get_portion_perWeek(self.program_id, self.school.id, ProductType.DAIRY, 12)) if not self.summary.is_first else "-",
             apple=str(self.apple),
             plum=str(self.plum),
             pear=str(self.pear),
             strawberry=str(self.strawberry),
+            juice=str(self.juice),
             fruit_all=str(self.fruit_all),
             carrot=str(self.carrot),
             tomato=str(self.tomato),
@@ -164,25 +202,25 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             record_dict = dict()
             record_dict['date_vegFruit'] = DateConverter.to_string(record.date, "%d.%m.%Y")
             record_dict['kids_vegFruit'] = str(record.product_no)
-            record_dict['vegFruit'] = Product.get_name_map(record.product)
+            record_dict['vegFruit'] = record.Product.get_name_mapping()
             self.records_to_merge_vegFruit.append(record_dict)
 
         for record in DatabaseManager.get_records(self.program_id, self.school.id, ProductType.DAIRY, self.weeks):
             record_dict = dict()
             record_dict['date_milk'] = DateConverter.to_string(record.date, "%d.%m.%Y")
             record_dict['kids_milk'] = str(record.product_no)
-            record_dict['milk'] = Product.get_name_map(record.product)
+            record_dict['milk'] = record.Product.get_name_mapping()
             self.records_to_merge_milk.append(record_dict)
 
         self.sum_product_vegFruit = self.__sum_product(self.records_to_merge_vegFruit, 'kids_vegFruit')
         self.sum_product_milk = self.__sum_product(self.records_to_merge_milk, 'kids_milk')
 
         if self.sum_product_vegFruit != (self.fruit_all + self.veg_all):
-            app.logger.error("Vale of fruitVeg product from 5 and 5A does not match! School: {0} 5: {1} "
+            app.logger.error("Value of fruitVeg product from 5 and 5A does not match! School: {0} 5: {1} "
                              " 5A: {2} -- ABORT generating".format(self.school.nick, self.fruit_all + self.veg_all, self.sum_product_vegFruit))
             return False
         if self.sum_product_milk != self.dairy_all:
-            app.logger.error("Vale of dairy product from 5 and 5A does not match! School: {0} 5: {1} "
+            app.logger.error("Value of dairy product from 5 and 5A does not match! School: {0} 5: {1} "
                              " 5A: {2} -- ABORT generating".format(self.school.nick, self.dairy_all, self.sum_product_milk))
             return False
         return True
@@ -214,9 +252,8 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             return self.create()
 
     def __update_summary(self):
-        self.summary.fruitVeg_income = (self.summary.apple + self.summary.pear + self.summary.plum + self.summary.strawberry + self.summary.pepper
-                                        + self.summary.carrot + self.summary.tomato + self.summary.radish + self.summary.kohlrabi) * DatabaseManager.get_fruit_price()
-        self.summary.milk_income = (self.summary.milk + self.summary.yoghurt + self.summary.kefir + self.summary.cheese) * DatabaseManager.get_milk_price()
+        self.summary.fruitVeg_income = self.summary.get_fruit_veg_income()
+        self.summary.milk_income = self.summary.get_dairy_income()
         app.logger.info("Update summary {2} fruitVeg_income: {0}, milk_income: {1}".format(self.summary.fruitVeg_income, self.summary.milk_income, self.school.nick))
         DatabaseManager.modify_row()
 
@@ -225,6 +262,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.summary.pear += self.pear
         self.summary.plum += self.plum
         self.summary.strawberry += self.strawberry
+        self.summary.juice += self.juice
         self.summary.carrot += self.carrot
         self.summary.radish += self.radish
         self.summary.pepper += self.pepper
@@ -247,6 +285,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.summary.pear -= self.pear
         self.summary.plum -= self.plum
         self.summary.strawberry -= self.strawberry
+        self.summary.juice -= self.juice
         self.summary.carrot -= self.carrot
         self.summary.radish -= self.radish
         self.summary.pepper -= self.pepper
@@ -267,7 +306,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
 
     def update_row(self):
         application = Application(summary_id=self.summary.id, school_id=self.school.id, apple=self.apple, pear=self.pear,
-                          plum=self.plum, strawberry=self.strawberry, carrot=self.carrot, radish=self.radish, kohlrabi=self.kohlrabi,
+                          plum=self.plum, strawberry=self.strawberry, juice=self.juice, carrot=self.carrot, radish=self.radish, kohlrabi=self.kohlrabi,
                           tomato=self.tomato, pepper=self.pepper, milk=self.milk, yoghurt=self.yoghurt, cheese=self.cheese,
                           kefir=self.kefir, fruit_all=self.fruit_all, veg_all=self.veg_all, dairy_all=self.dairy_all,
                           max_kids_perWeeks_fruitVeg=self.max_kids_perWeeks_fruitVeg, max_kids_perWeeks_milk=self.max_kids_perWeeks_milk
