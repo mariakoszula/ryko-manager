@@ -10,25 +10,30 @@ Wygenerowane WZ na {{ current_date }}
 <div class="panel-body">
     {% block content %}
     <!--<div class="col-lg-6 col-md-6">-->
-        <!--<div class="panel panel-blue">-->
-            <!--<a href="{{ url_for( 'create_records_per_week', week_id=week_id) }}">-->
-                <!--<div class="panel-footer">-->
-                    <!--<span class="pull-left">{{ prev_date }}</span>-->
-                    <!--<span class="pull-right"><i class="fa fa-arrow-circle-left"></i></span>-->
-                    <!--<div class="clearfix"></div>-->
-                <!--</div>-->
-            <!--</a>-->
-        <!--</div>-->
-        <!--<div class="panel panel-blue">-->
-            <!--<a href="{{ url_for( 'create_records_per_week', week_id=week_id) }}">-->
-                <!--<div class="panel-footer">-->
-                    <!--<span class="pull-left">{{ next_date }}</span>-->
-                    <!--<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>-->
-                    <!--<div class="clearfix"></div>-->
-                <!--</div>-->
-            <!--</a>-->
-        <!--</div>-->
+    <!--<div class="panel panel-blue">-->
+    <!--<a href="{{ url_for( 'create_records_per_week', week_id=week_id) }}">-->
+    <!--<div class="panel-footer">-->
+    <!--<span class="pull-left">{{ prev_date }}</span>-->
+    <!--<span class="pull-right"><i class="fa fa-arrow-circle-left"></i></span>-->
+    <!--<div class="clearfix"></div>-->
     <!--</div>-->
+    <!--</a>-->
+    <!--</div>-->
+    <!--<div class="panel panel-blue">-->
+    <!--<a href="{{ url_for( 'create_records_per_week', week_id=week_id) }}">-->
+    <!--<div class="panel-footer">-->
+    <!--<span class="pull-left">{{ next_date }}</span>-->
+    <!--<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>-->
+    <!--<div class="clearfix"></div>-->
+    <!--</div>-->
+    <!--</a>-->
+    <!--</div>-->
+    <!--</div>-->
+    {%- for category, message in get_flashed_messages(with_categories = true) %}
+    <div class="alert alert-danger">
+        {{ message }}
+    </div>
+    {%- endfor %}
     <div class="col-lg-12 col-md-8">
         <table width="100%" class="table table-bordered table-hover" id="wz-table">
             <thead>

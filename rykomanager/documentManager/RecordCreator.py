@@ -18,7 +18,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         self.date = DateConverter.to_date(current_date)
         self.state = RecordState.NOT_DELIVERED
         self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, current_date)
-        self.product = DatabaseManager.get_product(self.program_id, product_id)
+        self.product = DatabaseManager.get_product(product_id)
         self.doc_data = dict()
         self.generation_date = DateConverter.to_date(generation_date) if generation_date else datetime.date.today()
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school,

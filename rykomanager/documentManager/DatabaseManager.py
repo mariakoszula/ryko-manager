@@ -116,7 +116,6 @@ class DatabaseManager(ABC):
     def get_daily_records(program_id, current_date, generation_date=None):
         cdate = DateConverter.to_date(current_date)
         gen_date = DateConverter.to_date(generation_date)
-        print(cdate, type(cdate), gen_date, type(gen_date))
         if gen_date:
             return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).filter(Record.generation_date.like(gen_date)).all()
         return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).all()
@@ -126,8 +125,8 @@ class DatabaseManager(ABC):
         return Record.query.join(Record.contract).filter(Contract.program_id.like(program_id)).filter(Contract.school_id.like(school_id)).all()
 
     @staticmethod
-    def get_product(program_id, product_id):
-        return Product.query.filter(Product.program_id.like(program_id)).filter(Product.id.like(product_id)).first()
+    def get_product(product_id):
+        return Product.query.filter(Product.id.like(product_id)).first()
 
     @staticmethod
     def get_products(program_id, product_type):
@@ -313,3 +312,14 @@ class DatabaseManager(ABC):
         portion_no = Record.query.join(Record.contract).join(Record.product).join(Record.week).filter(Contract.program_id.like(program_id)).filter(Contract.school_id.like(school_id))\
             .filter(Week.week_no.like(week_no)).filter(Product.type.like(product_type)).count()
         return str(portion_no) if portion_no else "-"
+
+
+    @staticmethod
+    def get_existing_record(current_date, school_id, product_id):
+        if not product_id:
+            return None
+        product_type = Product.query.filter(Product.id == product_id).one().type
+        cdate = DateConverter.to_date(current_date)
+        assert(product_type == ProductType.DAIRY or product_type == ProductType.FRUIT_VEG)
+        return Record.query.join(Contract).join(Product).filter(Record.date.like(cdate)).filter(Contract.school_id == school_id)\
+                .filter(Product.type.like(product_type)).first()
