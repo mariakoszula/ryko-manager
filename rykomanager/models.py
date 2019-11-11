@@ -343,13 +343,13 @@ class Summary(db.Model):
 
     def get_from_diary_list(self, product: ProductName):
         if product == ProductName.MILK:
-            return self.__fruit_list()[0]
+            return self.__dairy_list()[0]
         if product == ProductName.YOGHURT:
-            return self.__fruit_list()[1]
+            return self.__dairy_list()[1]
         if product == ProductName.KEFIR:
-            return self.__fruit_list()[2]
+            return self.__dairy_list()[2]
         if product == ProductName.CHEESE:
-            return self.__fruit_list()[3]
+            return self.__dairy_list()[3]
 
     @staticmethod
     def calculate_income(products_list: List[ProductHandler]):

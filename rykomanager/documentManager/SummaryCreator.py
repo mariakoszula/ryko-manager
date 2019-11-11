@@ -31,6 +31,11 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         return now.year
 
     def __base_check(self):
+        assert(self.summary.get_from_fruit_list(ProductName.APPLE).amount == self.summary.apple)
+        assert (self.summary.get_fruit_veg_income() == self.summary.fruitVeg_income)
+        assert (self.summary.get_dairy_income() == self.summary.milk_income)
+        assert(self.summary.get_from_diary_list(ProductName.MILK).amount == self.summary.milk)
+        assert(self.summary.get_from_diary_list(ProductName.KEFIR).amount == self.summary.kefir)
         calculated_fruitVeg_price = self.summary.get_fruit_veg_income()
         calculated_dairy_price = self.summary.get_dairy_income()
 
