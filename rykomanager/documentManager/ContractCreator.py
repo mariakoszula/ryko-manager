@@ -6,14 +6,14 @@ from rykomanager import app
 from rykomanager.DateConverter import DateConverter
 from shutil import copyfile
 from os import remove, path, makedirs
-
+from rykomanager.name_strings import FILL_BY_SCHOOL
 
 class ContractCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.contract_docx
     main_contract_dir = path.join(cfg.output_dir_main,
                                   cfg.contract_dir_name)
 
-    def __init__(self, school, program_id):
+    def __init__(self, school, program_id, ommit_representat=True):
         if not path.exists(ContractCreator.main_contract_dir):
             makedirs(ContractCreator.main_contract_dir)
 
@@ -22,6 +22,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
         self.contract_no = None
         self.contract_year = None
         self.contract_date = None
+        self.ommit_representat = ommit_representat
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.contract_dir_name)
         DocumentCreator.__init__(self, ContractCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
@@ -63,7 +64,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
             address=self.school.address,
             nip=self.school.nip,
             regon=self.school.regon,
-            representant=self.school.responsible_person,
+            representant=self.school.responsible_person if not self.ommit_representat else FILL_BY_SCHOOL,
             email=self.school.email,
             program_start_date=DateConverter.to_string(self.program.start_date,"%d.%m.%Y"),
             program_end_date=DateConverter.to_string(self.program.end_date,"%d.%m.%Y"),

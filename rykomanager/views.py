@@ -178,7 +178,9 @@ def fruitVeg_summrize(weeks=(1, 12)):
 def schools_all():
     if not session.get('program_id'):
         return redirect(url_for('program'))
-    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
+#    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
+    all_schools = DatabaseManager.get_all_schools()
+
     return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
                            invalid_school_id=INVALID_ID)
 
