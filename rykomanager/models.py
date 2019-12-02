@@ -363,6 +363,9 @@ class Summary(db.Model):
     def calculate_vat(products_list: List[ProductHandler]):
         return sum([product.calculate_vat() for product in products_list])
 
+    def get_fruit_veg_amount(self):
+        return sum([product.amount for product in self.__fruit_list()])
+
     def get_fruit_vat(self):
         return Summary.calculate_vat(self.__fruit_list())
 
@@ -371,6 +374,9 @@ class Summary(db.Model):
 
     def get_fruit_veg_income(self):
         return self.calculate_income(self.__fruit_list())
+
+    def get_dairy_amount(self):
+        return sum([product.amount for product in self.__dairy_list()])
 
     def get_dairy_vat(self):
         return Summary.calculate_vat(self.__dairy_list())

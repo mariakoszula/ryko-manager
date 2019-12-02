@@ -84,7 +84,7 @@
                                 <button type="submit" class="btn btn-outline btn-success btn-lg btn-block">PRZYGOTUJ UMOWY</button>
                             </form>
 
-                            <form role="form" action="{{ url_for( 'create_summary', week_id=1) }}"
+                            <form role="form" action="{{ url_for( 'create_summary', is_first=False) }}"
                                   method="post">
                                 <div class="form-group">
                                     <label>Data ewidencji</label><input class="form-control" name="application_date"

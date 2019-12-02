@@ -454,8 +454,8 @@ def my_utility_processor():
     return dict(update_state=update_record_state)
 
 
-@app.route('/create_summary/<int:week_id>', methods=['POST'])
-def create_summary(week_id, week_no=1):
+@app.route('/create_summary/<int:is_first>', methods=['POST'])
+def create_summary(is_first=0):
     if not session.get('program_id'):
         return redirect(url_for('program'))
 
@@ -464,8 +464,8 @@ def create_summary(week_id, week_no=1):
 
         if not application_date:
             return redirect(url_for('program_form', program_id=session.get('program_id')))
-        summary_craetor = SummaryCreator(session.get('program_id'), week_id, week_no)
-        summary = summary_craetor.create()
+        summary_creator = SummaryCreator(session.get('program_id'), is_first)
+        summary = summary_creator.create()
 
         if summary:
             appCreators = list()
@@ -477,7 +477,7 @@ def create_summary(week_id, week_no=1):
             for appCreator in appCreators:
                 appCreator.generate()
 
-            summary_craetor.generate()
+            summary_creator.generate()
         else:
             app.logger.error("create_summary: summary is None. Can not create Application.")
     return redirect(url_for("index", weeks=(1, 12), dairy_summary=None, school_data="", product_remaining=""))

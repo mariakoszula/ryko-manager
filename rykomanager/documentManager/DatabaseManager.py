@@ -227,10 +227,9 @@ class DatabaseManager(ABC):
         return Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
 
     @staticmethod
-    def get_summary(program_id=None):
-        if program_id:
-            return Summary.query.filter(Summary.program_id.like(program_id)).order_by(Summary.no.desc()).first()
-        return None
+    def get_summary(program_id, is_first):
+        return Summary.query.filter(Summary.program_id.like(program_id)).\
+                filter(Summary.is_first.like(is_first)).first()
 
     @staticmethod
     def get_school_with_summary(summary_id):

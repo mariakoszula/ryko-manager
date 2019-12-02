@@ -13,11 +13,12 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
     template_document_v = cfg.applicaton_docx_5
     template_document_va = cfg.application_docx_5a
 
-    main_annex_dir = path.join(cfg.output_dir_main, cfg.application_dir_name)
+    main_app_dir = path.join(cfg.output_dir_main, cfg.application_dir_name)
 
     def __init__(self, program_id, school, summary, date):
-        if not path.exists(ApplicationCreator.main_annex_dir):
-            makedirs(ApplicationCreator.main_annex_dir)
+        self.main_app_dir = path.join(ApplicationCreator.main_app_dir, str(summary.no))
+        if not path.exists(self.main_app_dir):
+            makedirs(self.main_app_dir)
         self.program_id = program_id
         self.school = school
         self.summary = summary
@@ -161,7 +162,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             date_year=str(self.sign_date.year)
         )
         doc_5_name = "Oswiadczenie_V_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year)
-        doc_5_name_copy = path.join(ApplicationCreator.main_annex_dir,
+        doc_5_name_copy = path.join(self.main_app_dir,
                                                     "{0}_OswiadczenieV_{1}_{2}.docx".format(self.school.nick, self.summary.no, self.summary.year))
         DocumentCreator.generate(self, doc_5_name, False)
         if path.exists(doc_5_name_copy):
@@ -190,7 +191,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             date_year=str(self.sign_date.year)
         )
         doc_5a_name = "Ewidencja_VA_Wniosek_{}_{}.docx".format(self.summary.no, self.summary.year)
-        doc_5a_name_copy = path.join(ApplicationCreator.main_annex_dir,
+        doc_5a_name_copy = path.join(self.main_app_dir,
                                                     "{0}_EwidencjaVa_{1}_{2}.docx".format(self.school.nick, self.summary.no, self.summary.year))
         DocumentCreator.generate(self, doc_5a_name, False)
         if path.exists(doc_5a_name_copy):

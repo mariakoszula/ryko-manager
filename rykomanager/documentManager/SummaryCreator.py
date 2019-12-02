@@ -11,17 +11,13 @@ from os import path
 class SummaryCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.summary_docx
 
-    def __init__(self, program_id, week_start_id, week_no):
+    def __init__(self, program_id, is_first):
         self.program_id = program_id
-        self.week_start_id = week_start_id
-        self.week_no = week_no
-        self.summary: Summary = DatabaseManager.get_summary(self.program_id)
-        self.is_first = self.summary is None
+        self.is_first = is_first
+        self.summary: Summary = DatabaseManager.get_summary(self.program_id, self.is_first)
         self.year = SummaryCreator._get_current_year()
-        self.no = (self.summary.no + 1 )if self.summary else 1
+        self.no = 1 if self.is_first else 2
         output_directory = path.join(cfg.output_dir_main)
-        self.fruitVeg_all = 0
-        self.dairy_all = 0
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 
@@ -40,14 +36,14 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         calculated_dairy_price = self.summary.get_dairy_income()
 
         if not calculated_fruitVeg_price == self.summary.fruitVeg_income:
-            app.logger.error("Summary ABORT: the price for fruitVeg does not match calculated_fruitVeg_price: {} expected: {} fruitVeg amoung: {}"
+            app.logger.error("Summary ABORT: the price for fruitVeg does not match calculated_fruitVeg_price: {} expected: {}  fruitVeg amoung: {}"
                              " income: {} ".format(
-                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), (self.fruitVeg_all), self.summary.fruitVeg_income))
+                calculated_fruitVeg_price, DatabaseManager.get_fruit_price(), calculated_fruitVeg_price, self.summary.fruitVeg_income))
             return False
 
         if not calculated_dairy_price == self.summary.milk_income:
             app.logger.error("Summary ABORT: the price for dairy does not match calculated_dairy_price: {} expected: {} milk: {}".format(
-                calculated_dairy_price, DatabaseManager.get_milk_price(), self.dairy_all))
+                calculated_dairy_price, DatabaseManager.get_milk_price(), self.summary.milk_income))
             return False
         return True
 
@@ -110,7 +106,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 kohlrabiwn=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_netto()),
                 kohlrabivat=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_vat()),
                 kohlrabiwb=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_brutto()),
-                fruitVeg_all=str(self.fruitVeg_all),
+                fruitVeg_all=str(self.summary.get_fruit_veg_amount()),
                 fruitVeg_wn="{0:.2f}".format(self.summary.get_fruit_netto()),
                 fruitVeg_vat="{0:.2f}".format(self.summary.get_fruit_vat()),
                 fruitVeg_wb="{0:.2f}".format(self.summary.get_fruit_veg_income()),
@@ -133,7 +129,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 cheesevat=str(self.summary.get_from_diary_list(ProductName.CHEESE).calculate_vat()),
                 cheesewb=str(self.summary.get_from_diary_list(ProductName.CHEESE).calculate_brutto()),
 
-                dairy_all=str(self.dairy_all),
+                dairy_all=str(self.summary.get_dairy_amount()),
                 dairy_wn="{0:.2f}".format(self.summary.get_dairy_netto()),
                 dairy_vat="{0:.2f}".format(self.summary.get_dairy_vat()),
                 dairy_wb="{0:.2f}".format(self.summary.get_dairy_income()),
@@ -155,7 +151,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
     def update_row(self):
         summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=self.program_id)
         if DatabaseManager.add_row(summary):
-            self.summary = DatabaseManager.get_summary(self.no, self.year)[0]
+            self.summary = DatabaseManager.get_summary(self.program_id, self.is_first)
 
     def get_id(self):
         return self.summary.id
