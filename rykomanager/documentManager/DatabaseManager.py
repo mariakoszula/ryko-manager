@@ -36,7 +36,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_contracts(program_id):
-        return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.school_id).order_by(Contract.contract_no).all()
+        return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.contract_no).all()
 
     @staticmethod
     def is_annex(validity_date, school_id):
@@ -135,7 +135,6 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_product_no(program_id, product_type, week_no=None):
         if not week_no:
-            print( Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Product.type.like(product_type)).filter(Contract.program_id == program_id).all()[0])
             return Record.query.join(Record.contract).join(Record.product).join(Contract.school).filter(Contract.program_id == program_id).filter(Product.type.like(product_type))\
                 .with_entities(School, Product, func.count(Product.name)).group_by(School.nick, Product.name).all()
         return Record.query.join(Record.contract).join(Record.product).join(Contract.school).join(Record.week).filter(Week.week_no.like(week_no))\
@@ -193,7 +192,7 @@ class DatabaseManager(ABC):
                     func.sum(item_to_sum).label('product_amount')).one()
                 return data.product_amount if data and data.product_amount else 0
         except:
-            app.logger.warning("No data for program")
+            pass
         return 0
 
     @staticmethod

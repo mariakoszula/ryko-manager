@@ -150,6 +150,9 @@ class Contract(db.Model):
     def convert_validity_date_to_string(self):
         return DateConverter.to_string(self.validity_date)
 
+    def __str__(self):
+        return f"Contract_{self.contract_no}_{self.contract_year}"
+
     __table_args__ = (
         db.UniqueConstraint('validity_date', 'school_id'),
         )

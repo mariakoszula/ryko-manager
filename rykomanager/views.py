@@ -119,35 +119,58 @@ def get_fruitVeg_summary(weeks, state):
     return fruitVeg_summary
 
 
+class ProductStats(object):
+    def __init__(self, product: Product, kids_no):
+        self.product_name = product.get_name_mapping()
+        self.min_amount = product.min_amount
+        self.taken_product = 0
+        self.kids_no = kids_no
+
+    def get_remained(self):
+        return self.min_amount - self.taken_product
+
+    def decrease_product(self, amount):
+        self.taken_product = amount
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.product_name
+        if item == 1:
+            return self.given_product
+        if item == 2:
+            return self.get_remained()
+        if item == 3:
+            return self.get_remained() * self.kids_no
+
+
 def get_remaning_products(school_data, product_type):
     data = DatabaseManager.get_product_no(session.get('program_id'), product_type)
     schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
-    product = DatabaseManager.get_products(session.get('program_id'), product_type)
+    products = DatabaseManager.get_products(session.get('program_id'), product_type)
 
     for school in schools:
         kids_no = DatabaseManager.get_current_contract(school.id, session.get('program_id')).dairy_products
         if not kids_no or kids_no == 0:
             continue
+
+        # Prepare empty statistics
+        if not school_data.get(school.nick, None):
+            school_data[school.nick] = list()
+            for product in products:
+                school_data[school.nick].append(ProductStats(product, kids_no))
+
         for d in data:
             if school == d[0]:
-                if not school_data.get(school.nick, None):
-                    school_data[school.nick] = list()
-                remaining_product = d[1].min_amount - d[2]
-                if d[1] in product:
-                    product.remove(d[1])
-                school_data[school.nick].append(
-                    (d[1].get_name_mapping(), d[2], remaining_product, remaining_product * kids_no))
-        for remain_prod in product:
-            remaining_product = remain_prod.min_amount
-            school_data[school.nick].append(
-                (remain_prod.get_name_mapping(), 0, remaining_product, remaining_product * kids_no))
+                for product_stats in school_data[school.nick]:
+                    if product_stats.product_name == d[1].get_name_mapping(): # @TODO this comparizon should be moved to Product, check how to compare to objects
+                        product_stats.decrease_product(d[2])
 
     product_remaining = dict()
     for key, value in school_data.items():
         for v in value:
-            if not product_remaining.get(v[0], None):
-                product_remaining[v[0]] = 0
-            product_remaining[v[0]] += v[3]
+            if not product_remaining.get(v.product_name, None):
+                product_remaining[v.product_name] = 0
+            product_remaining[v.product_name] += v[3]
     return product_remaining
 
 
@@ -178,9 +201,7 @@ def fruitVeg_summrize(weeks=(1, 12)):
 def schools_all():
     if not session.get('program_id'):
         return redirect(url_for('program'))
-#    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
-    all_schools = DatabaseManager.get_all_schools()
-
+    all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
                            invalid_school_id=INVALID_ID)
 
