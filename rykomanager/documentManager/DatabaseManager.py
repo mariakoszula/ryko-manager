@@ -32,11 +32,18 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_annex(annex_id):
-        return Contract.query.filter(Contract.id==annex_id).filter(Contract.is_annex==True).first()
+        return Contract.query.filter(Contract.id==annex_id).filter(Contract.is_annex == True).first()
+
+    @staticmethod
+    def get_annex(program_id, contract_id):
+        return Contract.query.filter(Contract.program_id == program_id) \
+            .filter(Contract.is_annex == True) \
+            .filter(Contract.contract_no.like(f"{contract_id}/_%", escape="/")) \
+            .order_by(Contract.validity_date).all()
 
     @staticmethod
     def get_contracts(program_id):
-        return Contract.query.filter(Contract.program_id==program_id).order_by(Contract.contract_no).all()
+        return Contract.query.filter(Contract.program_id==program_id).filter(Contract.is_annex == False).order_by(Contract.contract_no).all()
 
     @staticmethod
     def is_annex(validity_date, school_id):
@@ -62,13 +69,9 @@ class DatabaseManager(ABC):
             return last_contract.contract_no + 1
 
     @staticmethod
-    def get_contract_year(program_id):
-        return 2019
-
-    @staticmethod
     def get_all_schools_with_contract(program_id):
         return db.session.query(School).join(School.contracts).filter(
-            Contract.program_id.like(program_id)).all()
+            Contract.program_id.like(program_id)).order_by(Contract.contract_no).all()
 
     @staticmethod
     def get_school(school_id):

@@ -28,33 +28,41 @@ class RegisterCreator(DocumentCreator):
     def _prepare_school_data(self):
         no = 1
         for contract in self.contracts:
-            record_dict = dict()
-            if not contract.is_annex:
-                record_dict['contract_info'] = "{}/{}".format(contract.contract_no, contract.contract_year)
-                record_dict['no'] = str(no)
-                record_dict['school_name'] = contract.school.name
-                record_dict['school_nip'] = contract.school.nip
-                record_dict['school_address'] = contract.school.address
-                record_dict['school_city'] = contract.school.city
-                record_dict['school_regon'] = contract.school.regon
-                record_dict['school_phone'] = contract.school.phone
-                record_dict['school_email'] = contract.school.email
-                no += 1
-            else:
-                record_dict['no'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_name'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_nip'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_address'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_city'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_regon'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_phone'] = RegisterCreator.CELL_TO_MERGE_MARK
-                record_dict['school_email'] = RegisterCreator.CELL_TO_MERGE_MARK
-                validity_date = DateConverter.to_date(contract.validity_date)
-                record_dict['contract_info'] = "{}/{}".format(contract.contract_no.split("_")[0], contract.contract_year)
-                record_dict['annex_info'] = "{}*".format(DateConverter.to_string(validity_date,"%d-%m-%Y"))
-            record_dict['kids_milk'] = str(contract.dairy_products)
-            record_dict['kids_fruitveg'] = str(contract.fruitVeg_products)
-            self.records_to_merge.append(record_dict)
+            self.fill_data_in_table(contract, no, False)
+
+            # Fill additional fields with annex information if needed any
+            for annex in DatabaseManager.get_annex(contract.program_id, contract.contract_no):
+                self.fill_data_in_table(annex, no, True)
+            no += 1
+
+    def fill_data_in_table(self, contract, no, is_annex):
+        record_dict = dict()
+        if not is_annex:
+            record_dict['no'] = str(no)
+            record_dict['contract_info'] = "{}/{}".format(contract.contract_no, contract.contract_year)
+            record_dict['school_name'] = contract.school.name
+            record_dict['school_nip'] = contract.school.nip
+            record_dict['school_address'] = contract.school.address
+            record_dict['school_city'] = contract.school.city
+            record_dict['school_regon'] = contract.school.regon
+            record_dict['school_phone'] = contract.school.phone
+            record_dict['school_email'] = contract.school.email
+        else:
+            record_dict['no'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_name'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_nip'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_address'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_city'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_regon'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_phone'] = RegisterCreator.CELL_TO_MERGE_MARK
+            record_dict['school_email'] = RegisterCreator.CELL_TO_MERGE_MARK
+            validity_date = DateConverter.to_date(contract.validity_date)
+            record_dict['contract_info'] = "{}/{}".format(contract.contract_no.split("_")[0], contract.contract_year)
+            record_dict['annex_info'] = "{}*".format(DateConverter.to_string(validity_date, "%d-%m-%Y"))
+
+        record_dict['kids_milk'] = str(contract.dairy_products)
+        record_dict['kids_fruitveg'] = str(contract.fruitVeg_products)
+        self.records_to_merge.append(record_dict)
 
     def generate(self, new_doc_name, gen_pdf=True):
         self._prepare_school_data()
