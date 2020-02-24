@@ -15,3 +15,9 @@ https://github.com/dagwieers/unoconv
 
 Printing:
 https://stackoverflow.com/questions/12723818/print-to-standard-printer-from-python
+=======
+# ryko-manager
+
+Python project based on Flask and Database (recommended SQLite).
+
+Python packages needed: flask, Flask-SQLAlchemy,  docx-mailmerge.
