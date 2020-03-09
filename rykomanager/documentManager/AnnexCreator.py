@@ -12,31 +12,41 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
     template_document = cfg.annex_docx
     main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_dir_name)
 
-    def __init__(self, school_id, program_id):
+    def __init__(self, school_id, program_id, existing_annex: Contract = None):
         self.program_id = program_id
         self.program = DatabaseManager.get_program(program_id)
         self.school = DatabaseManager.get_school(school_id)
-        self.contract = DatabaseManager.get_contract(school_id, self.program_id)
-        self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id, self.program_id ))
-        self.contract_year = self.contract.contract_year
-        self.contract_date = None
-        self.validity_date = None
-        self.fruitVeg_products = None
-        self.dairy_products = None
+        if not existing_annex:
+            self.contract = DatabaseManager.get_contract(school_id, self.program_id)
+            self.contract_no = "{0}_{1}".format(self.contract.contract_no, DatabaseManager.get_next_annex_no(school_id, self.program_id ))
+            self.contract_year = self.contract.contract_year
+            self.contract_date = None
+            self.validity_date = None
+            self.fruitVeg_products = None
+            self.dairy_products = None
+        else:
+            self.contract = existing_annex
+            self.contract_no = existing_annex.contract_no
+            self.contract_year = existing_annex.contract_year
+            self.contract_date = existing_annex.contract_date
+            self.validity_date = existing_annex.validity_date
+            self.fruitVeg_products = existing_annex.fruitVeg_products
+            self.dairy_products = existing_annex.dairy_products
+
         output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.annex_dir_name)
         DocumentCreator.__init__(self, AnnexCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 
     def create(self, contract_date=None, validity_date=None, fruitVeg_products=None, dairy_products=None):
-        self.contract_date = datetime.strptime(contract_date, "%d.%m.%Y")
-        self.validity_date = datetime.strptime(validity_date, "%d.%m.%Y")
-        self.fruitVeg_products = fruitVeg_products # @TODO if None get_the_latest_value
-        self.dairy_products = dairy_products
-
         if DatabaseManager.is_annex(self.validity_date, self.school.id):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
             return
+
+        self.contract_date = datetime.strptime(contract_date, "%d.%m.%Y")
+        self.validity_date = datetime.strptime(validity_date, "%d.%m.%Y")
+        self.fruitVeg_products = fruitVeg_products # @TODO if None get_the_latest_value
+        self.dairy_products = dairy_products
 
         app.logger.info("[%s] Adding new annex: school_nick %s: city %s | current_date %s, | contract_no %s"
                         "| contract_year %s | validity_date %s | fruitVeg_products %s | dairy_products %s ",
@@ -75,8 +85,4 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
                          validity_date=self.validity_date, fruitVeg_products=self.fruitVeg_products, dairy_products=self.dairy_products, is_annex=True,
                          school_id=self.school.id, program_id=self.program_id)
         return DatabaseManager.add_row(annex)
-
-    def modify_row(self):
-        # for feature case after modification of Annex is ready from view
-        pass
 

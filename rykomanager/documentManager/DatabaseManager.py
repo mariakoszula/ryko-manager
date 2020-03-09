@@ -31,7 +31,7 @@ class DatabaseManager(ABC):
             .filter(Contract.is_annex==False).first()
 
     @staticmethod
-    def get_annex(annex_id):
+    def get_existing_annex(annex_id):
         return Contract.query.filter(Contract.id==annex_id).filter(Contract.is_annex == True).first()
 
     @staticmethod

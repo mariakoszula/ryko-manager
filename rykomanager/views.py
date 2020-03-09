@@ -6,7 +6,7 @@ from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
 from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
-from rykomanager.models import ProductName, ProductType, School, Program, Week, Product, RecordState, Record
+from rykomanager.models import ProductName, ProductType, School, Program, Week, Product, RecordState, Record, Contract
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
@@ -282,7 +282,7 @@ def school_form_edit_annex(school_id, annex_id):
     if not session.get('program_id'):
         return redirect(url_for('program'))
     school = DatabaseManager.get_school(school_id)
-    annex = DatabaseManager.get_annex(annex_id)
+    annex: Contract = DatabaseManager.get_existing_annex(annex_id)
     if request.method == 'POST':
         date = DateConverter.to_date(request.form['contract_date'])
         date_valid = DateConverter.to_date(request.form['validity_date'])
@@ -290,6 +290,8 @@ def school_form_edit_annex(school_id, annex_id):
         dairy_products = request.form['dairy_products']
         if annex:
             annex.update(date, date_valid, fruitVeg_products, dairy_products)
+            AnnexCreator(annex.school_id, annex.program_id, annex).generate()
+
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=school, annex=annex)
 
