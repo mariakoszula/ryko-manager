@@ -206,13 +206,12 @@ class DatabaseManager(ABC):
                                      DateConverter.to_string(week.end_date, "%Y"))
 
     @staticmethod
-    def str_from_weeks(weeks, week_range=(1,12)):
-        weeks_list=list()
+    def str_from_weeks(weeks, weeks_list=[1,12]):
+        week_to_use = list()
         for week in weeks:
-            if week.week_no in list(range(week_range[0], week_range[1]+1)):
-                weeks_list.append("{0}-{1}".format(DateConverter.to_string(week.start_date, "%d.%m"),
-                                  DateConverter.to_string(week.end_date, "%d.%m.%Y")))
-        return ','.join(weeks_list)
+            if week.week_no in weeks_list:
+                week_to_use.append(f"{DateConverter.to_string(week.start_date, '%d.%m')}-{DateConverter.to_string(week.end_date, '%d.%m.%Y')}")
+        return ','.join(week_to_use)
 
 
     @staticmethod

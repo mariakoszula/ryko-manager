@@ -489,24 +489,60 @@ def create_summary(is_first=0):
 
         if not application_date:
             return redirect(url_for('program_form', program_id=session.get('program_id')))
-        summary_creator = SummaryCreator(session.get('program_id'), is_first)
-        summary = summary_creator.create()
+        # summary_creator = SummaryCreator(session.get('program_id'), is_first)
+        # summary = summary_creator.create()
+        #
+        # if summary:
+        #     appCreators = list()
+        #     for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
+        #         app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+        #         if app.create():
+        #             appCreators.append(app)
+        #
+        #     for appCreator in appCreators:
+        #         appCreator.generate()
+        #
+        #     summary_creator.generate()
+        # else:
+        #     app.logger.error("create_summary: summary is None. Can not create Application.")
+
+        school_nick_second = ["SP 17","Drzonków","Muzyczna","Przylep"]
+        summary_creator_first = SummaryCreator(session.get('program_id'), 1)
+        summary = summary_creator_first.create()
 
         if summary:
             appCreators = list()
             for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
-                app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
-                if app.create():
-                    appCreators.append(app)
+                if school.nick not in school_nick_second:
+                    app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+                    if app.create():
+                        appCreators.append(app)
 
             for appCreator in appCreators:
                 appCreator.generate()
 
-            summary_creator.generate()
+            summary_creator_first.generate()
+        else:
+            app.logger.error("create_summary: summary is None. Can not create Application.")
+
+        summary_creator_second = SummaryCreator(session.get('program_id'), 0)
+        summary = summary_creator_second.create()
+
+        if summary:
+            appCreators = list()
+            for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
+                if school.nick in school_nick_second:
+                    app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+                    if app.create():
+                        appCreators.append(app)
+
+            for appCreator in appCreators:
+                appCreator.generate()
+
+            summary_creator_second.generate()
         else:
             app.logger.error("create_summary: summary is None. Can not create Application.")
     return redirect(url_for("index", weeks=(1, 12), dairy_summary=None, school_data="", product_remaining=""))
-
 
 @app.route('/program')
 def program():

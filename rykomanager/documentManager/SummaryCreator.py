@@ -57,15 +57,15 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             app.logger.error("Summary Base Check failed")
             return
 
-        week_range = (1, 6) if self.summary.is_first else (7, 12)
+        weeks_list = [1,2,3] if self.summary.is_first else [1,2,3,9,10,11,12] #(1, 6) if self.summary.is_first else (7, 12)
+        assert(int(self.summary.get_veg_income() + self.summary.get_fruit_income()) == int(self.summary.get_fruit_veg_income()))
         self.document.merge(
                 application_no=self.summary.get_application_no(),
                 city="Zielona Góra",
+                wn=str(len(weeks_list)),
                 kids_no_fruitVeg=str(self.summary.kids_no),
                 kids_no_milk=str(self.summary.kids_no_milk),
-                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), week_range),
-                is_first="X" if self.summary.is_first else "",
-                is_not_first="X" if not self.summary.is_first else "",
+                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), weeks_list),
                 apple=str(self.summary.get_from_fruit_list(ProductName.APPLE).amount),
                 applewn=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_netto()),
                 applevat=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_vat()),
@@ -86,6 +86,10 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 juicewn=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_netto()),
                 juicevat=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_vat()),
                 juicewb=str(self.summary.get_from_fruit_list(ProductName.JUICE).calculate_brutto()),
+                fruitall=str(self.summary.get_fruit_amount()),
+                fruitalln="{0:.2f}".format(self.summary.get_fruit_netto()),
+                fruitallvat="{0:.2f}".format(self.summary.get_fruit_vat()),
+                fruitallwb="{0:.2f}".format(self.summary.get_fruit_income()),
                 carrot=str(self.summary.get_from_fruit_list(ProductName.CARROT).amount),
                 carrotwn=str(self.summary.get_from_fruit_list(ProductName.CARROT).calculate_netto()),
                 carrotvat=str(self.summary.get_from_fruit_list(ProductName.CARROT).calculate_vat()),
@@ -106,10 +110,11 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
                 kohlrabiwn=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_netto()),
                 kohlrabivat=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_vat()),
                 kohlrabiwb=str(self.summary.get_from_fruit_list(ProductName.KOHLRABI).calculate_brutto()),
-                fruitVeg_all=str(self.summary.get_fruit_veg_amount()),
-                fruitVeg_wn="{0:.2f}".format(self.summary.get_fruit_netto()),
-                fruitVeg_vat="{0:.2f}".format(self.summary.get_fruit_vat()),
-                fruitVeg_wb="{0:.2f}".format(self.summary.get_fruit_veg_income()),
+                veg_all=str(self.summary.get_veg_amount()),
+                veg_alln="{0:.2f}".format(self.summary.get_veg_netto()),
+                veg_allvat="{0:.2f}".format(self.summary.get_veg_vat()),
+                veg_allwb="{0:.2f}".format(self.summary.get_veg_income()),
+
                 fruitVeg_income="{0:.2f}".format(self.summary.fruitVeg_income),
 
                 milk=str(self.summary.get_from_diary_list(ProductName.MILK).amount),
@@ -137,7 +142,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
                 school_no_fruitVeg=str(self.summary.school_no),
                 school_no_milk=str(self.summary.school_no_milk),
-                school_no=str(max(self.summary.school_no, self.summary.school_no_milk))
+                app_school_no=str(max(self.summary.school_no, self.summary.school_no_milk))
         )
         DocumentCreator.generate(self, f"Wniosek_{self.summary.no}.docx", False)
 

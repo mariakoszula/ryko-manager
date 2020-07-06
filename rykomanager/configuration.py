@@ -2,7 +2,7 @@
 database_location = 'sqlite:///C:\\rykomanager\\rykomanager.db'
 annex_docx = 'C:\\rykomanager\\mergefield_docs\\aneks_wzor.docx'
 record_docx = 'C:\\rykomanager\\mergefield_docs\\wz.docx'
-summary_docx = 'C:\\rykomanager\\mergefield_docs\\2019_2020\\zal_IV_wn_pomoc_2019_2020_05092019.doc'
+summary_docx = 'C:\\rykomanager\\mergefield_docs\\2019_2020\\zal_IV_wn_pomoc_2019_2020_25062020.docx'
 applicaton_docx_5 = 'C:\\rykomanager\\mergefield_docs\\2019_2020\\zal_V_oswiadczenie_szkoly_2019-2020_15102019.docx'
 application_docx_5a = 'C:\\rykomanager\\mergefield_docs\\2019_2020\\zal_Va_ewidencja_dostaw_2019_2020_05092019.docx'
 contract_docx = 'C:\\rykomanager\\mergefield_docs\\2019_2020\\zal_VIII_umowa_2019_2020_05092019.docx'

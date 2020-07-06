@@ -314,7 +314,10 @@ class Summary(db.Model):
     def __fruit_list(self):
         return [ProductHandler(self.apple, 5, float(self.program.fruitVeg_price)), ProductHandler(self.plum, 5, float(self.program.fruitVeg_price)),
                 ProductHandler(self.pear, 5, float(self.program.fruitVeg_price)),  ProductHandler(self.strawberry, 5, float(self.program.fruitVeg_price)),
-                ProductHandler(self.juice, 5, float(self.program.fruitVeg_price)), ProductHandler(self.carrot, 8, float(self.program.fruitVeg_price)),
+                ProductHandler(self.juice, 5, float(self.program.fruitVeg_price))]
+
+    def __veg_list(self):
+        return [ProductHandler(self.carrot, 8, float(self.program.fruitVeg_price)),
                 ProductHandler(self.tomato, 5, float(self.program.fruitVeg_price)), ProductHandler(self.radish, 8, float(self.program.fruitVeg_price)),
                 ProductHandler(self.kohlrabi, 8, float(self.program.fruitVeg_price)), ProductHandler(self.pepper, 8, float(self.program.fruitVeg_price))]
 
@@ -334,15 +337,15 @@ class Summary(db.Model):
         if product == ProductName.JUICE:
             return self.__fruit_list()[4]
         if product == ProductName.CARROT:
-            return self.__fruit_list()[5]
+            return self.__veg_list()[0]
         if product == ProductName.TOMATO:
-            return self.__fruit_list()[6]
+            return self.__veg_list()[1]
         if product == ProductName.RADISH:
-            return self.__fruit_list()[7]
+            return self.__veg_list()[2]
         if product == ProductName.KOHLRABI:
-            return self.__fruit_list()[8]
+            return self.__veg_list()[3]
         if product == ProductName.PEPPER:
-            return self.__fruit_list()[9]
+            return self.__veg_list()[4]
 
     def get_from_diary_list(self, product: ProductName):
         if product == ProductName.MILK:
@@ -366,7 +369,7 @@ class Summary(db.Model):
     def calculate_vat(products_list: List[ProductHandler]):
         return sum([product.calculate_vat() for product in products_list])
 
-    def get_fruit_veg_amount(self):
+    def get_fruit_amount(self):
         return sum([product.amount for product in self.__fruit_list()])
 
     def get_fruit_vat(self):
@@ -375,8 +378,23 @@ class Summary(db.Model):
     def get_fruit_netto(self):
         return Summary.calculate_netto(self.__fruit_list())
 
-    def get_fruit_veg_income(self):
+    def get_fruit_income(self):
         return self.calculate_income(self.__fruit_list())
+
+    def get_veg_amount(self):
+        return sum([product.amount for product in self.__veg_list()])
+
+    def get_veg_vat(self):
+        return Summary.calculate_vat(self.__veg_list())
+
+    def get_veg_netto(self):
+        return Summary.calculate_netto(self.__veg_list())
+
+    def get_veg_income(self):
+        return self.calculate_income(self.__veg_list())
+
+    def get_fruit_veg_income(self):
+        return self.calculate_income(self.__fruit_list() + self.__veg_list())
 
     def get_dairy_amount(self):
         return sum([product.amount for product in self.__dairy_list()])
