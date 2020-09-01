@@ -103,7 +103,7 @@
                     <!--&lt;!&ndash; /input-group &ndash;&gt;-->
                     <!--</li>-->
                     <li>
-                        <a><i class="fa fa-fw"></i>Podsumowanie</a>
+                        <a style="cursor: pointer"><i class="fa fa-fw"></i>Podsumowanie</a>
                         <ul class="nav nav-second-level">
                             <li>
                                 <a href={{ url_for('dairy_summrize') }}>Nabiał</a>
@@ -117,7 +117,15 @@
                         <a href={{ url_for('create_records') }}><i class="fa fa-fw"></i>WZ-tki</a>
                     </li>
                     <li>
-                        <a href={{ url_for('schools_all') }}><i class="fa fa-fw"></i>Szkoły</a>
+                        <a style="cursor: pointer"><i class="fa fa-fw"></i>Szkoły</a>
+                        <ul class="nav nav-second-level">
+                            <li>
+                                <a href={{ url_for('schools_with_contract') }}><i class="fa fa-fw"></i>Umowy</a>
+                            </li>
+                            <li>
+                                <a href={{ url_for('schools_all') }}><i class="fa fa-fw"></i>Wszystkie</a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>

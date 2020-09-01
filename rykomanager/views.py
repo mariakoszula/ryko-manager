@@ -197,14 +197,21 @@ def fruitVeg_summrize(weeks=(1, 12)):
                            school_data=school_data, product_remaining=product_remaining)
 
 
-@app.route('/schools_all')
-def schools_all():
+@app.route('/schools_with_contract')
+def schools_with_contract():
     if not session.get('program_id'):
         return redirect(url_for('program'))
     all_schools = DatabaseManager.get_all_schools_with_contract(session.get('program_id'))
     return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
                            invalid_school_id=INVALID_ID)
 
+@app.route('/schools_all')
+def schools_all():
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    all_schools = DatabaseManager.get_all_schools()
+    return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
+                           invalid_school_id=INVALID_ID)
 
 @app.route('/create_register')
 def create_register():
