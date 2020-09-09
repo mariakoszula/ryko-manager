@@ -25,12 +25,12 @@
                                                               Program.end_date
                                                               %}value="{{ Program.convert_start_end_to_string() }}" {%
                                                               endif %}>
-                        <label>Zwrot za produkt owocowo-warzywny</label><input class="form-control"
+                        <label>Zwrot za produkt owocowo-warzywny (netto)</label><input class="form-control"
                                                                                name="fruitVeg_price" {% if
                                                                                Program.fruitVeg_price
                                                                                %}value="{{ Program.fruitVeg_price }}" {%
                                                                                endif %}>
-                        <label>Zwrot za produkt nabiałowy</label><input class="form-control" name="dairy_price" {% if
+                        <label>Zwrot za produkt nabiałowy (netto)</label><input class="form-control" name="dairy_price" {% if
                                                                         Program.dairy_price
                                                                         %}value="{{ Program.dairy_price }}" {% endif %}>
                         <label>Min. ilość produktów nabiałowych w tygodniu</label><input class="form-control"
@@ -83,6 +83,7 @@
                                 </div>
                                 <button type="submit" class="btn btn-outline btn-success btn-lg btn-block">PRZYGOTUJ UMOWY</button>
                             </form>
+
 
                             <form role="form" action="{{ url_for( 'create_summary', is_first=True) }}"
                                   method="post">

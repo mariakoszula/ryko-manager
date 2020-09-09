@@ -41,7 +41,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
             self.generate()
         else:
             self.contract_no = str(DatabaseManager.get_next_contract_no(self.program.id))
-            self.contract_year = DatabaseManager.get_contract_year(self.program.id)
+            self.contract_year = DateConverter.get_year()
 
             app.logger.info("[%s] Adding new contract: school_nick %s: city %s | current_date %s, | contract_no %s"
                         "| contract_year %s",

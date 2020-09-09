@@ -30,3 +30,8 @@ class DateConverter(object):
             return "0{}".format(date_part)
         else:
             return "FailedToConvertDate"
+
+    @staticmethod
+    def get_year():
+        now = datetime.datetime.now()
+        return now.year
