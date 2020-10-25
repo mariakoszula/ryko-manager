@@ -17,6 +17,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.summary: Summary = DatabaseManager.get_summary(self.program_id, self.is_first)
         self.year = SummaryCreator._get_current_year()
         self.no = 1 if self.is_first else 2
+        self.school_no = 0
         output_directory = path.join(cfg.output_dir_main)
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
@@ -142,7 +143,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
                 school_no_fruitVeg=str(self.summary.school_no),
                 school_no_milk=str(self.summary.school_no_milk),
-                app_school_no=str(max(self.summary.school_no, self.summary.school_no_milk))
+                app_school_no=str(self.school_no)
         )
         DocumentCreator.generate(self, f"Wniosek_{self.summary.no}.docx", False)
 

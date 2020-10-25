@@ -118,7 +118,7 @@ class DatabaseManager(ABC):
     @staticmethod
     def get_daily_records(program_id, current_date, generation_date=None):
         cdate = DateConverter.to_date(current_date)
-        gen_date = DateConverter.to_date(generation_date)
+        gen_date = DateConverter.to_date(generation_date) if generation_date else None
         if gen_date:
             return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).filter(Record.generation_date.like(gen_date)).all()
         return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).all()

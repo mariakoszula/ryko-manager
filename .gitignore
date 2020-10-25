@@ -11,4 +11,4 @@ build/
 *.egg-info/
 
 ryko-manager.log
-program_2018_2019_sem1/
+flask_session/

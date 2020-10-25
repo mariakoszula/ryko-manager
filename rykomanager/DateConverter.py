@@ -2,6 +2,19 @@ import datetime
 from rykomanager.name_strings import COMMON_DATE_PATTERN
 
 
+class DateConversionError(Exception):
+    ERROR_MSG = "Failed to convert"
+
+    def __init__(self, date_to_convert=None):
+        self.date_to_convert = date_to_convert
+
+    def __str__(self):
+        if self.date_to_convert:
+            return f"{DateConversionError.ERROR_MSG} date: {self.date} of type {self.type(self.date)}"
+        else:
+            return DateConversionError.ERROR_MSG
+
+
 class DateConverter(object):
     @staticmethod
     def to_string(date, pattern=None):
@@ -19,7 +32,7 @@ class DateConverter(object):
         elif isinstance(date, datetime.date):
             return datetime.datetime.combine(date, datetime.datetime.min.time())
         else:
-            print("WRONG DATE CONVERTION for: ", date , " tpye: ", type(date)) #@TODO here should exception be thrown
+            raise DateConversionError(date)
 
     @staticmethod
     def two_digits(date_part):
@@ -29,7 +42,7 @@ class DateConverter(object):
         elif date_part_len == 1:
             return "0{}".format(date_part)
         else:
-            return "FailedToConvertDate"
+            raise DateConversionError()
 
     @staticmethod
     def get_year():
