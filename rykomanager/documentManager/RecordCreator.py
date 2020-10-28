@@ -1,8 +1,7 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.models import RecordState, ProductType, Record
-import rykomanager.configuration as cfg
-from rykomanager import app
+from rykomanager import app, config_parser
 from rykomanager.DateConverter import DateConverter
 import re
 from os import path, listdir, makedirs
@@ -11,7 +10,7 @@ from rykomanager.name_strings import ALL_RECORDS_DOC_NAME
 
 
 class RecordCreator(DocumentCreator, DatabaseManager):
-    template_document = cfg.record_docx
+    template_document = config_parser.get('DocTemplates', 'record')
 
     def __init__(self, program_id, current_date, school_id, product_id, generation_date=""):
         self.program_id = program_id
@@ -21,8 +20,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         self.product = DatabaseManager.get_product(product_id)
         self.doc_data = dict()
         self.generation_date = DateConverter.to_date(generation_date) if generation_date else datetime.date.today()
-        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school,
-                                     self.contract.school.nick, cfg.record_folder_name)
+        output_directory = self.contract.school.generate_directory_name(config_parser.get('Directories', 'record'))
         DocumentCreator.__init__(self, RecordCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
         self._prepare_data_for_doc()
@@ -31,7 +29,8 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def from_record(cls, record):
         if not isinstance(record, Record):
             raise Exception("Not Record instance")
-        return cls(record.contract.program.id, record.date, record.contract.school.id, record.product_id, record.generation_date)
+        return cls(record.contract.program.id, record.date, record.contract.school.id, record.product_id,
+                   record.generation_date)
 
     def create(self):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
@@ -69,7 +68,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         if not records_to_merge:
             return
 
-        out_dir = path.join(cfg.output_dir_main, cfg.record_folder_name)
+        out_dir = config_parser.get('Directories', 'record_all')
         doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
@@ -84,7 +83,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         if not isinstance(gen_date, datetime.date):
             gen_date = DateConverter.to_date(gen_date)
 
-        assert(gen_date and date) #@TODO remove later
+        assert (gen_date and date)  # @TODO remove later
         if not gen_date or not date:
             return
 
@@ -125,7 +124,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
             kids_no = self.contract.dairy_products
         else:
             app.logger.error("[%s] product type not found:%s. Kids no will be set to 0",
-                            __class__.__name__, self.product.type)
+                             __class__.__name__, self.product.type)
 
         return kids_no if kids_no else 0
 
@@ -143,5 +142,3 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def extract_school_id(string_with_school_id):
         pattern = r'records_schoolId_(\d+)'
         return int(re.findall(pattern, string_with_school_id)[0])
-
-

@@ -1,6 +1,6 @@
 import datetime
 from rykomanager.name_strings import COMMON_DATE_PATTERN
-
+import re
 
 class DateConversionError(Exception):
     ERROR_MSG = "Failed to convert"
@@ -17,16 +17,13 @@ class DateConversionError(Exception):
 
 class DateConverter(object):
     @staticmethod
-    def to_string(date, pattern=None):
-        # @TODO check if given strig has this pattern
-        pattern_used = '%Y-%m-%d' if not pattern else pattern
-        return datetime.datetime.strftime(date, pattern_used)
+    def to_string(date, pattern=COMMON_DATE_PATTERN):
+        return datetime.datetime.strftime(date, pattern)
 
     @staticmethod
-    def to_date(date, pattern=None):
+    def to_date(date, pattern=COMMON_DATE_PATTERN):
         if isinstance(date, str):
-            pattern_used = COMMON_DATE_PATTERN if not pattern else pattern
-            return datetime.datetime.strptime(date, pattern_used)
+            return datetime.datetime.strptime(date, pattern)
         elif isinstance(date, datetime.datetime):
             return date
         elif isinstance(date, datetime.date):

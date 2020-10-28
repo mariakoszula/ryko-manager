@@ -277,9 +277,10 @@ def school_form_add_annex(school_id):
             flash('Uzupełnij wartość produktu, którego liczba zmieniła się', 'error')
         else:
             ac = AnnexCreator(school_id, session.get('program_id'))
-            ac.create(request.form['contract_date'], request.form['validity_date'],
-                      request.form['fruitVeg_products'], request.form['dairy_products'])
-
+            validity_date = request.form['validity_date']
+            if not ac.create(request.form['contract_date'], validity_date,
+                      request.form['fruitVeg_products'], request.form['dairy_products']):
+                flash(f"Aneks z { validity_date } już istnieje, możesz go edytować", 'error')
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=school)
 

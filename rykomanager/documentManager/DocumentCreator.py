@@ -1,23 +1,24 @@
-from rykomanager import app
-import rykomanager.configuration as cfg
+from rykomanager import app, config_parser
 
 from mailmerge import MailMerge
 from abc import ABC, abstractmethod
-from os import path, makedirs
 import subprocess
 import win32api
 from shutil import copy
 from os import path, makedirs, remove, rename
 
+
 class DocumentCreator(ABC):
     wdFormatPDF = 17
+    pdf_converter = config_parser.get('Common', 'libreoffice_converter_path')
 
     def __init__(self, template_document, output_directory):
         if not path.exists(template_document):
             app.logger.error("[%s] template document: %s does not exists", __class__.__name__, template_document)
         self.document = DocumentCreator.start_doc_gen(template_document, output_directory)
         self.fields_to_merge = self.document.get_merge_fields()
-        if cfg.devDebug:
+
+        if config_parser.get('Common', 'debug_on'):
             app.logger.info("[%s] merge fields: %s", __class__.__name__, self.fields_to_merge)
 
         self.template_document = template_document
@@ -59,11 +60,11 @@ class DocumentCreator(ABC):
     @staticmethod
     def generate_pdf(docx_to_convert, output_dir):
         try:
-            args = [cfg.libreoffice_converter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
+            args = [DocumentCreator.pdf_converter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
             subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3000)
         except Exception as e:
             app.logger.error("[%s] Serious error when generating pdf from docx %s out_dir %s: err_msg: %s. Check libreoffice converter path: %s",
-                                   __class__.__name__, docx_to_convert, output_dir , e, cfg.libreoffice_converter)
+                                   __class__.__name__, docx_to_convert, output_dir , e, DocumentCreator.pdf_converter,)
 
     @staticmethod
     def print_pdf(filename):

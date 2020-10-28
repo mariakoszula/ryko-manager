@@ -1,15 +1,15 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
-import rykomanager.configuration as cfg
 from docx import Document
 from os import path
 from datetime import datetime
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from rykomanager.DateConverter import DateConverter
+from rykomanager import config_parser
 
 
 class RegisterCreator(DocumentCreator):
-    template_document = cfg.register_docx
+    template_document = config_parser.get('DocTemplates', 'register')
     CELL_TO_MERGE_MARK = "MERGE"
 
     def __init__(self, program_id):
@@ -19,7 +19,7 @@ class RegisterCreator(DocumentCreator):
         self.program_semester = self.program.get_current_semester()
         self.year = self.program.school_year
         self.records_to_merge = []
-        output_directory = path.join(cfg.output_dir_main)
+        output_directory = config_parser.get('Directories', 'current_program')
         DocumentCreator.__init__(self, RegisterCreator.template_document, output_directory)
 
     def create(self):
@@ -84,9 +84,9 @@ class RegisterCreator(DocumentCreator):
             for col in range(0, len(table.columns)):
                 for row in range(0, len(table.rows)):
                     if table.cell(row, col).text == mark:
-                        table.cell(row, col).text=""
-                        merged = table.cell(row-1, col).merge(table.cell(row, col))
-                        merged.vertical_alignment  = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                        table.cell(row, col).text = ""
+                        merged = table.cell(row - 1, col).merge(table.cell(row, col))
+                        merged.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         table.allow_autofit = True

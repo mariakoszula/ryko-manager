@@ -1,15 +1,13 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.models import ProductName
-import rykomanager.configuration as cfg
 from rykomanager.models import Summary
-from rykomanager import app
+from rykomanager import app, config_parser
 import datetime
-from os import path
 
 
 class SummaryCreator(DocumentCreator, DatabaseManager):
-    template_document = cfg.summary_docx
+    template_document = config_parser.get('DocTemplates', 'summary')
 
     def __init__(self, program_id, is_first):
         self.program_id = program_id
@@ -18,7 +16,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.year = SummaryCreator._get_current_year()
         self.no = 1 if self.is_first else 2
         self.school_no = 0
-        output_directory = path.join(cfg.output_dir_main)
+        output_directory = config_parser.get('Directories', 'current_program')
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 

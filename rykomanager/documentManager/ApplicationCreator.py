@@ -1,19 +1,16 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
-import rykomanager.configuration as cfg
-from rykomanager.models import Summary, ProductName, ProductType, Application, Product
-from rykomanager import app
-from datetime import datetime
+from rykomanager.models import ProductName, ProductType, Application
+from rykomanager import app, config_parser
 from shutil import copyfile
 from os import path, makedirs, remove
 from rykomanager.DateConverter import DateConverter
 
 
 class ApplicationCreator(DocumentCreator, DatabaseManager):
-    template_document_v = cfg.applicaton_docx_5
-    template_document_va = cfg.application_docx_5a
-
-    main_app_dir = path.join(cfg.output_dir_main, cfg.application_dir_name)
+    template_document_v = config_parser.get('DocTemplates', 'application')
+    template_document_va = config_parser.get('DocTemplates', 'application_5a')
+    main_app_dir = config_parser.get('Directories', 'application_all')
 
     def __init__(self, program_id, school, summary, date):
         self.main_app_dir = path.join(ApplicationCreator.main_app_dir, str(summary.no))
@@ -48,9 +45,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.sum_product_vegFruit = 0
         self.sum_product_milk = 0
         self.sign_date = DateConverter.to_date(date)
-        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick,
-                                     cfg.application_dir_name)
-        self.output_directory = output_directory
+        self.output_directory = self.school.generate_directory_name(config_parser.get('Directories', 'application'))
         DatabaseManager.__init__(self)
 
     def generate(self):

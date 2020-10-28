@@ -31,6 +31,7 @@
                                 </form>
                             </div>
                             <div class="col-lg-6">
+
                            <div class="table-responsive">
                                 <table class="table">
                                     <thead>
@@ -86,6 +87,11 @@
                                     </a>
                                 </div>
                                 {% endif %}
+                              {%- for category, message in get_flashed_messages(with_categories = true) %}
+                             <div class = "alert alert-danger">
+                                {{ message }}
+                             </div>
+                            {%- endfor %}
                              <div class="panel panel-yellow">
                             <div class="panel-heading">
                                 <div class="row">

@@ -5,7 +5,6 @@ import re
 from sqlalchemy import func, exc, update, or_
 import datetime
 from rykomanager.DateConverter import DateConverter
-import rykomanager.configuration as cfg
 
 
 class DatabaseManager(ABC):

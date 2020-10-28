@@ -1,17 +1,13 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
-import rykomanager.configuration as cfg
 from rykomanager.models import Contract
-from rykomanager import app
+from rykomanager import app, config_parser, DateConverter
 
 from os import path
 from datetime import datetime
 
 
 class AnnexCreator(DocumentCreator, DatabaseManager):
-    template_document = cfg.annex_docx
-    main_annex_dir = path.join(cfg.output_dir_main, cfg.annex_dir_name)
-
     def __init__(self, school_id, program_id, existing_annex: Contract = None):
         self.program_id = program_id
         self.program = DatabaseManager.get_program(program_id)
@@ -33,15 +29,16 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
             self.fruitVeg_products = existing_annex.fruitVeg_products
             self.dairy_products = existing_annex.dairy_products
 
-        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.annex_dir_name)
-        DocumentCreator.__init__(self, AnnexCreator.template_document, output_directory)
+        output_directory = self.school.generate_directory_name(config_parser.get('Directories', 'annex'));
+        DocumentCreator.__init__(self, config_parser.get('DocTemplates', 'annex'), output_directory)
         DatabaseManager.__init__(self)
 
     def create(self, contract_date=None, validity_date=None, fruitVeg_products=None, dairy_products=None):
-        if DatabaseManager.is_annex(self.validity_date, self.school.id):
+        if validity_date and DatabaseManager.is_annex(DateConverter.DateConverter.to_date(validity_date, pattern="%d.%m.%Y"),
+                                                                            self.school.id):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
-            return
+            return False
 
         self.contract_date = datetime.strptime(contract_date, "%d.%m.%Y")
         self.validity_date = datetime.strptime(validity_date, "%d.%m.%Y")
@@ -57,6 +54,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
             self.generate()
         else:
             app.logger.error("[%s]  Something went wrong when creating annex", __class__.__name__)
+        return True
 
     def generate(self):
         self.document.merge(
@@ -76,7 +74,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
             validity_date=self.validity_date.strftime("%d.%m.%Y")
         )
         created_annex = DocumentCreator.generate(self, "Aneks_" + self.contract_date.strftime("%d_%m_%Y") + ".docx")
-        new_annex_dst = path.join(AnnexCreator.main_annex_dir,
+        new_annex_dst = path.join(config_parser.get('Directories', 'annex_all'),
                                                     "{0}_Aneks_{1}_{2}.docx".format(self.school.nick, self.contract_no, self.contract_year))
         DocumentCreator.copy_to_path(created_annex, new_annex_dst)
 

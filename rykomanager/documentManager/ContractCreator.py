@@ -1,17 +1,15 @@
 from rykomanager.documentManager.DocumentCreator import DocumentCreator
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
-import rykomanager.configuration as cfg
 from rykomanager.models import Contract
-from rykomanager import app
+from rykomanager import app, config_parser
 from rykomanager.DateConverter import DateConverter
-from shutil import copyfile
-from os import remove, path, makedirs
+from os import path, makedirs
 from rykomanager.name_strings import FILL_BY_SCHOOL
 
+
 class ContractCreator(DocumentCreator, DatabaseManager):
-    template_document = cfg.contract_docx
-    main_contract_dir = path.join(cfg.output_dir_main,
-                                  cfg.contract_dir_name)
+    template_document = config_parser.get('DocTemplates', 'contract')
+    main_contract_dir = config_parser.get('Directories', 'contract_all')
 
     def __init__(self, school, program_id, ommit_representat=True):
         if not path.exists(ContractCreator.main_contract_dir):
@@ -23,7 +21,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
         self.contract_year = None
         self.contract_date = None
         self.ommit_representat = ommit_representat
-        output_directory = path.join(cfg.output_dir_main, cfg.output_dir_school, self.school.nick, cfg.contract_dir_name)
+        output_directory = self.school.generate_directory_name(config_parser.get('Directories', 'contract'))
         DocumentCreator.__init__(self, ContractCreator.template_document, output_directory)
         DatabaseManager.__init__(self)
 

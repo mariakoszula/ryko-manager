@@ -1,7 +1,9 @@
-from rykomanager import db
+from rykomanager import db, config_parser
 import enum
+from os import path
 from rykomanager.DateConverter import  DateConverter
 from typing import List
+
 class ProductType(enum.Enum):
     NONE = 0
     FRUIT_VEG = 1
@@ -62,6 +64,9 @@ class School(db.Model):
 
     def __repr__(self):
         return '<School: %r>' % self.name
+
+    def generate_directory_name(self, specific_directory):
+        return path.join(config_parser.get('Directories', 'school'), self.nick, specific_directory)
 
 
 class Program(db.Model):
