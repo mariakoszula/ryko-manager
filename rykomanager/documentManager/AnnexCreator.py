@@ -50,7 +50,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
                         __class__.__name__, self.school.nick, self.school.city, self.contract_date, self.contract_no,
                         self.contract_year, self.validity_date, self.fruitVeg_products, self.dairy_products)
 
-        if self.update_row():
+        if self.create_new():
             self.generate()
         else:
             app.logger.error("[%s]  Something went wrong when creating annex", __class__.__name__)
@@ -78,7 +78,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
                                                     "{0}_Aneks_{1}_{2}.docx".format(self.school.nick, self.contract_no, self.contract_year))
         DocumentCreator.copy_to_path(created_annex, new_annex_dst)
 
-    def update_row(self):
+    def create_new(self):
         annex = Contract(contract_no=self.contract_no, contract_year=self.contract_year, contract_date=self.contract_date,
                          validity_date=self.validity_date, fruitVeg_products=self.fruitVeg_products, dairy_products=self.dairy_products, is_annex=True,
                          school_id=self.school.id, program_id=self.program_id)

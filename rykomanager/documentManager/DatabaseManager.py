@@ -5,7 +5,7 @@ import re
 from sqlalchemy import func, exc, update, or_
 import datetime
 from rykomanager.DateConverter import DateConverter
-
+from typing import Set
 
 class DatabaseManager(ABC):
 
@@ -13,11 +13,11 @@ class DatabaseManager(ABC):
         super(DatabaseManager, self).__init__()
 
     @abstractmethod
-    def update_row(self):
+    def create_new(self):
         pass
 
     @staticmethod
-    def modify_row():
+    def modify():
         db.session.commit()
 
     @staticmethod
@@ -179,7 +179,7 @@ class DatabaseManager(ABC):
         return True
 
     @staticmethod
-    def get_product_amount(program_id, school_id, product_name, weeks=list(), state=(RecordState.DELIVERED, RecordState.DELIVERED)):
+    def get_product_amount(program_id, school_id, product_name, weeks: Set, state=(RecordState.DELIVERED, RecordState.DELIVERED)):
         product_type_qr = None
         try:
             product_type_qr = Product.query.filter(Product.name==product_name).filter(Product.program_id == program_id).with_entities(Product.type).one()
@@ -187,8 +187,7 @@ class DatabaseManager(ABC):
                 product_type = product_type_qr[0]
                 item_to_sum = Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
                 data = Record.query.join(Contract).join(Product).filter(Contract.program_id.like(program_id))\
-                    .filter(Product.name == product_name).join(Week).filter(Week.week_no >= weeks[0],
-                                                                           Week.week_no <= weeks[1]).filter(
+                    .filter(Product.name == product_name).join(Week).filter(Week.week_no.in_(weeks)).filter(
                     Contract.school_id == school_id) \
                     .filter(or_(Record.state == state[0], Record.state == state[1])).with_entities(
                     func.sum(item_to_sum).label('product_amount')).one()
@@ -205,20 +204,20 @@ class DatabaseManager(ABC):
                                      DateConverter.to_string(week.end_date, "%Y"))
 
     @staticmethod
-    def str_from_weeks(weeks, weeks_list=[1,12]):
+    def str_from_weeks(weeks, current_weeks: Set):
         week_to_use = list()
         for week in weeks:
-            if week.week_no in weeks_list:
+            if week.week_no in current_weeks:
                 week_to_use.append(f"{DateConverter.to_string(week.start_date, '%d.%m')}-{DateConverter.to_string(week.end_date, '%d.%m.%Y')}")
         return ','.join(week_to_use)
 
 
     @staticmethod
-    def get_maxKids_perWeek(program_id, school_id, product_type, weeks=(1,12)):
+    def get_maxKids_perWeek(program_id, school_id, product_type, weeks: Set):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
         data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).\
                 filter(Week.program_id == program_id).\
-                filter(Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).with_entities(
+                filter(Week.week_no.in_(weeks)).filter(Contract.school_id == school_id).with_entities(
                 func.max(item_to_sum).label('max_amount')).one()
         return data.max_amount if data.max_amount else 0
 
@@ -227,9 +226,9 @@ class DatabaseManager(ABC):
         return Contract.fruitVeg_products if product_type == ProductType.FRUIT_VEG else Contract.dairy_products
 
     @staticmethod
-    def get_summary(program_id, is_first):
+    def get_summary(program_id, no):
         return Summary.query.filter(Summary.program_id.like(program_id)).\
-                filter(Summary.is_first.like(is_first)).first()
+                filter(Summary.no.like(no)).first()
 
     @staticmethod
     def get_school_with_summary(summary_id):
@@ -240,10 +239,10 @@ class DatabaseManager(ABC):
         return Application.query.filter(Application.school_id==school_id).filter(Application.summary_id==summary_id).all()
 
     @staticmethod
-    def get_records(program_id, school_id, product_type, weeks=(1, 12)):
+    def get_records(program_id, school_id, product_type, weeks: Set):
         item_to_sum = DatabaseManager.get_contract_products(product_type)
         data = Record.query.join(Contract).join(Product).filter(Product.type == product_type).join(Week).filter(Week.program_id == program_id).\
-            filter(Week.week_no >= weeks[0], Week.week_no <= weeks[1]).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
+            filter(Week.week_no.in_(weeks)).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
             order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product).all()
         return data
 
@@ -310,7 +309,7 @@ class DatabaseManager(ABC):
     def get_portion_perWeek(program_id, school_id, product_type, week_no):
         portion_no = Record.query.join(Record.contract).join(Record.product).join(Record.week).filter(Contract.program_id.like(program_id)).filter(Contract.school_id.like(school_id))\
             .filter(Week.week_no.like(week_no)).filter(Product.type.like(product_type)).count()
-        return str(portion_no) if portion_no else "-"
+        return portion_no
 
 
     @staticmethod

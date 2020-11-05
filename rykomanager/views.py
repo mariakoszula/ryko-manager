@@ -162,7 +162,8 @@ def get_remaning_products(school_data, product_type):
         for d in data:
             if school == d[0]:
                 for product_stats in school_data[school.nick]:
-                    if product_stats.product_name == d[1].get_name_mapping(): # @TODO this comparizon should be moved to Product, check how to compare to objects
+                    if product_stats.product_name == d[
+                        1].get_name_mapping():  # @TODO this comparizon should be moved to Product, check how to compare to objects
                         product_stats.decrease_product(d[2])
 
     product_remaining = dict()
@@ -205,6 +206,7 @@ def schools_with_contract():
     return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
                            invalid_school_id=INVALID_ID)
 
+
 @app.route('/schools_all')
 def schools_all():
     if not session.get('program_id'):
@@ -212,6 +214,7 @@ def schools_all():
     all_schools = DatabaseManager.get_all_schools()
     return render_template("schools_all.html", Schools=all_schools, program_id=session.get('program_id'),
                            invalid_school_id=INVALID_ID)
+
 
 @app.route('/create_register')
 def create_register():
@@ -279,8 +282,8 @@ def school_form_add_annex(school_id):
             ac = AnnexCreator(school_id, session.get('program_id'))
             validity_date = request.form['validity_date']
             if not ac.create(request.form['contract_date'], validity_date,
-                      request.form['fruitVeg_products'], request.form['dairy_products']):
-                flash(f"Aneks z { validity_date } już istnieje, możesz go edytować", 'error')
+                             request.form['fruitVeg_products'], request.form['dairy_products']):
+                flash(f"Aneks z {validity_date} już istnieje, możesz go edytować", 'error')
             return redirect(url_for('school_form', school_id=school_id))
     return render_template("add_annex_form.html", school=school)
 
@@ -399,7 +402,10 @@ def create_records_per_week(week_id):
                         rc.create()
                         record_list.append(rc)
                     else:
-                        duplicated_records_set.add("{}: '{}' istnieje WZ dla '{}'".format(DatabaseManager.get_school(school_id).nick, product.get_name_mapping(), product_record.product.get_name_mapping()))
+                        duplicated_records_set.add(
+                            "{}: '{}' istnieje WZ dla '{}'".format(DatabaseManager.get_school(school_id).nick,
+                                                                   product.get_name_mapping(),
+                                                                   product_record.product.get_name_mapping()))
             RecordCreator.generate_many(record_list, RECORDS_NEW_NAME)
             # REGENERATE_FOR_ALL
             generation_date = datetime.date.today()
@@ -487,17 +493,32 @@ def my_utility_processor():
     return dict(update_state=update_record_state)
 
 
-@app.route('/create_summary/<int:is_first>', methods=['POST'])
-def create_summary(is_first=0):
+def parse_list_of_weeks(weeks: str):
+    # 1,2,3,4 or 1-6,14 or 13,1-6
+    weeks_list = list()
+    weeks_parts = weeks.split(",")
+    for weeks in weeks_parts:
+        if "-" in weeks:
+            weeks_range = weeks.split("-")
+            weeks_list.extend([i for i in range(int(weeks_range[0]), int(weeks_range[1])+1)])
+        else:
+            weeks_list.append(int(weeks))
+    weeks_list.sort()
+    return set(weeks_list)
+
+
+@app.route('/create_summary', methods=['POST'])
+def create_summary():
     if not session.get('program_id'):
         return redirect(url_for('program'))
 
     if request.method == 'POST':
         application_date = request.form["application_date"]
-
-        if not application_date:
-            return redirect(url_for('program_form', program_id=session.get('program_id')))
-        summary_creator = SummaryCreator(session.get('program_id'), is_first)
+        application_weeks = request.form["application_weeks"]
+        if not application_date or not application_weeks:
+            flash('Podaj date ewidencji oraz zakres tygodni', 'error')
+        weeks = parse_list_of_weeks(application_weeks)
+        summary_creator = SummaryCreator(session.get('program_id'), weeks, no=1)
         summary = summary_creator.create()
 
         if summary:
@@ -516,6 +537,7 @@ def create_summary(is_first=0):
             app.logger.error("create_summary: summary is None. Can not create Application.")
 
     return redirect(url_for("index", weeks=(1, 12), dairy_summary=None, school_data="", product_remaining=""))
+
 
 @app.route('/program')
 def program():

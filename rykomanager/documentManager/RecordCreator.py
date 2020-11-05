@@ -35,7 +35,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
     def create(self):
         app.logger.info("[%s] Adding new record: date %s, school %s: product %s",
                         __class__.__name__, self.date, self.contract.school.nick, self.product.name)
-        if self.update_row():
+        if self.create_new():
             self.generate()
 
     def generate(self):
@@ -128,14 +128,14 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
         return kids_no if kids_no else 0
 
-    def update_row(self):
+    def create_new(self):
         record = Record(date=self.date, state=RecordState.NOT_DELIVERED, product_id=self.product.id,
                         contract_id=self.contract.id, week_id=DatabaseManager.get_week_by_date(self.date).id,
                         generation_date=self.generation_date)
 
         return DatabaseManager.add_row(record)
 
-    def modify_row(self):
+    def modify(self):
         pass
 
     @staticmethod

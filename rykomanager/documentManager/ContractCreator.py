@@ -46,7 +46,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
                         __class__.__name__, self.school.nick, self.school.city, self.contract_date, self.contract_no,
                         self.contract_year)
 
-            if self.update_row():
+            if self.create_new():
                 self.generate()
             else:
                 app.logger.error("[%s]  Something went wrong when creating a contract", __class__.__name__)
@@ -88,13 +88,13 @@ class ContractCreator(DocumentCreator, DatabaseManager):
         return ",".join(["{0}-{1}".format(DateConverter.to_string(week.start_date, "%d.%m"),
                                           DateConverter.to_string(week.end_date, "%d.%m.%Y")) for week in weeks])
 
-    def update_row(self):
+    def create_new(self):
         contract = Contract(contract_no=self.contract_no, contract_year=self.contract_year, contract_date=self.contract_date,
                          validity_date=self.contract_date, fruitVeg_products=0, dairy_products=0, is_annex=False,
                          school_id=self.school.id, program_id=self.program.id)
         return DatabaseManager.add_row(contract)
 
     @staticmethod
-    def modify_row(self):
+    def modify(self):
         pass
 

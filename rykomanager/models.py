@@ -310,8 +310,8 @@ class Summary(db.Model):
     cheese = db.Column(db.Integer, default=0)
     fruitVeg_income = db.Column(db.Float, default=0)
     milk_income = db.Column(db.Float, default=0)
-    is_first = db.Column(db.Boolean, nullable=False)
-
+    is_first = db.Column(db.Boolean)
+    weeks = db.Column(db.PickleType)
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program',
                              backref=db.backref('summary', lazy=True))

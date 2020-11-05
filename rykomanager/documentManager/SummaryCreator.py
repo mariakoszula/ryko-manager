@@ -3,18 +3,21 @@ from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.models import ProductName
 from rykomanager.models import Summary
 from rykomanager import app, config_parser
+from typing import Set
 import datetime
 
 
 class SummaryCreator(DocumentCreator, DatabaseManager):
     template_document = config_parser.get('DocTemplates', 'summary')
 
-    def __init__(self, program_id, is_first):
+    def __init__(self, program_id, weeks: Set[int], no=None):
+        self.summary: Summary = None
         self.program_id = program_id
-        self.is_first = is_first
-        self.summary: Summary = DatabaseManager.get_summary(self.program_id, self.is_first)
-        self.year = SummaryCreator._get_current_year()
-        self.no = 1 if self.is_first else 2
+        self.weeks = weeks
+        if no:
+            self.summary = DatabaseManager.get_summary(self.program_id, no) # TODO MERY Check how get unique
+            self.summary.weeks = weeks
+            DatabaseManager.modify()
         self.school_no = 0
         output_directory = config_parser.get('Directories', 'current_program')
         DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
@@ -56,15 +59,14 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             app.logger.error("Summary Base Check failed")
             return
 
-        weeks_list = [1,2,3] if self.summary.is_first else [1,2,3,9,10,11,12] #(1, 6) if self.summary.is_first else (7, 12)
         assert(int(self.summary.get_veg_income() + self.summary.get_fruit_income()) == int(self.summary.get_fruit_veg_income()))
         self.document.merge(
                 application_no=self.summary.get_application_no(),
                 city="Zielona Góra",
-                wn=str(len(weeks_list)),
+                wn=str(len(self.summary.weeks)),
                 kids_no_fruitVeg=str(self.summary.kids_no),
                 kids_no_milk=str(self.summary.kids_no_milk),
-                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), weeks_list),
+                weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), self.summary.weeks),
                 apple=str(self.summary.get_from_fruit_list(ProductName.APPLE).amount),
                 applewn=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_netto()),
                 applevat=str(self.summary.get_from_fruit_list(ProductName.APPLE).calculate_vat()),
@@ -147,20 +149,29 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
     def create(self):
         if not self.summary:
-            self.update_row()
+            self.create_new()
         else:
             self.clear()
+        self.summary
         return self.summary
 
-    def update_row(self):
-        summary = Summary(no=self.no, year=self.year, is_first=self.is_first, program_id=self.program_id)
+    def _get_next_number(self):
+        # TODO get real next no
+        return 1
+
+    def create_new(self):
+        number = self._get_next_number()
+        summary = Summary(no=number,
+                          year=SummaryCreator._get_current_year(),
+                          program_id=self.program_id,
+                          weeks=self.weeks)
         if DatabaseManager.add_row(summary):
-            self.summary = DatabaseManager.get_summary(self.program_id, self.is_first)
+            self.summary = DatabaseManager.get_summary(self.program_id, number)
 
     def get_id(self):
         return self.summary.id
 
-    def modify_row(self):
+    def modify(self):
         pass
 
     def clear(self):
@@ -184,4 +195,4 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.summary.school_no_milk = 0
         self.summary.fruitVeg_income = 0
         self.summary.milk_income = 0
-        DatabaseManager.modify_row()
+        DatabaseManager.modify()
