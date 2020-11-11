@@ -15,7 +15,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.program_id = program_id
         self.weeks = weeks
         if no:
-            self.summary = DatabaseManager.get_summary(self.program_id, no) # TODO MERY Check how get unique
+            self.summary = DatabaseManager.get_summary(self.program_id, no) # TODO Check how get unique
             self.summary.weeks = weeks
             DatabaseManager.modify()
         self.school_no = 0
@@ -63,7 +63,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.document.merge(
                 application_no=self.summary.get_application_no(),
                 city="Zielona Góra",
-                wn=str(len(self.summary.weeks)),
+                wn=str(self.summary.number_of_weeks),
                 kids_no_fruitVeg=str(self.summary.kids_no),
                 kids_no_milk=str(self.summary.kids_no_milk),
                 weeks=DatabaseManager.str_from_weeks(DatabaseManager.get_weeks(self.program_id), self.summary.weeks),
@@ -156,8 +156,8 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         return self.summary
 
     def _get_next_number(self):
-        # TODO get real next no
-        return 1
+        summaries = DatabaseManager.get_summaries(self.program_id)
+        return max([summary.no for summary in summaries]) + 1
 
     def create_new(self):
         number = self._get_next_number()
@@ -175,6 +175,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         pass
 
     def clear(self):
+        # TODO refactor
         self.summary.apple = 0
         self.summary.pear = 0
         self.summary.plum = 0

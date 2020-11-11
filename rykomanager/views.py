@@ -515,18 +515,28 @@ def create_summary():
     if request.method == 'POST':
         application_date = request.form["application_date"]
         application_weeks = request.form["application_weeks"]
+        schools_for_summary = request.form.getlist("application_schools", type=int)
+        application_summary = request.form.get("application_summary")
+
         if not application_date or not application_weeks:
             flash('Podaj date ewidencji oraz zakres tygodni', 'error')
+        if not schools_for_summary:
+            flash('Musisz wybrać chociaż jedną szkołe', 'error')
         weeks = parse_list_of_weeks(application_weeks)
-        summary_creator = SummaryCreator(session.get('program_id'), weeks, no=1)
+        summary_no = int(application_summary) if application_summary else None
+        summary_creator = SummaryCreator(session.get('program_id'), weeks, no=summary_no)
         summary = summary_creator.create()
 
         if summary:
             appCreators = list()
-            for school in DatabaseManager.get_all_schools_with_contract(session.get('program_id')):
-                app = ApplicationCreator(session.get('program_id'), school, summary, application_date)
-                if app.create():
-                    appCreators.append(app)
+            for school in [DatabaseManager.get_school(i) for i in schools_for_summary]:
+                print(school.nick)
+                application = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+                try:
+                    if application.create():
+                        appCreators.append(application)
+                except ValueError as e:
+                    app.logger.error(f"Cannot create application for {school.nick}: {e}")
 
             for appCreator in appCreators:
                 summary_creator.school_no += 1
@@ -571,6 +581,8 @@ def program_form(program_id=INVALID_ID):
             return redirect(url_for('program_form', program_id=id_of_program_being_added.id))
 
     current_program = DatabaseManager.get_program(program_id)
+    schools_with_contract = DatabaseManager.get_all_schools_with_contract(current_program.id)
+    available_summary = DatabaseManager.get_summaries(current_program.id)
     if request.method == 'POST':
         data_to_update = {"semester_no": empty_if_none(request.form["semester_no"]),
                           "school_year": empty_if_none(request.form["school_year"]),
@@ -584,7 +596,7 @@ def program_form(program_id=INVALID_ID):
                           "fruitVeg_amount": empty_if_none(request.form["fruitVeg_amount"])}
         program_id = DatabaseManager.update_program_data(current_program, **data_to_update)
         return redirect(url_for('program_form', program_id=program_id))
-    return render_template("program_form.html", Program=current_program)
+    return render_template("program_form.html", Program=current_program, Schools=schools_with_contract, Summary=available_summary)
 
 
 @app.route('/program_form/<int:program_id>/add_week', methods=['GET', 'POST'])

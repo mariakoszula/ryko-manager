@@ -231,6 +231,10 @@ class DatabaseManager(ABC):
                 filter(Summary.no.like(no)).first()
 
     @staticmethod
+    def get_summaries(program_id):
+        return Summary.query.filter(Summary.program_id.like(program_id)).all()
+
+    @staticmethod
     def get_school_with_summary(summary_id):
         return Application.query.filter(Application.summary_id==summary_id).all()
 
@@ -245,6 +249,15 @@ class DatabaseManager(ABC):
             filter(Week.week_no.in_(weeks)).filter(Contract.school_id == school_id).filter(Record.state == RecordState.DELIVERED).\
             order_by(Record.date).with_entities(Record.date.label("date"), item_to_sum.label("product_no"), Product).all()
         return data
+
+    @staticmethod
+    def is_any_record(program_id, school_id, week_no: int):
+        data = Record.query.join(Contract).join(Week).\
+            filter(Week.program_id == program_id).\
+            filter(Contract.school_id == school_id).\
+            filter(Record.state == RecordState.DELIVERED).\
+            filter(Week.week_no == week_no).all()
+        return len(data)
 
     @staticmethod
     def get_record(id):

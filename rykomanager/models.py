@@ -11,23 +11,28 @@ class ProductType(enum.Enum):
 
 
 class ProductName(enum.Enum):
+    MIN_FRUIT_PRODUCT_NO = 0
     APPLE = 1
     PEAR = 2
     STRAWBERRY = 3
     PLUM = 4
     JUICE = 5
+    MAX_FRUIT_PRODUCT_NO = 6
 
+    MIN_VEG_PRODUCT_NO = 10
     CARROT = 11
     RADISH = 12
     PEPPER = 13
     TOMATO = 14
     KOHLRABI = 15
+    MAX_VEG_PRODUCT_NO = 16
 
+    MIN_DAIRY_PRODUCT_NO = 20
     MILK = 21
     YOGHURT = 22
     KEFIR = 23
     CHEESE = 24
-
+    MAX_DAIRY_PRODUCT_NO = 25
 
 fruit_veg_mapping = {  ProductName.APPLE: "jabłko",
                        ProductName.PEAR: "gruszka",
@@ -315,6 +320,17 @@ class Summary(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('program.id'), nullable=False)
     program = db.relationship('Program',
                              backref=db.backref('summary', lazy=True))
+
+
+    number_of_weeks = 0
+
+    #TODO how this suppose to be
+    def set_number_of_weeks(self, weeks_no):
+        if self.number_of_weeks != 0 and self.number_of_weeks != len(weeks_no):
+            raise ValueError(f"weeks_no: {weeks_no} != {self.number_of_weeks}. "
+                             f"For one summary all schools must have the same number of weeks.")
+        self.weeks = weeks_no
+        self.number_of_weeks = len(weeks_no)
 
     def __fruit_list(self):
         return [ProductHandler(self.apple, 5, float(self.program.fruitVeg_price)), ProductHandler(self.plum, 5, float(self.program.fruitVeg_price)),

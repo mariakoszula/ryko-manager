@@ -85,7 +85,7 @@
                             </form>
 
 
-                            <form role="form" action="{{ url_for( 'create_summary', is_first=True) }}"
+                            <form role="form" action="{{ url_for( 'create_summary') }}"
                                   method="post">
                                 <div class="form-group">
                                     <label>Data ewidencji</label><input class="form-control" name="application_date"
@@ -95,6 +95,18 @@
                                 <div class="form-group">
                                     <label>Tygodnie np. 1-6 lub 1-6,13</label>
                                     <input type="text" class="form-control" name="application_weeks" value="">
+                                </div>
+                                <div class="form-group">
+                                    {% for school in Schools %}
+                                       <label for="application_schools">{{ school.nick }}</label>
+                                       <input type="checkbox" value={{ school.id }} name="application_schools" checked>
+                                    {% endfor %}
+                                </div>
+                                <div class="form-group">
+                                    {% for summary in Summary %}
+                                       <label for="application_summary">Wniosek {{ summary.get_application_no() }}</label>
+                                       <input type="radio" value={{ summary.no }} name="application_summary">
+                                    {% endfor %}
                                 </div>
                                 <button type="submit" class="btn btn-outline  btn-warning  btn-lg btn-block">PRZYGOTUJ DOKUMENTY DO WNIOSKU O POMOC
                                 </button>
