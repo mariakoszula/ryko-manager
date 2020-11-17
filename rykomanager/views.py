@@ -520,8 +520,7 @@ def create_summary():
 
         if not application_date or not application_weeks:
             flash('Podaj date ewidencji oraz zakres tygodni', 'error')
-        if not schools_for_summary:
-            flash('Musisz wybrać chociaż jedną szkołe', 'error')
+            return redirect(url_for('program_form', program_id=session.get('program_id')))
         weeks = parse_list_of_weeks(application_weeks)
         summary_no = int(application_summary) if application_summary else None
         summary_creator = SummaryCreator(session.get('program_id'), weeks, no=summary_no)
@@ -529,17 +528,22 @@ def create_summary():
 
         if summary:
             appCreators = list()
-            for school in [DatabaseManager.get_school(i) for i in schools_for_summary]:
-                print(school.nick)
-                application = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+            schools = set([application.school for application in DatabaseManager.get_school_with_summary(summary.id)])
+            schools.update([DatabaseManager.get_school(i) for i in schools_for_summary])
+            for school in schools:
                 try:
+                    application = ApplicationCreator(session.get('program_id'), school, summary, application_date)
                     if application.create():
                         appCreators.append(application)
                 except ValueError as e:
                     app.logger.error(f"Cannot create application for {school.nick}: {e}")
+                    flash(f"Próbjesz wygnerować błędny wniosek."
+                          f"Ilosc tygodni dla {school.nick} nie zgadza sie z ilościa we wniosku {summary.number_of_weeks}.", 'error')
+                    return redirect(url_for('program_form', program_id=session.get('program_id')))
+
 
             for appCreator in appCreators:
-                summary_creator.school_no += 1
+                summary_creator.school_no += 1 #TODO change this to use obeserver
                 appCreator.generate()
 
             summary_creator.generate()
@@ -582,7 +586,17 @@ def program_form(program_id=INVALID_ID):
 
     current_program = DatabaseManager.get_program(program_id)
     schools_with_contract = DatabaseManager.get_all_schools_with_contract(current_program.id)
-    available_summary = DatabaseManager.get_summaries(current_program.id)
+    available_summary = DatabaseManager.get_summaries(current_program.id) # TODO only summary for current_semester from config.ini
+    #TODO if each school has at least one school_with_contract change this to show for second part
+    summaries_data = dict()
+    if not available_summary:
+        school_to_display = schools_with_contract
+    else:
+        school_to_display = [school for school in schools_with_contract
+         if not any([DatabaseManager.get_application(school.id, summary.id) for summary in available_summary])]
+        summaries_data = {k: ", ".join([application.school.nick for application in DatabaseManager.get_school_with_summary(k.id)])
+                            for k in available_summary}
+
     if request.method == 'POST':
         data_to_update = {"semester_no": empty_if_none(request.form["semester_no"]),
                           "school_year": empty_if_none(request.form["school_year"]),
@@ -596,7 +610,8 @@ def program_form(program_id=INVALID_ID):
                           "fruitVeg_amount": empty_if_none(request.form["fruitVeg_amount"])}
         program_id = DatabaseManager.update_program_data(current_program, **data_to_update)
         return redirect(url_for('program_form', program_id=program_id))
-    return render_template("program_form.html", Program=current_program, Schools=schools_with_contract, Summary=available_summary)
+    return render_template("program_form.html", Program=current_program, Schools=school_to_display,
+                           Summary=summaries_data)
 
 
 @app.route('/program_form/<int:program_id>/add_week', methods=['GET', 'POST'])

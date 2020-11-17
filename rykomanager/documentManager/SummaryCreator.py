@@ -60,6 +60,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
             return
 
         assert(int(self.summary.get_veg_income() + self.summary.get_fruit_income()) == int(self.summary.get_fruit_veg_income()))
+        #TODO refactor based on idea in Application Creator
         self.document.merge(
                 application_no=self.summary.get_application_no(),
                 city="Zielona Góra",
@@ -157,7 +158,7 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
 
     def _get_next_number(self):
         summaries = DatabaseManager.get_summaries(self.program_id)
-        return max([summary.no for summary in summaries]) + 1
+        return 1 + (max([summary.no for summary in summaries]) if summaries else 0)
 
     def create_new(self):
         number = self._get_next_number()

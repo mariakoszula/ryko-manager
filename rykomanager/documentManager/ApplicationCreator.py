@@ -233,6 +233,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.sum_product_milk = 0
 
     def generate(self):
+        #TODO ASAP valiadte if all record have proper values base on annex here on in create method
         # TODO refactor to reuse generate
         self._generate_5()
         self._generate_5a()
@@ -353,7 +354,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             app.logger.info(
                 "Application for summary {0}/{1} for school {2} added".format(self.summary.no, self.summary.year,
                                                                               self.school.nick))
-            self.__increase_in_summary()
+            self.__increase_in_summary() # change this to use observer when new Application is added
             return True
         else:
             if DatabaseManager.remove_application(application[0].id):
@@ -372,11 +373,14 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         DatabaseManager.modify()
 
     def __increase_in_summary(self):
+        # TODO refactor idea: Summary should be obsevator of ApplicationCreator and perform informaton update
+        # overload _add_ method in Summary self + application - add products; self - application remove products
+        # increase/descrease number of schools setup weeks number not in model in SummraryCreator as only needed of document generation
+
         try:
             self.summary.set_number_of_weeks(self.common_data.get_week_numbers())
         except ValueError:
             raise
-        # TODO refactor
         self.summary.apple += self.product_data['apple']
         self.summary.pear += self.product_data['pear']
         self.summary.plum += self.product_data['plum']

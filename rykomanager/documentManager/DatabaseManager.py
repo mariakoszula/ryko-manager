@@ -72,6 +72,7 @@ class DatabaseManager(ABC):
         return db.session.query(School).join(School.contracts).filter(
             Contract.program_id.like(program_id)).order_by(Contract.contract_no).all()
 
+
     @staticmethod
     def get_school(school_id):
         return db.session.query(School).filter(School.id.like(school_id)).first()

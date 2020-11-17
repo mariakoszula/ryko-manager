@@ -435,6 +435,7 @@ class Summary(db.Model):
     def get_application_no(self):
         return "{0}/{1}/{2}".format(self.program.semester_no, self.no, self.program.school_year)
 
+
     __table_args__ = (
                         db.UniqueConstraint('no', 'year', 'program_id'),)
 

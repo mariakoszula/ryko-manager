@@ -39,6 +39,8 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
             return False
+        #TODO Validate if any records for this period already exsits if yes update record (remove and add)
+        # and notify that recodrd were update
 
         self.contract_date = datetime.strptime(contract_date, "%d.%m.%Y")
         self.validity_date = datetime.strptime(validity_date, "%d.%m.%Y")
