@@ -338,9 +338,9 @@ class Summary(db.Model):
                 ProductHandler(self.juice, 5, float(self.program.fruitVeg_price))]
 
     def __veg_list(self):
-        return [ProductHandler(self.carrot, 7, float(self.program.fruitVeg_price)),
-                ProductHandler(self.tomato, 5, float(self.program.fruitVeg_price)), ProductHandler(self.radish, 7, float(self.program.fruitVeg_price)),
-                ProductHandler(self.kohlrabi, 7, float(self.program.fruitVeg_price)), ProductHandler(self.pepper, 7, float(self.program.fruitVeg_price))]
+        return [ProductHandler(self.carrot, 8, float(self.program.fruitVeg_price)),
+                ProductHandler(self.tomato, 5, float(self.program.fruitVeg_price)), ProductHandler(self.radish, 8, float(self.program.fruitVeg_price)),
+                ProductHandler(self.kohlrabi, 8, float(self.program.fruitVeg_price)), ProductHandler(self.pepper, 8, float(self.program.fruitVeg_price))]
 
     def __dairy_list(self):
         return [ProductHandler(self.milk, 5, float(self.program.dairy_price)), ProductHandler(self.yoghurt, 5, float(self.program.dairy_price)),

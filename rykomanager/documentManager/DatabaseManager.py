@@ -82,8 +82,13 @@ class DatabaseManager(ABC):
         return School.query.all()
 
     @staticmethod
-    def get_all_contracts(school_id, program_id):
-        return Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id).all()
+    def get_all_contracts(school_id, program_id, asc = True):
+        if asc:
+            order = Contract.validity_date.asc()
+        else:
+            order = Contract.validity_date.desc()
+        return Contract.query.filter(Contract.school_id == school_id).filter(Contract.program_id == program_id)\
+            .order_by(order).all()
 
     @staticmethod
     def get_current_contract(school_id, program_id, date=None):
@@ -335,3 +340,24 @@ class DatabaseManager(ABC):
         assert(product_type == ProductType.DAIRY or product_type == ProductType.FRUIT_VEG)
         return Record.query.join(Contract).join(Product).filter(Record.date.like(cdate)).filter(Contract.school_id == school_id)\
                 .filter(Product.type.like(product_type)).first()
+
+    @staticmethod
+    def get_any_inconsistent_records_with_annex(program_id, school_id):
+        inconsistent = list()
+        records = DatabaseManager.get_school_records(program_id, school_id)
+        contracts = DatabaseManager.get_all_contracts(school_id, program_id, asc=False)
+        for record in records:
+            if record.date < record.contract.validity_date:
+                inconsistent.append(record)
+
+        for record in records:
+            proper_contract_id = None
+            for contract in contracts:
+                if record.date >= contract.validity_date:
+                    proper_contract_id = contract.id
+                    break
+            if proper_contract_id != record.contract_id:
+                inconsistent.append(record)
+        return inconsistent
+
+

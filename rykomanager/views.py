@@ -540,10 +540,14 @@ def create_summary():
                     flash(f"Próbjesz wygnerować błędny wniosek."
                           f"Ilosc tygodni dla {school.nick} nie zgadza sie z ilościa we wniosku {summary.number_of_weeks}.", 'error')
                     return redirect(url_for('program_form', program_id=session.get('program_id')))
-
+                except TypeError as e:
+                    flash(f"Nie można wygenerować wniosku. Błąd w szkole {school.nick}.\n"
+                          f"Błędne ilości na WZtkach: {e}",
+                          'error')
+                    return redirect(url_for('program_form', program_id=session.get('program_id')))
 
             for appCreator in appCreators:
-                summary_creator.school_no += 1 #TODO change this to use obeserver
+                summary_creator.school_no += 1 #TODO change this to update in some smarter way
                 appCreator.generate()
 
             summary_creator.generate()

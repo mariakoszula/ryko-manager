@@ -233,7 +233,6 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.sum_product_milk = 0
 
     def generate(self):
-        #TODO ASAP valiadte if all record have proper values base on annex here on in create method
         # TODO refactor to reuse generate
         self._generate_5()
         self._generate_5a()
@@ -291,6 +290,11 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         copyfile(path.join(self.output_directory, doc_5a_name), doc_5a_name_copy)
 
     def __prepare_data(self):
+        inconsistent_records = DatabaseManager.get_any_inconsistent_records_with_annex(self.program_id, self.school.id)
+        if inconsistent_records:
+            #TODO change this excpetion to some meaningfull one
+           raise TypeError(' | '.join([f"{record.date.year}-{record.date.month}-{record.date.day} {record.product.get_name_mapping()}" for record in inconsistent_records]))
+
         for data in self.tmp_data_to_rename:
             data.prepare()
 

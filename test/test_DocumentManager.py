@@ -4,8 +4,8 @@ from rykomanager.documentManager.RecordCreator import RecordCreator
 from os import path
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.models import Contract, ProductName, ProductType
-from rykomanager.documentManager.ApplicationCreator import Fruit, Veg, Dairy, CommonData, FruitVegSummary,\
-    DairySummary
+from rykomanager.documentManager.ApplicationCreator import Fruit, Veg, Dairy, CommonData, FruitVegSummary, \
+    DairySummary, ApplicationCreator
 
 
 class DB(object):
@@ -164,8 +164,8 @@ def test_product_info():
     assert (DatabaseManager.get_dates(program_id, end_week) == "12.01-18.01\n2021")
     assert (DatabaseManager.get_maxKids_perWeek(program_id, school_id, ProductType.FRUIT_VEG,
                                                 weeks=set([start_week])) == 310)
-    assert (DatabaseManager.get_portion_perWeek(program_id, school_id, ProductType.DAIRY, 13) == 1)
-    assert (DatabaseManager.get_portion_perWeek(program_id, school_id, ProductType.FRUIT_VEG, 13) == 2)
+    assert (DatabaseManager.get_portion_perWeek(program_id, school_id, ProductType.DAIRY, 13) == 2)
+    assert (DatabaseManager.get_portion_perWeek(program_id, school_id, ProductType.FRUIT_VEG, 13) == 3)
     assert (DatabaseManager.get_maxKids_perWeek(program_id, school_id, ProductType.FRUIT_VEG,
                                                 weeks=set([end_week])) if end_week in weeks else "-" == "-")
     assert (DatabaseManager.get_portion_perWeek(program_id, school_id, ProductType.FRUIT_VEG,
@@ -206,10 +206,15 @@ def test_product_info():
     assert (expected_data_dairy[2][ProductName.KEFIR] == dairy.get_amount(ProductName.KEFIR))
     assert (expected_data_dairy[2][ProductName.CHEESE] == dairy.get_amount(ProductName.CHEESE))
 
-
     fruit_veg_summary = FruitVegSummary(cpi)
     assert (expected_data_fruits[1] == fruit_veg_summary.get_kids())
     assert (expected_data_vegs[1] == fruit_veg_summary.get_kids())
 
     dairy_summary = DairySummary(cpi)
     assert (expected_data_dairy[1] == dairy_summary.get_kids())
+
+
+def test_inconsistent_records():
+    assert(len(DatabaseManager.get_any_inconsistent_records_with_annex(5, 1)) == 3)
+    assert(len(DatabaseManager.get_any_inconsistent_records_with_annex(5, 2)) == 0)
+
