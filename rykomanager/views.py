@@ -1,6 +1,7 @@
 from flask import render_template, request, flash, redirect, url_for, session
 import datetime
-from rykomanager import app
+from rykomanager import app, config_parser, config_file
+from os import path
 from rykomanager.documentManager.AnnexCreator import AnnexCreator
 from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
@@ -149,7 +150,11 @@ def get_remaning_products(school_data, product_type):
     products = DatabaseManager.get_products(session.get('program_id'), product_type)
 
     for school in schools:
-        kids_no = DatabaseManager.get_current_contract(school.id, session.get('program_id')).dairy_products
+        current_contract = DatabaseManager.get_current_contract(school.id, session.get('program_id'))
+        if not current_contract:
+            continue
+        kids_no = current_contract.dairy_products
+
         if not kids_no or kids_no == 0:
             continue
 
@@ -567,6 +572,12 @@ def program():
         session.get('program_id'))
     if current_session_program:
         session['program_id'] = current_session_program.id
+        program = DatabaseManager.get_program(session['program_id'])
+        school_year = program.school_year.replace("/", "_")
+        config_parser.set('Program', 'year', f"{school_year}")
+        config_parser.set('Program', 'semester', f"{program.semester_no}")
+        with open(config_file, 'w') as configfile:
+            config_parser.write(configfile)
     return render_template("program.html", Programs=all_programs, current=current_session_program,
                            invalid_program_id=INVALID_ID)
 
