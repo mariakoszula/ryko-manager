@@ -6,6 +6,7 @@ from sqlalchemy import func, exc, update, or_
 import datetime
 from rykomanager.DateConverter import DateConverter
 from typing import Set
+from rykomanager.name_strings import DATABASE_DATE_PATTERN
 
 class DatabaseManager(ABC):
 
@@ -45,9 +46,9 @@ class DatabaseManager(ABC):
         return Contract.query.filter(Contract.program_id==program_id).filter(Contract.is_annex == False).order_by(Contract.contract_no).all()
 
     @staticmethod
-    def is_annex(validity_date, school_id):
+    def is_annex(validity_date, school_id, program_id):
         rdate = validity_date if not isinstance(validity_date, datetime.datetime) else DateConverter.to_string(validity_date)
-        return Contract.query.join(Contract.school).filter(School.id==school_id)\
+        return Contract.query.join(Contract.school).filter(Contract.program_id == program_id).filter(School.id==school_id)\
             .filter(Contract.validity_date == DateConverter.to_date(rdate)).all()
 
     @staticmethod
@@ -92,7 +93,7 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_current_contract(school_id, program_id, date=None):
-        date_to_compare = DateConverter.to_date(date) if date else datetime.datetime.now()
+        date_to_compare = date if date else datetime.datetime.now()
         res = School.query.filter(School.id.like(school_id)).first()
         for contract in res.contracts:
             if contract.program_id == program_id and contract.validity_date.date() <= date_to_compare.date():
@@ -122,8 +123,8 @@ class DatabaseManager(ABC):
 
     @staticmethod
     def get_daily_records(program_id, current_date, generation_date=None):
-        cdate = DateConverter.to_date(current_date)
-        gen_date = DateConverter.to_date(generation_date) if generation_date else None
+        cdate = DateConverter.to_date(current_date, pattern=DATABASE_DATE_PATTERN)
+        gen_date = DateConverter.to_date(generation_date, pattern=DATABASE_DATE_PATTERN) if generation_date else None
         if gen_date:
             return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).filter(Record.generation_date.like(gen_date)).all()
         return Record.query.filter(Product.program_id.like(program_id)).filter(Record.date.like(cdate)).all()
@@ -285,8 +286,8 @@ class DatabaseManager(ABC):
         if isinstance(program, Program):
             program.semester_no = data_to_update['semester_no']
             program.school_year = data_to_update['school_year']
-            program.fruitVeg_price = float(data_to_update['fruitVeg_price'].replace(",", "."))
-            program.dairy_price = float(data_to_update['dairy_price'].replace(",", "."))
+            program.fruitVeg_price = float(data_to_update['fruitVeg_price'].replace(",", ".")) if data_to_update['fruitVeg_price'] else 0
+            program.dairy_price = float(data_to_update['dairy_price'].replace(",", ".")) if data_to_update['dairy_price'] else 0
             program.start_date = data_to_update['start_date']
             program.end_date = data_to_update['end_date']
             program.dairy_min_per_week = data_to_update['dairy_min_per_week']
@@ -336,7 +337,7 @@ class DatabaseManager(ABC):
         if not product_id:
             return None
         product_type = Product.query.filter(Product.id == product_id).one().type
-        cdate = DateConverter.to_date(current_date)
+        cdate = DateConverter.to_date(current_date, pattern=DATABASE_DATE_PATTERN)
         assert(product_type == ProductType.DAIRY or product_type == ProductType.FRUIT_VEG)
         return Record.query.join(Contract).join(Product).filter(Record.date.like(cdate)).filter(Contract.school_id == school_id)\
                 .filter(Product.type.like(product_type)).first()

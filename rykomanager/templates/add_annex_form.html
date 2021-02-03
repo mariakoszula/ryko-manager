@@ -17,8 +17,8 @@
                                 {%- endfor %}
                                 <form role="form" action="{{ request.path }}" method="post">
                                             <div class="form-group">
-                                                <label>Data zawaracia (dd.mm.rrrr)</label><input class="form-control" name="contract_date" {% if annex %} value="{{ annex.convert_date_to_string() }}" {% endif %}>
-                                                <label>Data obowiązywania (dd.mm.rrrr)</label><input class="form-control" name="validity_date" {% if annex %} value="{{ annex.convert_validity_date_to_string() }}" {% endif %}>
+                                                <label>Data zawaracia</label><input class="form-control" name="contract_date" {% if annex %} value="{{ annex.convert_date_to_string() }}" {% endif %}>
+                                                <label>Data obowiązywania</label><input class="form-control" name="validity_date" {% if annex %} value="{{ annex.convert_validity_date_to_string() }}" {% endif %}>
                                                 <label>Produkt owocowo-warzywny</label><input class="form-control" name="fruitVeg_products" {% if annex %} value="{{ annex.fruitVeg_products }}" {% endif %}>
                                                 <label>Produkt mleczny</label><input class="form-control" name="dairy_products" {% if annex %} value="{{ annex.dairy_products }}" {% endif %}>
                                             </div>

@@ -1,3 +1,5 @@
+import datetime
+
 from rykomanager import db, config_parser
 import enum
 from os import path
@@ -106,7 +108,7 @@ class Program(db.Model):
         if self.contracts:
             return DateConverter.to_string(self.contracts[0].contract_date)
         else:
-            return "rrrr-mm-dd"
+            return DateConverter.to_string(datetime.datetime.now())
 
     def get_current_semester(self):
         if self.semester_no == 1:

@@ -6,7 +6,7 @@ from rykomanager.DateConverter import DateConverter
 import re
 from os import path, listdir, makedirs
 import datetime
-from rykomanager.name_strings import ALL_RECORDS_DOC_NAME
+from rykomanager.name_strings import ALL_RECORDS_DOC_NAME, DATABASE_DATE_PATTERN
 
 
 class RecordCreator(DocumentCreator, DatabaseManager):
@@ -14,9 +14,9 @@ class RecordCreator(DocumentCreator, DatabaseManager):
 
     def __init__(self, program_id, current_date, school_id, product_id, generation_date=""):
         self.program_id = program_id
-        self.date = DateConverter.to_date(current_date)
+        self.date = DateConverter.to_date(current_date, pattern=DATABASE_DATE_PATTERN)
         self.state = RecordState.NOT_DELIVERED
-        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, current_date)
+        self.contract = DatabaseManager.get_current_contract(school_id, self.program_id, self.date)
         self.product = DatabaseManager.get_product(product_id)
         self.doc_data = dict()
         self.generation_date = DateConverter.to_date(generation_date) if generation_date else datetime.date.today()

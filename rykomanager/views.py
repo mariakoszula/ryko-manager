@@ -11,8 +11,8 @@ from rykomanager.models import ProductName, ProductType, School, Program, Week, 
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
-from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID, FILL_STR, FILL_BY_SCHOOL, DEFAULT_DATE_STR, \
-    FILL_STR_SCHOOL, ALL_RECORDS_DOC_NAME
+from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID, FILL_STR, FILL_BY_SCHOOL, \
+    FILL_STR_SCHOOL
 
 
 @app.route("/")
@@ -587,9 +587,11 @@ def program_form(program_id=INVALID_ID):
     if program_id == INVALID_ID:
         id_of_program_being_added = DatabaseManager.id_of_program_being_added(FILL_STR)
         if not id_of_program_being_added:
+            default_date = DateConverter.to_string(datetime.datetime.now())
+            print(f"Default date: {default_date}")
             new_program = Program(semester_no=FILL_STR, school_year=FILL_STR, fruitVeg_price=FILL_STR,
-                                  dairy_price=FILL_STR, start_date=DateConverter.to_date(DEFAULT_DATE_STR),
-                                  end_date=DateConverter.to_date(DEFAULT_DATE_STR),
+                                  dairy_price=FILL_STR, start_date=DateConverter.to_date(default_date),
+                                  end_date=DateConverter.to_date(default_date),
                                   dairy_min_per_week=FILL_STR, fruitVeg_min_per_week=FILL_STR, dairy_amount=FILL_STR,
                                   fruitVeg_amount=FILL_STR)
             if DatabaseManager.add_row(new_program):

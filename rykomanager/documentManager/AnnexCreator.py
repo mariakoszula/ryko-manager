@@ -35,7 +35,7 @@ class AnnexCreator(DocumentCreator, DatabaseManager):
 
     def create(self, contract_date=None, validity_date=None, fruitVeg_products=None, dairy_products=None):
         if validity_date and DatabaseManager.is_annex(DateConverter.DateConverter.to_date(validity_date, pattern="%d.%m.%Y"),
-                                                                            self.school.id):
+                                                                            self.school.id, self.program_id):
             app.logger.error("[%s] Annex already exists [%s, %s]. Only modifying is possible", __class__.__name__,
                              self.school.nick, self.validity_date)
             return False

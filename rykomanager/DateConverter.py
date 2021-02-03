@@ -1,5 +1,5 @@
 import datetime
-from rykomanager.name_strings import COMMON_DATE_PATTERN
+from rykomanager.name_strings import COMMON_VIEW_DATE_PATTERN
 import re
 
 class DateConversionError(Exception):
@@ -17,11 +17,11 @@ class DateConversionError(Exception):
 
 class DateConverter(object):
     @staticmethod
-    def to_string(date, pattern=COMMON_DATE_PATTERN):
+    def to_string(date, pattern=COMMON_VIEW_DATE_PATTERN):
         return datetime.datetime.strftime(date, pattern)
 
     @staticmethod
-    def to_date(date, pattern=COMMON_DATE_PATTERN):
+    def to_date(date, pattern=COMMON_VIEW_DATE_PATTERN):
         if isinstance(date, str):
             return datetime.datetime.strptime(date, pattern)
         elif isinstance(date, datetime.datetime):

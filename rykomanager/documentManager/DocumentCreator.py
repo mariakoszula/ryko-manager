@@ -10,7 +10,7 @@ from os import path, makedirs, remove, rename
 
 class DocumentCreator(ABC):
     wdFormatPDF = 17
-    pdf_converter = config_parser.get('Common', 'libreoffice_converter_path')
+    pdf_converter = path.normpath(config_parser.get('Common', 'libreoffice_converter_path'))
 
     def __init__(self, template_document, output_directory):
         if not path.exists(template_document):
@@ -26,16 +26,15 @@ class DocumentCreator(ABC):
         super(DocumentCreator, self).__init__()
 
     @abstractmethod
-    def generate(self, new_doc_name, gen_pdf=False): #@TODO fix this method for generating pdfs
+    def generate(self, new_doc_name, gen_pdf=True): #@TODO fix this method for generating pdfs
         generated_file = path.join(self.output_directory, new_doc_name)
 
-        res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory) #TODO: pdf are not genereting correctly for 5
-        if gen_pdf and res:
-            DocumentCreator.generate_pdf(generated_file, self.output_directory)
+        res = DocumentCreator.end_doc_gen(self.document, generated_file, self.output_directory, gen_pdf) #TODO: pdf are not genereting correctly for 5
+        if res:
             return generated_file
-        elif res:
-            DocumentCreator.print_pdf(generated_file)
-            return generated_file
+        # elif res:
+        #     DocumentCreator.print_pdf(generated_file)
+        #     return generated_file
         return None #@TODO create exception here and return the ProperException
 
     @staticmethod
@@ -60,6 +59,9 @@ class DocumentCreator(ABC):
     @staticmethod
     def generate_pdf(docx_to_convert, output_dir):
         try:
+            docx_to_convert = path.normpath(docx_to_convert)
+            output_dir = path.normpath(output_dir)
+            app.logger.info(f"Generate pdf for {docx_to_convert} using {DocumentCreator.pdf_converter} save in {output_dir}")
             args = [DocumentCreator.pdf_converter, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, docx_to_convert]
             subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3000)
         except Exception as e:
@@ -84,7 +86,7 @@ class DocumentCreator(ABC):
         return MailMerge(doc_template)
 
     @staticmethod
-    def end_doc_gen(document, generated_file, output_dir, gen_pdf=False):
+    def end_doc_gen(document, generated_file, output_dir, gen_pdf=True):
         document.write(generated_file)
         app.logger.info("[%s] Created new output directory: %s", __class__.__name__, generated_file, )
         if gen_pdf:

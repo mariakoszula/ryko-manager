@@ -17,7 +17,7 @@
                                 {%- endfor %}
                                 <form role="form" action="{{ request.path }}" method="post">
                                             <div class="form-group">
-                                                <label>Data zawarcia (rrrr-mm-dd) </label><input class="form-control" name="contract_date" {% if contract %} value="{{ contract.convert_date_to_string() }}" {% endif %}>
+                                                <label>Data zawarcia</label><input class="form-control" name="contract_date" {% if contract %} value="{{ contract.convert_date_to_string() }}" {% endif %}>
                                                 <label>Produkt owocowo-warzywny</label><input class="form-control" name="fruitVeg_products" {% if contract %} value="{{ contract.fruitVeg_products }}" {% endif %}>
                                                 <label>Produkt mleczny</label><input class="form-control" name="dairy_products" {% if contract %} value="{{ contract.dairy_products }}" {% endif %}>
                                             </div>
