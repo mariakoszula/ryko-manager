@@ -43,6 +43,13 @@
 
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.7.14/css/bootstrap-datetimepicker.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.pl.min.js"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -175,23 +182,32 @@
 <script src="/static/vendor/datatables-responsive/dataTables.responsive.js"></script>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#divided-table-with-search').DataTable({
             responsive: true,
+            pageLength: 50,
             language: {"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Polish.json"}
         });
     });
-        $(document).ready(function() {
+    $(document).ready(function () {
         $('#wz-table').DataTable({
             responsive: true,
-            "pageLength": 200,
-             stateSave: true,
+            pageLength: 50,
+            stateSave: true,
             language: {"url": "//cdn.datatables.net/plug-ins/1.10.19/i18n/Polish.json"}
         });
     });
+    $(document).ready(function () {
+        $('.input-daterange').datepicker({
+            format: 'dd.mm.yyyy',
+            autoclose: true,
+            calendarWeeks: false,
+            clearBtn: true,
+            disableTouchKeyboard: true,
+            locale: 'pl',
+            language: 'pl'
+        });
 
-    $(function() {
-      $('#datapicer').datetimepicker();
     });
     {% block script %}
 

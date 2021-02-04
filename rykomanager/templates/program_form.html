@@ -1,95 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %}Program {{Program.semester_no }} na {{Program.school_year }}{% endblock %}
+{% block title %}Program {{ Program.semester_no }} na {{ Program.school_year }}{% endblock %}
 
 {% block content %}
-<div class="col-lg-12">
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            Edytuj dane programu
-        </div>
-        <div class="panel-body">
-            <div class="col-lg-6">
-                <form role="form" action="{{ request.path }}" method="post">
-                    <div class="form-group">
-                        <label>Semestr</label><input class="form-control" name="semester_no" {% if Program.semester_no
-                                                     %} value="{{ Program.semester_no }}" {% endif %}>
-                        <label>Rok Szkolny np. 2018/2019</label><input class="form-control" name="school_year" {% if
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Edytuj dane programu
+            </div>
+            <div class="panel-body">
+                <div class="col-lg-6">
+                    <form role="form" action="{{ request.path }}" method="post" autocomplete="off">
+                        <div class="form-group">
+                            <label>Semestr</label><input type="number" class="form-control" name="semester_no"
+                                {% if Program.semester_no %} value="{{ Program.semester_no }}" {% endif %}>
+                            <label>Rok Szkolny np. 2018/2019</label><input class="form-control" name="school_year" {% if
                                                                        Program.school_year %}
-                                                                       value="{{ Program.school_year }}" {% endif %}>
-                        <label>Data rozpoczęcia</label><input class="form-control" name="start_date" {% if
+                                                                           value="{{ Program.school_year }}" {% endif %}>
+                            <div class="input-daterange">
+                                <label class="form-control-placeholder">Data rozpoczęcia</label><input
+                                    class="form-control text-left" name="start_date" {% if
                                                               Program.start_date %}
-                                                              value="{{ Program.convert_start_date_to_string() }}" {%
-                                                              endif %}>
-                        <label>Data zakończenia</label><input class="form-control" name="end_date" {% if
-                                                              Program.end_date
-                                                              %}value="{{ Program.convert_start_end_to_string() }}" {%
-                                                              endif %}>
-                        <label>Zwrot za produkt owocowo-warzywny (netto)</label><input class="form-control"
-                                                                               name="fruitVeg_price" {% if
-                                                                               Program.fruitVeg_price
-                                                                               %}value="{{ Program.fruitVeg_price }}" {%
-                                                                               endif %}>
-                        <label>Zwrot za produkt nabiałowy (netto)</label><input class="form-control" name="dairy_price" {% if
-                                                                        Program.dairy_price
-                                                                        %}value="{{ Program.dairy_price }}" {% endif %}>
-                        <label>Min. ilość produktów nabiałowych w tygodniu</label><input class="form-control"
-                                                                                                name="dairy_min_per_week"
-                                                                                                {% if
-                                                                                                Program.dairy_min_per_week
-                                                                                                %}value="{{ Program.dairy_min_per_week }}"
-                                                                                                {% endif %}>
-                        <label>Min. ilość produktów owocowo-warzywnych w tygodniu</label><input class="form-control"
-                                                                                         name="fruitVeg_min_per_week" {%
-                                                                                         if
-                                                                                         Program.fruitVeg_min_per_week
-                                                                                         %}value="{{ Program.fruitVeg_min_per_week }}"
-                                                                                         {% endif %}>
-                        <label>Suma podań produktów nabiałowych</label><input class="form-control"
-                                                                                     name="dairy_amount" {% if
-                                                                                     Program.dairy_amount
-                                                                                     %}value="{{ Program.dairy_amount }}"
-                                                                                     {% endif %}>
-                        <label>Suma podań produktów owocowo-warzywnych</label><input class="form-control"
-                                                                              name="fruitVeg_amount" {% if
-                                                                              Program.fruitVeg_amount
-                                                                              %}value="{{ Program.fruitVeg_amount }}" {%
-                                                                              endif %}>
-                        </td>
-                    </div>
-
-                    <button type="submit" class="btn btn-outline btn-primary btn-lg btn-block">ZAPISZ</button>
-                </form>
-                <br/>
-                <div>
-                    {%- for category, message in get_flashed_messages(with_categories = true) %}
-                    {% if category == 'error' %}
-                    <div class="alert alert-danger">
-                        {% elif category == 'success'%}
-                        <div class="alert alert-success">
-                            {% endif %}
-                            {{ message }}
+                                    value="{{ Program.convert_start_date_to_string() }}" {% endif %}>
+                            </div>
+                            <div class="input-daterange">
+                                <label class="form-control-placeholder">Data zakończenia</label><input
+                                    class="form-control text-left" name="end_date" {% if
+                                                              Program.end_date %}value="{{ Program.convert_start_end_to_string() }}" {% endif %}>
+                            </div>
+                            <label>Zwrot za produkt owocowo-warzywny (netto)</label><input type="number" step="0.01"
+                                                                                           class="form-control"
+                                                                                           name="fruitVeg_price" {% if
+                                                                               Program.fruitVeg_price %}value="{{ Program.fruitVeg_price }}" {% endif %}>
+                            <label>Zwrot za produkt nabiałowy (netto)</label><input type="number" step="0.01"
+                                                                                    class="form-control"
+                                                                                    name="dairy_price" {% if
+                                                                        Program.dairy_price %}value="{{ Program.dairy_price }}" {% endif %}>
+                            <label>Min. ilość produktów nabiałowych w tygodniu</label><input type="number"
+                                                                                             class="form-control"
+                                                                                             name="dairy_min_per_week"
+                                                                                             {% if
+                                                                                                Program.dairy_min_per_week %}value="{{ Program.dairy_min_per_week }}"
+                                                                                             {% endif %}>
+                            <label>Min. ilość produktów owocowo-warzywnych w tygodniu</label><input type="number"
+                                                                                                    class="form-control"
+                                                                                                    name="fruitVeg_min_per_week"
+                                                                                                    {% if
+                                                                                         Program.fruitVeg_min_per_week %}value="{{ Program.fruitVeg_min_per_week }}"
+                                                                                                    {% endif %}>
+                            <label>Suma podań produktów nabiałowych</label><input type="number" class="form-control"
+                                                                                  name="dairy_amount" {% if
+                                                                                     Program.dairy_amount %}value="{{ Program.dairy_amount }}"
+                                                                                  {% endif %}>
+                            <label>Suma podań produktów owocowo-warzywnych</label><input type="number"
+                                                                                         class="form-control"
+                                                                                         name="fruitVeg_amount" {% if
+                                                                              Program.fruitVeg_amount %}value="{{ Program.fruitVeg_amount }}" {% endif %}>
+                            </td>
                         </div>
-                    </div>
+
+                        <button type="submit" class="btn btn-outline btn-primary btn-lg btn-block">ZAPISZ</button>
+                    </form>
+                    <br/>
+                    <div>
+                        {%- for category, message in get_flashed_messages(with_categories = true) %}
+                            {% if category == 'error' %}
+                                <div class="alert alert-danger">
+                            {% elif category == 'success' %}
+                                <div class="alert alert-success">
+                            {% endif %}
+                        {{ message }}
+                        </div>
+                        </div>
                         {%- endfor %}
                         <div class="col-lg-12">
                             <form role="form" action="{{ url_for( 'generate_contracts', program_id=Program.id) }}"
                                   method="post">
                                 <label>Liczba zawartych umów: {{ Program.contract_no() }}</label>
                                 <div class="form-group">
-                                    <label>Data zawarcia umów</label><input class="form-control" name="contract_date"
-                                                                            value="{{ Program.contract_date() }}">
+                                    <div class="input-daterange">
+                                        <label class="form-control-placeholder">Data zawarcia umów</label><input
+                                            class="form-control" name="contract_date"
+                                            value="{{ Program.contract_date() }}">
+                                    </div>
                                     </td>
                                 </div>
-                                <button type="submit" class="btn btn-outline btn-success btn-lg btn-block">PRZYGOTUJ UMOWY</button>
+                                <button type="submit" class="btn btn-outline btn-success btn-lg btn-block">PRZYGOTUJ
+                                    UMOWY
+                                </button>
                             </form>
 
 
-                            <form role="form" action="{{ url_for( 'create_summary') }}"
+                            <form role="form" autocomplete="off" action="{{ url_for( 'create_summary') }}"
                                   method="post">
                                 <div class="form-group">
-                                    <label>Data ewidencji</label><input class="form-control" name="application_date"
-                                                                        value="">
+                                    <div class="input-daterange">
+                                        <label class="form-control-placeholder">Data ewidencji</label><input
+                                            class="form-control" name="application_date"
+                                            value="">
+                                    </div>
                                     </td>
                                 </div>
                                 <div class="form-group">
@@ -98,121 +107,124 @@
                                 </div>
                                 <div style="text-align: justify" class="form-group">
                                     {% for school  in Schools %}
-                                       <label for="application_schools">{{ school.nick }}</label>
-                                       <input style="margin-right: 10px" type="checkbox" value={{ school.id }} name="application_schools">
-                                        {% if loop.index%5 == 0%}
-                                        <br/>
+                                        <label for="application_schools">{{ school.nick }}</label>
+                                        <input style="margin-right: 10px" type="checkbox"
+                                               value={{ school.id }} name="application_schools">
+                                        {% if loop.index%5 == 0 %}
+                                            <br/>
                                         {% endif %}
                                     {% endfor %}
                                 </div>
                                 <div class="form-group">
                                     {% if Summary %}
-                                    {% for summary, schools in Summary.items() %}
-                                        <br/>
-                                        <label for="application_summary">Wniosek nr {{ summary.get_application_no() }}</label>
-                                        <input type="radio" value={{ summary.no }} name="application_summary">
-                                        {{  schools }}
-                                        <br/>
-                                    {% endfor %}
+                                        {% for summary, schools in Summary.items() %}
+                                            <br/>
+                                            <label for="application_summary">Wniosek
+                                                nr {{ summary.get_application_no() }}</label>
+                                            <input type="radio" value={{ summary.no }} name="application_summary">
+                                            {{ schools }}
+                                            <br/>
+                                        {% endfor %}
                                     {% endif %}
                                 </div>
-                                <button type="submit" class="btn btn-outline  btn-warning  btn-lg btn-block">PRZYGOTUJ DOKUMENTY DO WNIOSKU O POMOC
+                                <button type="submit" class="btn btn-outline  btn-warning  btn-lg btn-block">PRZYGOTUJ
+                                    DOKUMENTY DO WNIOSKU O POMOC
                                 </button>
                             </form>
                         </div>
                     </div>
 
                 </div>
-            <div class="col-lg-6">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>Nazwa</th>
-                            <th>Ilość podań</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for product in Program.products %}
-                        {% if product.is_fruit_veg() %}
-                        <tr class="success">
-                            <td>{{ product.get_name_mapping() }}</td>
-                            <td>{{ product.min_amount }}</td>
-                        </tr>
-                        {% endif %}
-                        {% endfor %}
-                        {% for product in Program.products %}
-                        {% if product.is_dairy() %}
-                        <tr class="warning">
-                            <td>{{ product.get_name_mapping() }}</td>
-                            <td>{{ product.min_amount }}</td>
-                        </tr>
-                        {% endif %}
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="panel panel-yellow">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-tasks fa-5x"></i>
-                            </div>
-                            <div class="col-xs-9 text-right">
-                                <div class="huge">Dodaj Produkt</div>
-                            </div>
-                        </div>
+                <div class="col-lg-6">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Nazwa</th>
+                                <th>Ilość podań</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for product in Program.products %}
+                                {% if product.is_fruit_veg() %}
+                                    <tr class="success">
+                                        <td>{{ product.get_name_mapping() }}</td>
+                                        <td>{{ product.min_amount }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            {% for product in Program.products %}
+                                {% if product.is_dairy() %}
+                                    <tr class="warning">
+                                        <td>{{ product.get_name_mapping() }}</td>
+                                        <td>{{ product.min_amount }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <a href="{{ url_for( 'add_product', program_id=Program.id, product_type=0) }}">
-                        <div class="panel-footer">
-                            <span class="pull-left">Dodaj</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-tasks fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">Dodaj Produkt</div>
+                                </div>
+                            </div>
                         </div>
-                    </a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Data rozpoczęcia</th>
-                            <th>Data zakończenia</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for week in Program.weeks %}
-                        <tr>
-                            <td>{{ week.week_no }}</td>
-                            <td>{{ week.convert_start_date_to_string() }}</td>
-                            <td>{{ week.convert_start_end_to_string() }}</td>
+                        <a href="{{ url_for( 'add_product', program_id=Program.id, product_type=0) }}">
+                            <div class="panel-footer">
+                                <span class="pull-left">Dodaj</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Data rozpoczęcia</th>
+                                <th>Data zakończenia</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for week in Program.weeks %}
+                                <tr>
+                                    <td>{{ week.week_no }}</td>
+                                    <td>{{ week.convert_start_date_to_string() }}</td>
+                                    <td>{{ week.convert_start_end_to_string() }}</td>
 
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-tasks fa-5x"></i>
-                            </div>
-                            <div class="col-xs-9 text-right">
-                                <div class="huge">Dodaj Tydzień</div>
-                            </div>
-                        </div>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <a href="{{ url_for( 'add_week', program_id=Program.id) }}">
-                        <div class="panel-footer">
-                            <span class="pull-left">Dodaj</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-tasks fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">Dodaj Tydzień</div>
+                                </div>
+                            </div>
                         </div>
-                    </a>
+                        <a href="{{ url_for( 'add_week', program_id=Program.id) }}">
+                            <div class="panel-footer">
+                                <span class="pull-left">Dodaj</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
