@@ -505,11 +505,20 @@ def parse_list_of_weeks(weeks: str):
     for weeks in weeks_parts:
         if "-" in weeks:
             weeks_range = weeks.split("-")
-            weeks_list.extend([i for i in range(int(weeks_range[0]), int(weeks_range[1])+1)])
+            weeks_list.extend([i for i in range(int(weeks_range[0]), int(weeks_range[1]) + 1)])
         else:
             weeks_list.append(int(weeks))
     weeks_list.sort()
     return set(weeks_list)
+
+
+@app.route('/next_summary')
+def next_summary():
+    # TODO impelemnt logic for next summary, check what are weeks for in *.ini file
+    print("Impelment this functionality")
+    if not session.get('program_id'):
+        return redirect(url_for('program'))
+    return redirect(url_for('program'))
 
 
 @app.route('/create_summary', methods=['POST'])
@@ -543,7 +552,8 @@ def create_summary():
                 except ValueError as e:
                     app.logger.error(f"Cannot create application for {school.nick}: {e}")
                     flash(f"Próbjesz wygnerować błędny wniosek."
-                          f"Ilosc tygodni dla {school.nick} nie zgadza sie z ilościa we wniosku {summary.number_of_weeks}.", 'error')
+                          f"Ilosc tygodni dla {school.nick} nie zgadza sie z ilościa we wniosku {summary.number_of_weeks}.",
+                          'error')
                     return redirect(url_for('program_form', program_id=session.get('program_id')))
                 except TypeError as e:
                     flash(f"Nie można wygenerować wniosku. Błąd w szkole {school.nick}.\n"
@@ -552,7 +562,7 @@ def create_summary():
                     return redirect(url_for('program_form', program_id=session.get('program_id')))
 
             for appCreator in appCreators:
-                summary_creator.school_no += 1 #TODO change this to update in some smarter way
+                summary_creator.school_no += 1  # TODO change this to update in some smarter way
                 appCreator.generate()
 
             summary_creator.generate()
@@ -582,6 +592,11 @@ def program():
                            invalid_program_id=INVALID_ID)
 
 
+def is_current_program_set(current_program, config_parser):
+    return str(config_parser.get("Program", "year")) == str(current_program.school_year.replace("/", "_")) and int(
+        config_parser.get("Program", "semester")) == int(current_program.semester_no)
+
+
 @app.route('/program_form/<int:program_id>', methods=['GET', 'POST'])
 def program_form(program_id=INVALID_ID):
     if program_id == INVALID_ID:
@@ -602,17 +617,24 @@ def program_form(program_id=INVALID_ID):
             return redirect(url_for('program_form', program_id=id_of_program_being_added.id))
 
     current_program = DatabaseManager.get_program(program_id)
-    schools_with_contract = DatabaseManager.get_all_schools_with_contract(current_program.id)
-    available_summary = DatabaseManager.get_summaries(current_program.id) # TODO only summary for current_semester from config.ini
-    #TODO if each school has at least one school_with_contract change this to show for second part
-    summaries_data = dict()
-    if not available_summary:
-        school_to_display = schools_with_contract
-    else:
-        school_to_display = [school for school in schools_with_contract
-         if not any([DatabaseManager.get_application(school.id, summary.id) for summary in available_summary])]
-        summaries_data = {k: ", ".join([application.school.nick for application in DatabaseManager.get_school_with_summary(k.id)])
-                            for k in available_summary}
+    school_without_summary = None
+    summaries_data = None
+    if is_current_program_set(current_program, config_parser):
+        schools_with_contract = DatabaseManager.get_all_schools_with_contract(current_program.id)
+        available_summary = DatabaseManager.get_summaries(current_program.id)
+        # TODO if each school has at least one school_with_contract change this to show for second part
+        summaries_data = dict()
+        if not available_summary:
+            school_without_summary = schools_with_contract
+        else:
+            school_without_summary = [school for school in schools_with_contract
+                                      if not any(
+                    [DatabaseManager.get_application(school.id, summary.id) for summary in available_summary])]
+            summaries_data = {
+                k: ", ".join(
+                    [application.school.nick for application in DatabaseManager.get_school_with_summary(k.id) if
+                     application.school])
+                for k in available_summary}
 
     if request.method == 'POST':
         data_to_update = {"semester_no": empty_if_none(request.form["semester_no"]),
@@ -627,7 +649,7 @@ def program_form(program_id=INVALID_ID):
                           "fruitVeg_amount": empty_if_none(request.form["fruitVeg_amount"])}
         program_id = DatabaseManager.update_program_data(current_program, **data_to_update)
         return redirect(url_for('program_form', program_id=program_id))
-    return render_template("program_form.html", Program=current_program, Schools=school_to_display,
+    return render_template("program_form.html", Program=current_program, Schools=school_without_summary,
                            Summary=summaries_data)
 
 
@@ -673,7 +695,9 @@ def add_product(program_id, product_type):
 def generate_contracts(program_id):
     current_program = DatabaseManager.get_program(program_id)
     contract_date = request.form["contract_date"]
-    if not contract_date or contract_date == "dd.mm.rrrr":
+    if not is_current_program_set(current_program, config_parser):
+        flash('Żeby wygenerować umowy ustaw program jako aktulany', 'error')
+    elif not contract_date or contract_date == "dd.mm.rrrr":
         flash('Uzupełnij datę zawarcia umów', 'error')
     else:
         if session.get('program_id') == program_id:

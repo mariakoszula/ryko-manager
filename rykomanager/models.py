@@ -91,6 +91,9 @@ class Program(db.Model):
     db.UniqueConstraint('school_year', 'semester_no')
     __table_args__ = {'extend_existing': True, }
 
+    def __repr__(self):
+        return f"Program: {self.id} semester_no:{self.semester_no} year:{self.school_year}"
+
     def convert_start_date_to_string(self):
         return DateConverter.to_string(self.start_date)
 
