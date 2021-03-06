@@ -1,7 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for, session
 import datetime
 from rykomanager import app, config_parser, config_file
-from os import path
 from rykomanager.documentManager.AnnexCreator import AnnexCreator
 from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
@@ -13,7 +12,8 @@ from rykomanager.documentManager.RecordCreator import RecordCreator
 from rykomanager.DateConverter import DateConverter
 from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID, FILL_STR, FILL_BY_SCHOOL, \
     FILL_STR_SCHOOL
-
+from rykomanager.common import parse_special_string_format_to_set, empty_if_none
+import json
 
 @app.route("/")
 def index():
@@ -228,12 +228,6 @@ def create_register():
     RegisterCreator(session.get('program_id')).create()
     flash('Rejestr został wygenerowany pomyślnie', 'info')
     return schools_all()
-
-
-def empty_if_none(value):
-    if not value:
-        return ""
-    return value
 
 
 @app.route('/school_form/<int:school_id>', methods=['GET', 'POST'])
@@ -484,11 +478,6 @@ def school_records(school_id):
     return render_template("generated_record_per_school.html", records=records)
 
 
-# @app.route('/school_records/<int:school_id>/<int:record_id>', methods=['GET', 'POST'])
-# def modify_record(record_id):
-#     record=DatabaseManager.get_record(record_id)
-#     return render_template("modify_record.html", record=record)
-
 @app.context_processor
 def my_utility_processor():
     def update_record_state(record=None):
@@ -498,27 +487,57 @@ def my_utility_processor():
     return dict(update_state=update_record_state)
 
 
-def parse_list_of_weeks(weeks: str):
-    # 1,2,3,4 or 1-6,14 or 13,1-6
-    weeks_list = list()
-    weeks_parts = weeks.split(",")
-    for weeks in weeks_parts:
-        if "-" in weeks:
-            weeks_range = weeks.split("-")
-            weeks_list.extend([i for i in range(int(weeks_range[0]), int(weeks_range[1]) + 1)])
-        else:
-            weeks_list.append(int(weeks))
-    weeks_list.sort()
-    return set(weeks_list)
+def get_session_data_from_session():
+    return json.loads(session.get('program_id_summary_set_mapping')) if session.get(
+        'program_id_summary_set_mapping') else dict()
+
+
+def get_summary_set_from_session_data(program_id):
+    program_id_summary_set_mapping = get_session_data_from_session()
+    program_id = str(program_id)
+    summaries = program_id_summary_set_mapping.get(program_id, [summary.no for summary in DatabaseManager.get_summaries(program_id)]) \
+        if program_id_summary_set_mapping else 1
+    if not isinstance(summaries, list):
+        summaries = [summaries]
+    return summaries
+
+
+def update_program_id_summary_set_mapping(program_id, new_summary_no = None):
+    program_id_summary_set_mapping = get_session_data_from_session()
+    if not new_summary_no:
+        new_summary_no = get_summary_set_from_session_data(program_id)
+    if not isinstance(new_summary_no, list):
+        new_summary_no = [new_summary_no]
+    program_id_summary_set_mapping[str(program_id)] = list(set(new_summary_no))
+    session['program_id_summary_set_mapping'] = json.dumps(program_id_summary_set_mapping)
+
+
+def update_summary_list(summaries):
+    config_parser.set('Program', 'summary', ",".join([str(i) for i in summaries]))
+    with open(config_file, 'w') as configfile:
+        config_parser.write(configfile)
+
+
+def update_summary_list_based_on_config_file(new_summary_no):
+    set_of_summaries = parse_special_string_format_to_set(config_parser.get('Program', 'summary'))
+    set_of_summaries.add(new_summary_no)
+    update_summary_list(set_of_summaries)
+
+
+def update_summary_list_based_on_session(program_id):
+    set_of_summaries = get_summary_set_from_session_data(program_id)
+    update_summary_list(set_of_summaries)
 
 
 @app.route('/next_summary')
 def next_summary():
-    # TODO impelemnt logic for next summary, check what are weeks for in *.ini file
-    print("Impelment this functionality")
-    if not session.get('program_id'):
+    program_id = session.get('program_id')
+    if not program_id:
         return redirect(url_for('program'))
-    return redirect(url_for('program'))
+    next_summary_to_be_generated = SummaryCreator.get_next_number(program_id)
+    update_summary_list([next_summary_to_be_generated])
+    update_program_id_summary_set_mapping(program_id, next_summary_to_be_generated)
+    return redirect(url_for('program_form', program_id=program_id))
 
 
 @app.route('/create_summary', methods=['POST'])
@@ -535,12 +554,13 @@ def create_summary():
         if not application_date or not application_weeks:
             flash('Podaj date ewidencji oraz zakres tygodni', 'error')
             return redirect(url_for('program_form', program_id=session.get('program_id')))
-        weeks = parse_list_of_weeks(application_weeks)
+        weeks = parse_special_string_format_to_set(application_weeks)
         summary_no = int(application_summary) if application_summary else None
         summary_creator = SummaryCreator(session.get('program_id'), weeks, no=summary_no)
         summary = summary_creator.create()
 
         if summary:
+            update_summary_list_based_on_config_file(summary.no)
             appCreators = list()
             schools = set([application.school for application in DatabaseManager.get_school_with_summary(summary.id)])
             schools.update([DatabaseManager.get_school(i) for i in schools_for_summary])
@@ -582,28 +602,36 @@ def program():
         session.get('program_id'))
     if current_session_program:
         session['program_id'] = current_session_program.id
+        update_program_id_summary_set_mapping(current_session_program.id)
         program = DatabaseManager.get_program(session['program_id'])
         school_year = program.school_year.replace("/", "_")
         config_parser.set('Program', 'year', f"{school_year}")
         config_parser.set('Program', 'semester', f"{program.semester_no}")
+        update_summary_list_based_on_session(current_session_program.id)
         with open(config_file, 'w') as configfile:
             config_parser.write(configfile)
+
     return render_template("program.html", Programs=all_programs, current=current_session_program,
                            invalid_program_id=INVALID_ID)
 
 
 def is_current_program_set(current_program, config_parser):
-    return str(config_parser.get("Program", "year")) == str(current_program.school_year.replace("/", "_")) and int(
+    return current_program.school_year != FILL_STR and str(config_parser.get("Program", "year")) == str(current_program.school_year.replace("/", "_")) and int(
         config_parser.get("Program", "semester")) == int(current_program.semester_no)
+
+
+def get_current_summaries(current_program_id):
+    return [summary for summary in DatabaseManager.get_summaries(current_program_id) if
+            summary.no in parse_special_string_format_to_set(config_parser.get("Program", "summary"))]
 
 
 @app.route('/program_form/<int:program_id>', methods=['GET', 'POST'])
 def program_form(program_id=INVALID_ID):
+    config_parser.read(config_file)
     if program_id == INVALID_ID:
         id_of_program_being_added = DatabaseManager.id_of_program_being_added(FILL_STR)
         if not id_of_program_being_added:
             default_date = DateConverter.to_string(datetime.datetime.now())
-            print(f"Default date: {default_date}")
             new_program = Program(semester_no=FILL_STR, school_year=FILL_STR, fruitVeg_price=FILL_STR,
                                   dairy_price=FILL_STR, start_date=DateConverter.to_date(default_date),
                                   end_date=DateConverter.to_date(default_date),
@@ -621,8 +649,7 @@ def program_form(program_id=INVALID_ID):
     summaries_data = None
     if is_current_program_set(current_program, config_parser):
         schools_with_contract = DatabaseManager.get_all_schools_with_contract(current_program.id)
-        available_summary = DatabaseManager.get_summaries(current_program.id)
-        # TODO if each school has at least one school_with_contract change this to show for second part
+        available_summary = get_current_summaries(current_program.id)
         summaries_data = dict()
         if not available_summary:
             school_without_summary = schools_with_contract

@@ -90,16 +90,16 @@
                                 </button>
                             </form>
 
-                        {% if not Schools %}
-                            <br/>
-                            <a href="{{ url_for( 'next_summary') }}">
-                                <div class="panel-footer">
-                                    <span class="pull-left">Przejdź do generowania nowego wniosku</span>
-                                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                    <div class="clearfix"></div>
-                                </div>
-                            </a>
-                        {% endif %}
+                            {% if not Schools and Summary %}
+                                <br/>
+                                <a href="{{ url_for( 'next_summary') }}">
+                                    <div class="panel-footer">
+                                        <span class="pull-left">Przejdź do generowania nowego wniosku</span>
+                                        <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                </a>
+                            {% endif %}
                             {% if Schools or Summary %}
                                 <br/>
                                 <form role="form" autocomplete="off" action="{{ url_for( 'create_summary') }}"

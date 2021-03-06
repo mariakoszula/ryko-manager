@@ -43,8 +43,6 @@ class Week(object):
 
 
 class CommonData(DataContainer):
-    MAX_WEEK_NO = int(config_parser.get('Program', 'weeks'))
-
     def __init__(self, program_id, school_id, given_weeks: Set):
         super().__init__()
         self.program_id = program_id
@@ -71,7 +69,7 @@ class CommonData(DataContainer):
         self.prepare_per_week("week_date_", lambda week: week.date)
 
     def prepare_per_week(self, base_name, fun):
-        for week in range(1, CommonData.MAX_WEEK_NO + 1):
+        for week in range(1, int(config_parser.get('Program', 'weeks')) + 1):
             self.dict_data[f"{base_name}{week}"] = fun(self.weeks[week]) if week in self.weeks.keys() else None
 
 
@@ -190,12 +188,10 @@ class DairySummary(ProductTypeSummary):
 
 
 class ApplicationCreator(DocumentCreator, DatabaseManager):
-    template_document_v = config_parser.get('DocTemplates', 'application')
-    template_document_va = config_parser.get('DocTemplates', 'application_5a')
-    main_app_dir = config_parser.get('Directories', 'application_all')
-
     def __init__(self, program_id, school, summary, date):
-        self.main_app_dir = path.join(ApplicationCreator.main_app_dir, str(summary.no))
+        self.template_document_v = config_parser.get('DocTemplates', 'application')
+        self.template_document_va = config_parser.get('DocTemplates', 'application_5a')
+        self.main_app_dir = path.join(config_parser.get('Directories', 'application_all'), str(summary.no))
         if not path.exists(self.main_app_dir):
             makedirs(self.main_app_dir)
         self.program_id = program_id
@@ -243,7 +239,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         return str(value)
 
     def _generate_5(self):
-        DocumentCreator.__init__(self, ApplicationCreator.template_document_v, self.output_directory)
+        DocumentCreator.__init__(self, self.template_document_v, self.output_directory)
         data_to_merge = dict()
         data_to_merge['application_no'] = self.summary.get_application_no()
 
@@ -265,7 +261,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         copyfile(path.join(self.output_directory, doc_5_name), doc_5_name_copy)
 
     def _generate_5a(self):
-        DocumentCreator.__init__(self, ApplicationCreator.template_document_va, self.output_directory)
+        DocumentCreator.__init__(self, self.template_document_va, self.output_directory)
 
         self.document.merge_rows('date_vegFruit', self.records_to_merge_vegFruit)
         self.document.merge_rows('date_milk', self.records_to_merge_milk)

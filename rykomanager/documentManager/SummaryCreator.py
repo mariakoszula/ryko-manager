@@ -8,19 +8,17 @@ import datetime
 
 
 class SummaryCreator(DocumentCreator, DatabaseManager):
-    template_document = config_parser.get('DocTemplates', 'summary')
-
     def __init__(self, program_id, weeks: Set[int], no=None):
         self.summary: Summary = None
         self.program_id = program_id
         self.weeks = weeks
         if no:
-            self.summary = DatabaseManager.get_summary(self.program_id, no) # TODO Check how get unique
+            self.summary = DatabaseManager.get_summary(self.program_id, no)
             self.summary.weeks = weeks
             DatabaseManager.modify()
         self.school_no = 0
         output_directory = config_parser.get('Directories', 'current_program')
-        DocumentCreator.__init__(self, SummaryCreator.template_document, output_directory)
+        DocumentCreator.__init__(self, config_parser.get('DocTemplates', 'summary'), output_directory)
         DatabaseManager.__init__(self)
 
     @staticmethod
@@ -53,7 +51,6 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         if not self.summary:
             app.logger.error("Summary does not exists")
             return
-
 
         if not self.__base_check():
             app.logger.error("Summary Base Check failed")
@@ -156,12 +153,13 @@ class SummaryCreator(DocumentCreator, DatabaseManager):
         self.summary
         return self.summary
 
-    def _get_next_number(self):
-        summaries = DatabaseManager.get_summaries(self.program_id)
+    @staticmethod
+    def get_next_number(program_id):
+        summaries = DatabaseManager.get_summaries(program_id)
         return 1 + (max([summary.no for summary in summaries]) if summaries else 0)
 
     def create_new(self):
-        number = self._get_next_number()
+        number = SummaryCreator.get_next_number(self.program_id)
         summary = Summary(no=number,
                           year=SummaryCreator._get_current_year(),
                           program_id=self.program_id,

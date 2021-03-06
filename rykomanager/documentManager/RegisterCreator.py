@@ -9,7 +9,6 @@ from rykomanager import config_parser
 
 
 class RegisterCreator(DocumentCreator):
-    template_document = config_parser.get('DocTemplates', 'register')
     CELL_TO_MERGE_MARK = "MERGE"
 
     def __init__(self, program_id):
@@ -20,7 +19,7 @@ class RegisterCreator(DocumentCreator):
         self.year = self.program.school_year
         self.records_to_merge = []
         output_directory = config_parser.get('Directories', 'current_program')
-        DocumentCreator.__init__(self, RegisterCreator.template_document, output_directory)
+        DocumentCreator.__init__(self, config_parser.get('DocTemplates', 'register'), output_directory)
 
     def create(self):
         self.generate("Rejestr_{}.docx".format(self.date))

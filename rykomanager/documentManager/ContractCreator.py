@@ -8,12 +8,10 @@ from rykomanager.name_strings import FILL_BY_SCHOOL
 
 
 class ContractCreator(DocumentCreator, DatabaseManager):
-    template_document = config_parser.get('DocTemplates', 'contract')
-    main_contract_dir = config_parser.get('Directories', 'contract_all')
-
     def __init__(self, school, program_id, ommit_representat=True):
-        if not path.exists(ContractCreator.main_contract_dir):
-            makedirs(ContractCreator.main_contract_dir)
+        self.main_contract_dir = config_parser.get('Directories', 'contract_all')
+        if not path.exists(self.main_contract_dir):
+            makedirs(self.main_contract_dir)
 
         self.program = DatabaseManager.get_program(program_id)
         self.school = school
@@ -22,7 +20,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
         self.contract_date = None
         self.ommit_representat = ommit_representat
         output_directory = self.school.generate_directory_name(config_parser.get('Directories', 'contract'))
-        DocumentCreator.__init__(self, ContractCreator.template_document, output_directory)
+        DocumentCreator.__init__(self, config_parser.get('DocTemplates', 'contract'), output_directory)
         DatabaseManager.__init__(self)
 
     def create(self, contract_date=None):
@@ -75,7 +73,7 @@ class ContractCreator(DocumentCreator, DatabaseManager):
         doc_contract_name = "Umowa_{0}_{1}.docx".format(self.contract_no, self.contract_year)
         created_doc_name = DocumentCreator.generate(self, doc_contract_name)
 
-        doc_contract_name_copy = path.join(ContractCreator.main_contract_dir,
+        doc_contract_name_copy = path.join(self.main_contract_dir,
                                                     "{0}_Umowa_{1}_{2}.docx".format(self.school.nick, self.contract_no, self.contract_year))
 
         try:

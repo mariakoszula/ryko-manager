@@ -7,7 +7,7 @@ from rykomanager.models import Contract, ProductName, ProductType
 from rykomanager.documentManager.ApplicationCreator import Fruit, Veg, Dairy, CommonData, FruitVegSummary, \
     DairySummary, ApplicationCreator
 
-
+from rykomanager.common import parse_special_string_format_to_set
 class DB(object):
     pass
 
@@ -218,3 +218,11 @@ def test_inconsistent_records():
     assert(len(DatabaseManager.get_any_inconsistent_records_with_annex(5, 1)) == 3)
     assert(len(DatabaseManager.get_any_inconsistent_records_with_annex(5, 2)) == 0)
 
+
+def test_special_string_parsing():
+    assert(parse_special_string_format_to_set("1,2") == set([1,2]))
+    assert(parse_special_string_format_to_set("1-3") == set([1,2,3]))
+    assert(parse_special_string_format_to_set("6-12,13") == set([i for i in range(6, 13+1)]))
+    test_set = set([i for i in range(6, 13+1)])
+    test_set.add(1)
+    assert(parse_special_string_format_to_set("1,6-12,13") == test_set)

@@ -10,8 +10,6 @@ from rykomanager.name_strings import ALL_RECORDS_DOC_NAME, DATABASE_DATE_PATTERN
 
 
 class RecordCreator(DocumentCreator, DatabaseManager):
-    template_document = config_parser.get('DocTemplates', 'record')
-
     def __init__(self, program_id, current_date, school_id, product_id, generation_date=""):
         self.program_id = program_id
         self.date = DateConverter.to_date(current_date, pattern=DATABASE_DATE_PATTERN)
@@ -21,7 +19,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
         self.doc_data = dict()
         self.generation_date = DateConverter.to_date(generation_date) if generation_date else datetime.date.today()
         output_directory = self.contract.school.generate_directory_name(config_parser.get('Directories', 'record'))
-        DocumentCreator.__init__(self, RecordCreator.template_document, output_directory)
+        DocumentCreator.__init__(self, config_parser.get('DocTemplates', 'record'), output_directory)
         DatabaseManager.__init__(self)
         self._prepare_data_for_doc()
 
@@ -69,7 +67,7 @@ class RecordCreator(DocumentCreator, DatabaseManager):
             return
 
         out_dir = config_parser.get('Directories', 'record_all')
-        doc = DocumentCreator.start_doc_gen(RecordCreator.template_document, out_dir)
+        doc = DocumentCreator.start_doc_gen(config_parser.get('DocTemplates', 'record'), out_dir)
         records_to_merge_list = [record.doc_data for record in records_to_merge
                                  if (isinstance(record, RecordCreator) and record.doc_data)]
         if not records_to_merge_list:
