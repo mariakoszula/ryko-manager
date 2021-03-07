@@ -343,12 +343,15 @@ class DatabaseManager(ABC):
                 .filter(Product.type.like(product_type)).first()
 
     @staticmethod
-    def get_any_inconsistent_records_with_annex(program_id, school_id):
+    def get_any_inconsistent_records_with_annex(program_id, school_id, list_of_weeks_no):
         inconsistent = list()
+        if not list_of_weeks_no:
+            return inconsistent
         records = DatabaseManager.get_school_records(program_id, school_id)
         contracts = DatabaseManager.get_all_contracts(school_id, program_id, asc=False)
+        weeks_ids = [week.id for week in DatabaseManager.get_weeks(program_id) if week.week_no in list_of_weeks_no]
         for record in records:
-            if record.date < record.contract.validity_date:
+            if record.date < record.contract.validity_date and record.week_id in weeks_ids:
                 inconsistent.append(record)
 
         for record in records:
@@ -357,7 +360,7 @@ class DatabaseManager(ABC):
                 if record.date >= contract.validity_date:
                     proper_contract_id = contract.id
                     break
-            if proper_contract_id != record.contract_id:
+            if proper_contract_id != record.contract_id and record.week_id in weeks_ids:
                 inconsistent.append(record)
         return inconsistent
 

@@ -5,7 +5,7 @@ from rykomanager.documentManager.AnnexCreator import AnnexCreator
 from rykomanager.documentManager.ContractCreator import ContractCreator
 from rykomanager.documentManager.RegisterCreator import RegisterCreator
 from rykomanager.documentManager.SummaryCreator import SummaryCreator
-from rykomanager.documentManager.ApplicationCreator import ApplicationCreator
+from rykomanager.documentManager.ApplicationCreator import ApplicationCreator, InconsistentAnnexWzError
 from rykomanager.models import ProductName, ProductType, School, Program, Week, Product, RecordState, Record, Contract
 from rykomanager.documentManager.DatabaseManager import DatabaseManager
 from rykomanager.documentManager.RecordCreator import RecordCreator
@@ -13,6 +13,7 @@ from rykomanager.DateConverter import DateConverter
 from rykomanager.name_strings import RECORDS_NEW_NAME, INVALID_ID, FILL_STR, FILL_BY_SCHOOL, \
     FILL_STR_SCHOOL
 from rykomanager.common import parse_special_string_format_to_set, empty_if_none
+
 import json
 
 @app.route("/")
@@ -554,42 +555,43 @@ def create_summary():
         if not application_date or not application_weeks:
             flash('Podaj date ewidencji oraz zakres tygodni', 'error')
             return redirect(url_for('program_form', program_id=session.get('program_id')))
+
         weeks = parse_special_string_format_to_set(application_weeks)
         summary_no = int(application_summary) if application_summary else None
         summary_creator = SummaryCreator(session.get('program_id'), weeks, no=summary_no)
         summary = summary_creator.create()
 
-        if summary:
-            update_summary_list_based_on_config_file(summary.no)
-            appCreators = list()
-            schools = set([application.school for application in DatabaseManager.get_school_with_summary(summary.id)])
-            schools.update([DatabaseManager.get_school(i) for i in schools_for_summary])
-            for school in schools:
-                try:
-                    application = ApplicationCreator(session.get('program_id'), school, summary, application_date)
-                    if application.create():
-                        appCreators.append(application)
-                except ValueError as e:
-                    app.logger.error(f"Cannot create application for {school.nick}: {e}")
-                    flash(f"Próbjesz wygnerować błędny wniosek."
-                          f"Ilosc tygodni dla {school.nick} nie zgadza sie z ilościa we wniosku {summary.number_of_weeks}.",
-                          'error')
-                    return redirect(url_for('program_form', program_id=session.get('program_id')))
-                except TypeError as e:
-                    flash(f"Nie można wygenerować wniosku. Błąd w szkole {school.nick}.\n"
-                          f"Błędne ilości na WZtkach: {e}",
-                          'error')
-                    return redirect(url_for('program_form', program_id=session.get('program_id')))
-
-            for appCreator in appCreators:
-                summary_creator.school_no += 1  # TODO change this to update in some smarter way
-                appCreator.generate()
-
-            summary_creator.generate()
-        else:
+        if not summary:
             app.logger.error("create_summary: summary is None. Can not create Application.")
+            return redirect(url_for('program_form', program_id=session.get('program_id')))
 
-    return redirect(url_for("index", weeks=(1, 12), dairy_summary=None, school_data="", product_remaining=""))
+        update_summary_list_based_on_config_file(summary.no)
+        appCreators = list()
+        schools = set([application.school for application in DatabaseManager.get_school_with_summary(summary.id)])
+        schools.update([DatabaseManager.get_school(i) for i in schools_for_summary])
+        any_problems_flash_list = list()
+        for school in schools:
+            try:
+                application = ApplicationCreator(session.get('program_id'), school, summary, application_date)
+                if application.inconsistent_records_error:
+                    any_problems_flash_list.append(application.inconsistent_records_error)
+                if application.create():
+                    appCreators.append(application)
+            except ValueError as e:
+                app.logger.error(f"Cannot create application for {school.nick}: {e}")
+                any_problems_flash_list.append(
+                (f"Szkoła {school.nick} zostanie pominięta, ponieważ ilość tygodni na oświadczeniu: {len(application.common_data.get_week_numbers())} {application.common_data.get_week_numbers()} "
+                 f"nie zgadza sie z ilością w generowanym wniosku: {summary.number_of_weeks}.",
+                 'error'))
+
+        for appCreator in appCreators:
+            summary_creator.school_no += 1  # TODO change this to update in some smarter way
+            appCreator.generate()
+
+        summary_creator.generate()
+        for problem in any_problems_flash_list:
+            flash(problem[0], problem[1])
+    return redirect(url_for('program_form', program_id=session.get('program_id')))
 
 
 @app.route('/program')

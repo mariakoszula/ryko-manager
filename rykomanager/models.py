@@ -329,13 +329,13 @@ class Summary(db.Model):
 
     number_of_weeks = 0
 
-    #TODO how this suppose to be
     def set_number_of_weeks(self, weeks_no):
         if self.number_of_weeks != 0 and self.number_of_weeks != len(weeks_no):
             raise ValueError(f"weeks_no: {weeks_no} != {self.number_of_weeks}. "
                              f"For one summary all schools must have the same number of weeks.")
         self.weeks = weeks_no
         self.number_of_weeks = len(weeks_no)
+        return True
 
     def __fruit_list(self):
         return [ProductHandler(self.apple, 5, float(self.program.fruitVeg_price)), ProductHandler(self.plum, 5, float(self.program.fruitVeg_price)),

@@ -52,11 +52,9 @@ class CommonData(DataContainer):
     @staticmethod
     def __get_active_week(program_id, school_id, given_weeks):
         weeks = dict()
-        no = 1
         for week_no in given_weeks:
             if DatabaseManager.is_any_record(program_id, school_id, week_no):
-                weeks[no] = Week(number=week_no, date=DatabaseManager.get_dates(program_id, week_no))
-                no += 1
+                weeks[week_no] = Week(number=week_no, date=DatabaseManager.get_dates(program_id, week_no))
         return weeks
 
     def get_week_numbers(self):
@@ -187,6 +185,24 @@ class DairySummary(ProductTypeSummary):
                                                              self.common_app_info.program_id).dairy_products
 
 
+class InconsistentAnnexWzError(Exception):
+    def __init__(self, inconsistent_records, inconsistency_treated_as_error):
+        self.inconsistent_records = inconsistent_records
+        self.inconsistency_treated_as_error = inconsistency_treated_as_error
+
+    def __str__(self):
+        information = f"Nie można wygenerować dokumentów dla tej szkoły\nBłędne ilości na WZtkach:" if self.inconsistency_treated_as_error else \
+            f"Dokumenty zostaną wygenerowane, sprawdź jednak czy zgadza się ilość dzieci na WZtkach:"
+
+        information += ' | '.join(
+            [f"{record.date.year}-{record.date.month}-{record.date.day} {record.product.get_name_mapping()}" for record
+             in self.inconsistent_records])
+        return information
+
+    def get_log_level(self):
+        return 'error' if self.inconsistency_treated_as_error else 'warning'
+
+
 class ApplicationCreator(DocumentCreator, DatabaseManager):
     def __init__(self, program_id, school, summary, date):
         self.template_document_v = config_parser.get('DocTemplates', 'application')
@@ -196,7 +212,6 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             makedirs(self.main_app_dir)
         self.program_id = program_id
         self.school: School = school
-
         self.summary: Summary = summary
 
         self.default_data: DefaultData = DefaultData(self.school, date)
@@ -216,8 +231,10 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.output_directory = self.school.generate_directory_name(config_parser.get('Directories', 'application'))
 
         self.product_data = dict()
+        self.inconsistent_records_error = None
         if not self.__prepare_data():
             raise Exception("Cannot prepare data")
+
         DatabaseManager.__init__(self)
 
     def __prepare_fruit_data(self):
@@ -242,6 +259,7 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         DocumentCreator.__init__(self, self.template_document_v, self.output_directory)
         data_to_merge = dict()
         data_to_merge['application_no'] = self.summary.get_application_no()
+
 
         data_to_merge.update({k: ApplicationCreator.convert_to_str(v) for k, v in self.default_data.get().items()})
         data_to_merge.update({k: ApplicationCreator.convert_to_str(v) for k, v in self.common_data.get().items()})
@@ -285,11 +303,17 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             remove(doc_5a_name_copy)
         copyfile(path.join(self.output_directory, doc_5a_name), doc_5a_name_copy)
 
-    def __prepare_data(self):
-        inconsistent_records = DatabaseManager.get_any_inconsistent_records_with_annex(self.program_id, self.school.id)
+    def __are_records_inconsistent(self, inconsistency_treated_as_error=False):
+        inconsistent_records = DatabaseManager.get_any_inconsistent_records_with_annex(self.program_id, self.school.id,
+                                                                                       self.common_data.get_week_numbers())
         if inconsistent_records:
-            #TODO change this excpetion to some meaningfull one
-           raise TypeError(' | '.join([f"{record.date.year}-{record.date.month}-{record.date.day} {record.product.get_name_mapping()}" for record in inconsistent_records]))
+            raise InconsistentAnnexWzError(inconsistent_records, inconsistency_treated_as_error)
+
+    def __prepare_data(self):
+        try:
+            self.__are_records_inconsistent()
+        except InconsistentAnnexWzError as e:
+            self.inconsistent_records_error = f"Szkoła: {self.school.nick}.\n{e}", e.get_log_level()
 
         for data in self.tmp_data_to_rename:
             data.prepare()
@@ -350,11 +374,13 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
             app.logger.error(
                 "Application serious error: should never be returned more than one item in this list")
             return False
-        if not application and self.create_new():
-            app.logger.info(
-                "Application for summary {0}/{1} for school {2} added".format(self.summary.no, self.summary.year,
+        if not application:
+            self.summary.set_number_of_weeks(self.common_data.get_week_numbers())
+            if self.create_new():
+                app.logger.info(
+                    "Application for summary {0}/{1} for school {2} added".format(self.summary.no, self.summary.year,
                                                                               self.school.nick))
-            self.__increase_in_summary() # change this to use observer when new Application is added
+                self.__increase_in_summary()
             return True
         else:
             if DatabaseManager.remove_application(application[0].id):
@@ -373,14 +399,10 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         DatabaseManager.modify()
 
     def __increase_in_summary(self):
-        # TODO refactor idea: Summary should be obsevator of ApplicationCreator and perform informaton update
-        # overload _add_ method in Summary self + application - add products; self - application remove products
+        # TODO refactor idea
+        # some ideas: overload _add_ method in Summary self + application - add products; self - application remove products
         # increase/descrease number of schools setup weeks number not in model in SummraryCreator as only needed of document generation
-
-        try:
-            self.summary.set_number_of_weeks(self.common_data.get_week_numbers())
-        except ValueError:
-            raise
+        # self.summary += self
         self.summary.apple += self.product_data['apple']
         self.summary.pear += self.product_data['pear']
         self.summary.plum += self.product_data['plum']
@@ -406,7 +428,8 @@ class ApplicationCreator(DocumentCreator, DatabaseManager):
         self.__update_summary()
 
     def __decrease_in_summary(self):
-        # TODO refactor, check if needed
+        # TODO refactor
+        # self.summary -= self
         self.summary.apple -= self.product_data['apple']
         self.summary.pear -= self.product_data['pear']
         self.summary.plum -= self.product_data['plum']
